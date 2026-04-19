@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModBlocks;
 import io.github.ash1688.nuclearpowered.init.ModCreativeTabs;
+import io.github.ash1688.nuclearpowered.init.ModFluids;
 import io.github.ash1688.nuclearpowered.init.ModItems;
 import io.github.ash1688.nuclearpowered.init.ModMenuTypes;
 import io.github.ash1688.nuclearpowered.init.ModRecipes;
@@ -31,6 +32,7 @@ public class NuclearPowered {
         ModBlockEntities.register(modEventBus);
         ModMenuTypes.register(modEventBus);
         ModRecipes.register(modEventBus);
+        ModFluids.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
 
         MinecraftForge.EVENT_BUS.register(this);

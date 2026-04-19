@@ -2,9 +2,11 @@ package io.github.ash1688.nuclearpowered.init;
 
 import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.block.battery.BatteryBlockEntity;
+import io.github.ash1688.nuclearpowered.block.boiler.CoalBoilerBlockEntity;
 import io.github.ash1688.nuclearpowered.block.cable.EnergyCableBlockEntity;
 import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlockEntity;
 import io.github.ash1688.nuclearpowered.block.electricfurnace.ElectricFurnaceBlockEntity;
+import io.github.ash1688.nuclearpowered.block.engine.SteamEngineBlockEntity;
 import io.github.ash1688.nuclearpowered.block.fabricator.FuelFabricatorBlockEntity;
 import io.github.ash1688.nuclearpowered.block.pile.PileBlockEntity;
 import io.github.ash1688.nuclearpowered.block.thermocouple.ThermocoupleBlockEntity;
@@ -50,6 +52,14 @@ public final class ModBlockEntities {
     public static final RegistryObject<BlockEntityType<FuelFabricatorBlockEntity>> FUEL_FABRICATOR =
             BLOCK_ENTITIES.register("fuel_fabricator", () ->
                     BlockEntityType.Builder.of(FuelFabricatorBlockEntity::new, ModBlocks.FUEL_FABRICATOR.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<CoalBoilerBlockEntity>> COAL_BOILER =
+            BLOCK_ENTITIES.register("coal_boiler", () ->
+                    BlockEntityType.Builder.of(CoalBoilerBlockEntity::new, ModBlocks.COAL_BOILER.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<SteamEngineBlockEntity>> STEAM_ENGINE =
+            BLOCK_ENTITIES.register("steam_engine", () ->
+                    BlockEntityType.Builder.of(SteamEngineBlockEntity::new, ModBlocks.STEAM_ENGINE.get()).build(null));
 
     private ModBlockEntities() {}
 

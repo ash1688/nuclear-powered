@@ -2,10 +2,12 @@ package io.github.ash1688.nuclearpowered.client;
 
 import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.client.screen.BatteryScreen;
+import io.github.ash1688.nuclearpowered.client.screen.CoalBoilerScreen;
 import io.github.ash1688.nuclearpowered.client.screen.CrusherScreen;
 import io.github.ash1688.nuclearpowered.client.screen.ElectricFurnaceScreen;
 import io.github.ash1688.nuclearpowered.client.screen.FuelFabricatorScreen;
 import io.github.ash1688.nuclearpowered.client.screen.PileScreen;
+import io.github.ash1688.nuclearpowered.client.screen.SteamEngineScreen;
 import io.github.ash1688.nuclearpowered.client.screen.ThermocoupleScreen;
 import io.github.ash1688.nuclearpowered.client.screen.WasherScreen;
 import io.github.ash1688.nuclearpowered.init.ModMenuTypes;
@@ -29,6 +31,8 @@ public final class ModClientSetup {
             MenuScreens.register(ModMenuTypes.THERMOCOUPLE.get(), ThermocoupleScreen::new);
             MenuScreens.register(ModMenuTypes.BATTERY.get(), BatteryScreen::new);
             MenuScreens.register(ModMenuTypes.FUEL_FABRICATOR.get(), FuelFabricatorScreen::new);
+            MenuScreens.register(ModMenuTypes.COAL_BOILER.get(), CoalBoilerScreen::new);
+            MenuScreens.register(ModMenuTypes.STEAM_ENGINE.get(), SteamEngineScreen::new);
         });
     }
 }

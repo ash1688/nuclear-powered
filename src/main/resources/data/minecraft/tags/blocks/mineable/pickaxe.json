@@ -17,6 +17,8 @@
     "nuclearpowered:thermocouple",
     "nuclearpowered:energy_cable",
     "nuclearpowered:battery",
-    "nuclearpowered:fuel_fabricator"
+    "nuclearpowered:fuel_fabricator",
+    "nuclearpowered:coal_boiler",
+    "nuclearpowered:steam_engine"
   ]
 }
