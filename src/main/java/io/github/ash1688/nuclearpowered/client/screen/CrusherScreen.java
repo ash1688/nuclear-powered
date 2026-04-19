@@ -14,6 +14,11 @@ public class CrusherScreen extends AbstractContainerScreen<CrusherMenu> {
     private static final ResourceLocation TEXTURE =
             new ResourceLocation(NuclearPowered.MODID, "textures/gui/container/crusher.png");
 
+    private static final int FE_X = 152;
+    private static final int FE_Y = 17;
+    private static final int FE_WIDTH = 12;
+    private static final int FE_HEIGHT = 52;
+
     private Button autoInputButton;
     private Button autoOutputButton;
 
@@ -64,6 +69,15 @@ public class CrusherScreen extends AbstractContainerScreen<CrusherMenu> {
         int y = (height - imageHeight) / 2;
         g.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
 
+        g.fill(x + FE_X - 1, y + FE_Y - 1, x + FE_X + FE_WIDTH + 1, y + FE_Y + FE_HEIGHT + 1, 0xFF555555);
+        g.fill(x + FE_X, y + FE_Y, x + FE_X + FE_WIDTH, y + FE_Y + FE_HEIGHT, 0xFF222222);
+        int bar = menu.getScaledFE(FE_HEIGHT);
+        if (bar > 0) {
+            int fillTop = y + FE_Y + (FE_HEIGHT - bar);
+            int fillBottom = y + FE_Y + FE_HEIGHT;
+            g.fill(x + FE_X, fillTop, x + FE_X + FE_WIDTH, fillBottom, 0xFFE05A20);
+        }
+
         if (menu.isCrafting()) {
             int filled = menu.getScaledProgress();
             g.fill(x + 78, y + 41, x + 78 + filled, y + 45, 0xFFE56B2B);
@@ -74,6 +88,20 @@ public class CrusherScreen extends AbstractContainerScreen<CrusherMenu> {
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         renderBackground(g);
         super.render(g, mouseX, mouseY, partialTick);
+        renderFETooltip(g, mouseX, mouseY);
         renderTooltip(g, mouseX, mouseY);
+    }
+
+    private void renderFETooltip(GuiGraphics g, int mouseX, int mouseY) {
+        int x = (width - imageWidth) / 2;
+        int y = (height - imageHeight) / 2;
+        int left = x + FE_X;
+        int top = y + FE_Y;
+        if (mouseX >= left && mouseX < left + FE_WIDTH
+                && mouseY >= top && mouseY < top + FE_HEIGHT) {
+            Component line = Component.literal(
+                    menu.getStoredFE() + " / " + menu.getMaxFE() + " FE");
+            g.renderTooltip(font, line, mouseX, mouseY);
+        }
     }
 }

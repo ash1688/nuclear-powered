@@ -19,6 +19,12 @@ public class WasherScreen extends AbstractContainerScreen<WasherMenu> {
     private static final int TANK_WIDTH = 12;
     private static final int TANK_HEIGHT = 52;
 
+    // FE gauge sits between the water tank and the input slot.
+    private static final int FE_X = 32;
+    private static final int FE_Y = 17;
+    private static final int FE_WIDTH = 12;
+    private static final int FE_HEIGHT = 52;
+
     private Button autoInputButton;
     private Button autoOutputButton;
 
@@ -78,6 +84,15 @@ public class WasherScreen extends AbstractContainerScreen<WasherMenu> {
             g.fill(fillX, fillTop, fillX + TANK_WIDTH, fillBottom, 0xFF2060D0);
         }
 
+        g.fill(x + FE_X - 1, y + FE_Y - 1, x + FE_X + FE_WIDTH + 1, y + FE_Y + FE_HEIGHT + 1, 0xFF555555);
+        g.fill(x + FE_X, y + FE_Y, x + FE_X + FE_WIDTH, y + FE_Y + FE_HEIGHT, 0xFF222222);
+        int bar = menu.getScaledFE(FE_HEIGHT);
+        if (bar > 0) {
+            int fillTop = y + FE_Y + (FE_HEIGHT - bar);
+            int fillBottom = y + FE_Y + FE_HEIGHT;
+            g.fill(x + FE_X, fillTop, x + FE_X + FE_WIDTH, fillBottom, 0xFFE05A20);
+        }
+
         if (menu.isCrafting()) {
             int filled = menu.getScaledProgress();
             g.fill(x + 78, y + 41, x + 78 + filled, y + 45, 0xFF2080E0);
@@ -89,7 +104,21 @@ public class WasherScreen extends AbstractContainerScreen<WasherMenu> {
         renderBackground(g);
         super.render(g, mouseX, mouseY, partialTick);
         renderTankTooltip(g, mouseX, mouseY);
+        renderFETooltip(g, mouseX, mouseY);
         renderTooltip(g, mouseX, mouseY);
+    }
+
+    private void renderFETooltip(GuiGraphics g, int mouseX, int mouseY) {
+        int x = (width - imageWidth) / 2;
+        int y = (height - imageHeight) / 2;
+        int left = x + FE_X;
+        int top = y + FE_Y;
+        if (mouseX >= left && mouseX < left + FE_WIDTH
+                && mouseY >= top && mouseY < top + FE_HEIGHT) {
+            Component line = Component.literal(
+                    menu.getStoredFE() + " / " + menu.getMaxFE() + " FE");
+            g.renderTooltip(font, line, mouseX, mouseY);
+        }
     }
 
     private void renderTankTooltip(GuiGraphics g, int mouseX, int mouseY) {

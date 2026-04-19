@@ -71,14 +71,9 @@ public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
         @Override
         protected void onContentsChanged() { setChanged(); }
 
-        @Override
-        public int fill(FluidStack resource, FluidAction action) {
-            // External machines shouldn't push steam back INTO the boiler.
-            if (action.simulate()) return 0;
-            return 0;
-        }
-
-        // Internal fills use fillInternal() below.
+        // External fills are blocked by the combinedFluidHandler capability (which only
+        // routes water into waterTank), so this tank can accept internal fill() calls
+        // directly without an override.
     };
 
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
@@ -261,7 +256,7 @@ public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
         if (burnTime > 0 && canBoil) {
             burnTime--;
             waterTank.drain(WATER_PER_TICK, IFluidHandler.FluidAction.EXECUTE);
-            steamTank.fillInternal(new FluidStack(ModFluids.STEAM.get(), STEAM_PER_TICK),
+            steamTank.fill(new FluidStack(ModFluids.STEAM.get(), STEAM_PER_TICK),
                     IFluidHandler.FluidAction.EXECUTE);
             changed = true;
         }

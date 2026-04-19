@@ -24,6 +24,7 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
@@ -41,6 +42,10 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
 
     public static final int TANK_CAPACITY_MB = 4000;
     private static final int BUCKET_VOLUME_MB = 1000;
+
+    public static final int ENERGY_CAPACITY = 10_000;
+    public static final int ENERGY_MAX_INPUT_PER_TICK = 256;
+    public static final int FE_PER_TICK = 15;
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(3) {
         @Override
@@ -64,11 +69,32 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
 
     private LazyOptional<IItemHandler> lazyExternalHandler = LazyOptional.empty();
     private LazyOptional<IFluidHandler> lazyFluidHandler = LazyOptional.empty();
+    private LazyOptional<IEnergyStorage> lazyEnergy = LazyOptional.empty();
 
     private int progress = 0;
     private int maxProgress = WasherRecipe.DEFAULT_PROCESSING_TIME;
     private boolean autoInput = true;
     private boolean autoOutput = true;
+    private int storedFE = 0;
+
+    private final IEnergyStorage externalEnergy = new IEnergyStorage() {
+        @Override
+        public int receiveEnergy(int amount, boolean simulate) {
+            int canAccept = Math.min(ENERGY_CAPACITY - storedFE, Math.min(amount, ENERGY_MAX_INPUT_PER_TICK));
+            if (canAccept <= 0) return 0;
+            if (!simulate) {
+                storedFE += canAccept;
+                setChanged();
+            }
+            return canAccept;
+        }
+
+        @Override public int extractEnergy(int maxExtract, boolean simulate) { return 0; }
+        @Override public int getEnergyStored() { return storedFE; }
+        @Override public int getMaxEnergyStored() { return ENERGY_CAPACITY; }
+        @Override public boolean canExtract() { return false; }
+        @Override public boolean canReceive() { return true; }
+    };
 
     private final ContainerData data = new ContainerData() {
         @Override
@@ -80,6 +106,8 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
                 case 3 -> waterTank.getCapacity();
                 case 4 -> autoInput ? 1 : 0;
                 case 5 -> autoOutput ? 1 : 0;
+                case 6 -> storedFE;
+                case 7 -> ENERGY_CAPACITY;
                 default -> 0;
             };
         }
@@ -91,12 +119,13 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
                 case 1 -> maxProgress = value;
                 case 4 -> autoInput = value != 0;
                 case 5 -> autoOutput = value != 0;
-                // 2 and 3 driven by tank; no setters.
+                case 6 -> storedFE = value;
+                // 2, 3 driven by tank; 7 capacity is static.
             }
         }
 
         @Override
-        public int getCount() { return 6; }
+        public int getCount() { return 8; }
     };
 
     public WasherBlockEntity(BlockPos pos, BlockState state) {
@@ -130,6 +159,7 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
         if (cap == ForgeCapabilities.ITEM_HANDLER) return lazyExternalHandler.cast();
         if (cap == ForgeCapabilities.FLUID_HANDLER) return lazyFluidHandler.cast();
+        if (cap == ForgeCapabilities.ENERGY) return lazyEnergy.cast();
         return super.getCapability(cap, side);
     }
 
@@ -138,6 +168,7 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
         super.onLoad();
         lazyExternalHandler = LazyOptional.of(() -> externalHandler);
         lazyFluidHandler = LazyOptional.of(() -> waterTank);
+        lazyEnergy = LazyOptional.of(() -> externalEnergy);
     }
 
     @Override
@@ -145,6 +176,7 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
         super.invalidateCaps();
         lazyExternalHandler.invalidate();
         lazyFluidHandler.invalidate();
+        lazyEnergy.invalidate();
     }
 
     @Override
@@ -155,6 +187,7 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
         waterTank.writeToNBT(tankTag);
         tag.put("water", tankTag);
         tag.putInt("progress", progress);
+        tag.putInt("fe", storedFE);
         tag.putBoolean("autoInput", autoInput);
         tag.putBoolean("autoOutput", autoOutput);
     }
@@ -165,6 +198,7 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
         waterTank.readFromNBT(tag.getCompound("water"));
         progress = tag.getInt("progress");
+        storedFE = tag.getInt("fe");
         autoInput = !tag.contains("autoInput") || tag.getBoolean("autoInput");
         autoOutput = !tag.contains("autoOutput") || tag.getBoolean("autoOutput");
     }
@@ -188,15 +222,21 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
         }
 
         Optional<WasherRecipe> recipe = findMatchingRecipe(level);
+        boolean washingThisTick = false;
         if (recipe.isPresent() && canFit(recipe.get().getResult()) && hasEnoughFluid(recipe.get().getFluid())) {
             maxProgress = recipe.get().getProcessingTime();
-            progress++;
-            setChanged(level, pos, state);
-            if (progress >= maxProgress) {
-                craft(recipe.get());
-                progress = 0;
+            if (storedFE >= FE_PER_TICK) {
+                storedFE -= FE_PER_TICK;
+                progress++;
+                setChanged(level, pos, state);
+                if (progress >= maxProgress) {
+                    craft(recipe.get());
+                    progress = 0;
+                }
             }
-        } else if (progress != 0) {
+            washingThisTick = true;
+        }
+        if (!washingThisTick && progress != 0) {
             progress = 0;
             setChanged(level, pos, state);
         }

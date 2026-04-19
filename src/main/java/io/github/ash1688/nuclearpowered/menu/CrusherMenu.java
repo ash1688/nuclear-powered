@@ -28,7 +28,7 @@ public class CrusherMenu extends AbstractContainerMenu {
     private static final int PLAYER_INV_SLOT_COUNT = 36;
 
     public CrusherMenu(int id, Inventory inv, FriendlyByteBuf buf) {
-        this(id, inv, resolveBlockEntity(inv, buf.readBlockPos()), new SimpleContainerData(4));
+        this(id, inv, resolveBlockEntity(inv, buf.readBlockPos()), new SimpleContainerData(6));
     }
 
     public CrusherMenu(int id, Inventory inv, BlockEntity be, ContainerData data) {
@@ -74,6 +74,15 @@ public class CrusherMenu extends AbstractContainerMenu {
 
     public boolean isAutoOutput() {
         return data.get(3) != 0;
+    }
+
+    public int getStoredFE() { return data.get(4); }
+
+    public int getMaxFE() { return data.get(5); }
+
+    public int getScaledFE(int barHeight) {
+        int max = data.get(5);
+        return (max == 0) ? 0 : data.get(4) * barHeight / max;
     }
 
     @Override

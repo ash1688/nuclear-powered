@@ -28,7 +28,7 @@ public class WasherMenu extends AbstractContainerMenu {
     private static final int PLAYER_INV_SLOT_COUNT = 36;
 
     public WasherMenu(int id, Inventory inv, FriendlyByteBuf buf) {
-        this(id, inv, resolveBlockEntity(inv, buf.readBlockPos()), new SimpleContainerData(6));
+        this(id, inv, resolveBlockEntity(inv, buf.readBlockPos()), new SimpleContainerData(8));
     }
 
     public WasherMenu(int id, Inventory inv, BlockEntity be, ContainerData data) {
@@ -88,6 +88,15 @@ public class WasherMenu extends AbstractContainerMenu {
     public boolean isAutoInput() { return data.get(4) != 0; }
 
     public boolean isAutoOutput() { return data.get(5) != 0; }
+
+    public int getStoredFE() { return data.get(6); }
+
+    public int getMaxFE() { return data.get(7); }
+
+    public int getScaledFE(int barHeight) {
+        int max = data.get(7);
+        return (max == 0) ? 0 : data.get(6) * barHeight / max;
+    }
 
     @Override
     public boolean clickMenuButton(Player player, int id) {

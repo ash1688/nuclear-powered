@@ -178,16 +178,16 @@ public class FuelFabricatorBlockEntity extends BlockEntity implements MenuProvid
     }
 
     public void tick(Level level, BlockPos pos, BlockState state) {
-        Optional<FuelFabricatorRecipe> recipe = findMatchingRecipe(level);
+        Optional<RecipeMatch> match = findMatchingRecipe(level);
         boolean fabricatingThisTick = false;
-        if (recipe.isPresent() && canFit(recipe.get().getResult())) {
-            maxProgress = recipe.get().getProcessingTime();
+        if (match.isPresent() && canFit(match.get().recipe.getResult())) {
+            maxProgress = match.get().recipe.getProcessingTime();
             if (storedFE >= FE_PER_TICK) {
                 storedFE -= FE_PER_TICK;
                 progress++;
                 setChanged(level, pos, state);
                 if (progress >= maxProgress) {
-                    craft(recipe.get());
+                    craft(match.get());
                     progress = 0;
                 }
             }
@@ -203,13 +203,26 @@ public class FuelFabricatorBlockEntity extends BlockEntity implements MenuProvid
         }
     }
 
-    private Optional<FuelFabricatorRecipe> findMatchingRecipe(Level level) {
-        if (itemHandler.getStackInSlot(SLOT_FUEL).isEmpty()) return Optional.empty();
-        if (itemHandler.getStackInSlot(SLOT_CLADDING).isEmpty()) return Optional.empty();
+    // Recipe match plus which physical slot is currently holding the fuel item —
+    // lets players load ingredients into either slot and still have the machine
+    // craft correctly. The swapped flag just redirects the shrink calls in craft().
+    private record RecipeMatch(FuelFabricatorRecipe recipe, boolean swapped) {}
+
+    private Optional<RecipeMatch> findMatchingRecipe(Level level) {
+        ItemStack a = itemHandler.getStackInSlot(SLOT_FUEL);
+        ItemStack b = itemHandler.getStackInSlot(SLOT_CLADDING);
+        if (a.isEmpty() || b.isEmpty()) return Optional.empty();
         SimpleContainer probe = new SimpleContainer(2);
-        probe.setItem(0, itemHandler.getStackInSlot(SLOT_FUEL));
-        probe.setItem(1, itemHandler.getStackInSlot(SLOT_CLADDING));
-        return level.getRecipeManager().getRecipeFor(ModRecipes.FABRICATING_TYPE.get(), probe, level);
+        probe.setItem(0, a);
+        probe.setItem(1, b);
+        Optional<FuelFabricatorRecipe> direct = level.getRecipeManager()
+                .getRecipeFor(ModRecipes.FABRICATING_TYPE.get(), probe, level);
+        if (direct.isPresent()) return Optional.of(new RecipeMatch(direct.get(), false));
+        probe.setItem(0, b);
+        probe.setItem(1, a);
+        return level.getRecipeManager()
+                .getRecipeFor(ModRecipes.FABRICATING_TYPE.get(), probe, level)
+                .map(r -> new RecipeMatch(r, true));
     }
 
     private boolean canFit(ItemStack result) {
@@ -219,7 +232,8 @@ public class FuelFabricatorBlockEntity extends BlockEntity implements MenuProvid
         return output.getCount() + result.getCount() <= output.getMaxStackSize();
     }
 
-    private void craft(FuelFabricatorRecipe recipe) {
+    private void craft(RecipeMatch match) {
+        FuelFabricatorRecipe recipe = match.recipe();
         ItemStack result = recipe.getResult();
         ItemStack output = itemHandler.getStackInSlot(SLOT_OUTPUT);
         if (output.isEmpty()) {
@@ -227,8 +241,10 @@ public class FuelFabricatorBlockEntity extends BlockEntity implements MenuProvid
         } else {
             output.grow(result.getCount());
         }
-        itemHandler.getStackInSlot(SLOT_FUEL).shrink(recipe.getFuelCount());
-        itemHandler.getStackInSlot(SLOT_CLADDING).shrink(recipe.getCladdingCount());
+        int fuelSlot = match.swapped() ? SLOT_CLADDING : SLOT_FUEL;
+        int claddingSlot = match.swapped() ? SLOT_FUEL : SLOT_CLADDING;
+        itemHandler.getStackInSlot(fuelSlot).shrink(recipe.getFuelCount());
+        itemHandler.getStackInSlot(claddingSlot).shrink(recipe.getCladdingCount());
     }
 
     private void autoPushSlot(Level level, BlockPos pos, int slot) {

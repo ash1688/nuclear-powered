@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
@@ -34,6 +35,10 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
     public static final int SLOT_OUTPUT = 1;
 
     private static final int MAX_PROGRESS = CrusherRecipe.DEFAULT_PROCESSING_TIME;
+
+    public static final int ENERGY_CAPACITY = 10_000;
+    public static final int ENERGY_MAX_INPUT_PER_TICK = 256;
+    public static final int FE_PER_TICK = 15;
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(2) {
         @Override
@@ -53,6 +58,28 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
     private int maxProgress = MAX_PROGRESS;
     private boolean autoInput = true;
     private boolean autoOutput = true;
+    private int storedFE = 0;
+
+    private final IEnergyStorage externalEnergy = new IEnergyStorage() {
+        @Override
+        public int receiveEnergy(int amount, boolean simulate) {
+            int canAccept = Math.min(ENERGY_CAPACITY - storedFE, Math.min(amount, ENERGY_MAX_INPUT_PER_TICK));
+            if (canAccept <= 0) return 0;
+            if (!simulate) {
+                storedFE += canAccept;
+                setChanged();
+            }
+            return canAccept;
+        }
+
+        @Override public int extractEnergy(int maxExtract, boolean simulate) { return 0; }
+        @Override public int getEnergyStored() { return storedFE; }
+        @Override public int getMaxEnergyStored() { return ENERGY_CAPACITY; }
+        @Override public boolean canExtract() { return false; }
+        @Override public boolean canReceive() { return true; }
+    };
+
+    private LazyOptional<IEnergyStorage> lazyEnergy = LazyOptional.empty();
 
     private final ContainerData data = new ContainerData() {
         @Override
@@ -62,6 +89,8 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
                 case 1 -> maxProgress;
                 case 2 -> autoInput ? 1 : 0;
                 case 3 -> autoOutput ? 1 : 0;
+                case 4 -> storedFE;
+                case 5 -> ENERGY_CAPACITY;
                 default -> 0;
             };
         }
@@ -73,12 +102,13 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
                 case 1 -> maxProgress = value;
                 case 2 -> autoInput = value != 0;
                 case 3 -> autoOutput = value != 0;
+                case 4 -> storedFE = value;
             }
         }
 
         @Override
         public int getCount() {
-            return 4;
+            return 6;
         }
     };
 
@@ -121,9 +151,8 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-        if (cap == ForgeCapabilities.ITEM_HANDLER) {
-            return lazyExternalHandler.cast();
-        }
+        if (cap == ForgeCapabilities.ITEM_HANDLER) return lazyExternalHandler.cast();
+        if (cap == ForgeCapabilities.ENERGY) return lazyEnergy.cast();
         return super.getCapability(cap, side);
     }
 
@@ -131,12 +160,14 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
     public void onLoad() {
         super.onLoad();
         lazyExternalHandler = LazyOptional.of(() -> externalHandler);
+        lazyEnergy = LazyOptional.of(() -> externalEnergy);
     }
 
     @Override
     public void invalidateCaps() {
         super.invalidateCaps();
         lazyExternalHandler.invalidate();
+        lazyEnergy.invalidate();
     }
 
     @Override
@@ -144,6 +175,7 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
         super.saveAdditional(tag);
         tag.put("inventory", itemHandler.serializeNBT());
         tag.putInt("progress", progress);
+        tag.putInt("fe", storedFE);
         tag.putBoolean("autoInput", autoInput);
         tag.putBoolean("autoOutput", autoOutput);
     }
@@ -153,6 +185,7 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
         progress = tag.getInt("progress");
+        storedFE = tag.getInt("fe");
         // Default to true for worlds created before the toggles existed.
         autoInput = !tag.contains("autoInput") || tag.getBoolean("autoInput");
         autoOutput = !tag.contains("autoOutput") || tag.getBoolean("autoOutput");
@@ -169,15 +202,23 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
 
     public void tick(Level level, BlockPos pos, BlockState state) {
         Optional<CrusherRecipe> recipe = findMatchingRecipe(level);
+        boolean crushingThisTick = false;
         if (recipe.isPresent() && canFit(recipe.get().getResult())) {
             maxProgress = recipe.get().getProcessingTime();
-            progress++;
-            setChanged(level, pos, state);
-            if (progress >= maxProgress) {
-                craft(recipe.get());
-                progress = 0;
+            // Progress pauses (doesn't reset) when power runs dry, matching the
+            // electric furnace so a starved crusher resumes where it left off.
+            if (storedFE >= FE_PER_TICK) {
+                storedFE -= FE_PER_TICK;
+                progress++;
+                setChanged(level, pos, state);
+                if (progress >= maxProgress) {
+                    craft(recipe.get());
+                    progress = 0;
+                }
             }
-        } else if (progress != 0) {
+            crushingThisTick = true;
+        }
+        if (!crushingThisTick && progress != 0) {
             progress = 0;
             setChanged(level, pos, state);
         }
