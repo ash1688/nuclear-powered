@@ -37,10 +37,15 @@ public class ShearerBlockEntity extends BlockEntity implements MenuProvider {
     public static final int SLOT_OUTPUT_FUEL = 1;
     public static final int SLOT_OUTPUT_SCRAP = 2;
 
-    public static final int ENERGY_CAPACITY = 20_000;
-    public static final int ENERGY_MAX_INPUT_PER_TICK = 512;
-    public static final int FE_PER_TICK = 50;
-    public static final int PROCESS_TICKS = 200;
+    // Tier-1 reprocessing chain is priced so a single depleted rod costs
+    // ~1.2M FE end-to-end across all five machines (Shearer, Dissolver,
+    // Extraction Column, Cs Column, Vitrifier) — comfortably above a single
+    // battery's output, so players need two piles or significant buffering.
+    // Per-machine budget: 800 FE/tick * 300 ticks = 240,000 FE per cycle.
+    public static final int ENERGY_CAPACITY = 32_000;
+    public static final int ENERGY_MAX_INPUT_PER_TICK = 1024;
+    public static final int FE_PER_TICK = 800;
+    public static final int PROCESS_TICKS = 300;
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(3) {
         @Override protected void onContentsChanged(int slot) { setChanged(); }
