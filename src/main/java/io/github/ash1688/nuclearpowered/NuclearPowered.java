@@ -47,12 +47,16 @@ public class NuclearPowered {
     public static final RegistryObject<Item> URANIUM_ORE_ITEM = ITEMS.register("uranium_ore",
             () -> new BlockItem(URANIUM_ORE.get(), new Item.Properties()));
 
+    public static final RegistryObject<Item> RAW_URANIUM = ITEMS.register("raw_uranium",
+            () -> new Item(new Item.Properties()));
+
     public static final RegistryObject<CreativeModeTab> NUCLEAR_TAB = CREATIVE_MODE_TABS.register("nuclear_tab",
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup." + MODID))
-                    .icon(() -> URANIUM_ORE_ITEM.get().getDefaultInstance())
+                    .icon(() -> RAW_URANIUM.get().getDefaultInstance())
                     .displayItems((params, out) -> {
                         out.accept(URANIUM_ORE_ITEM.get());
+                        out.accept(RAW_URANIUM.get());
                     })
                     .build());
 
