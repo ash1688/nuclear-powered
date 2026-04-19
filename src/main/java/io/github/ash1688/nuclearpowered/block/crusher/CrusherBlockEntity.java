@@ -1,7 +1,9 @@
 package io.github.ash1688.nuclearpowered.block.crusher;
 
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
+import io.github.ash1688.nuclearpowered.init.ModRecipes;
 import io.github.ash1688.nuclearpowered.menu.CrusherMenu;
+import io.github.ash1688.nuclearpowered.recipe.CrusherRecipe;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -24,12 +26,13 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
+import java.util.Optional;
 
 public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
     public static final int SLOT_INPUT = 0;
     public static final int SLOT_OUTPUT = 1;
 
-    private static final int MAX_PROGRESS = 40;
+    private static final int MAX_PROGRESS = CrusherRecipe.DEFAULT_PROCESSING_TIME;
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(2) {
         @Override
@@ -164,11 +167,13 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public void tick(Level level, BlockPos pos, BlockState state) {
-        if (hasInput() && canOutput()) {
+        Optional<CrusherRecipe> recipe = findMatchingRecipe(level);
+        if (recipe.isPresent() && canFit(recipe.get().getResult())) {
+            maxProgress = recipe.get().getProcessingTime();
             progress++;
             setChanged(level, pos, state);
             if (progress >= maxProgress) {
-                craft();
+                craft(recipe.get());
                 progress = 0;
             }
         } else if (progress != 0) {
@@ -177,28 +182,30 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    private boolean hasInput() {
-        return !itemHandler.getStackInSlot(SLOT_INPUT).isEmpty();
+    private Optional<CrusherRecipe> findMatchingRecipe(Level level) {
+        if (itemHandler.getStackInSlot(SLOT_INPUT).isEmpty()) return Optional.empty();
+        SimpleContainer probe = new SimpleContainer(1);
+        probe.setItem(0, itemHandler.getStackInSlot(SLOT_INPUT));
+        return level.getRecipeManager().getRecipeFor(ModRecipes.CRUSHING_TYPE.get(), probe, level);
     }
 
-    private boolean canOutput() {
-        ItemStack input = itemHandler.getStackInSlot(SLOT_INPUT);
+    private boolean canFit(ItemStack result) {
         ItemStack output = itemHandler.getStackInSlot(SLOT_OUTPUT);
         if (output.isEmpty()) return true;
-        if (!ItemStack.isSameItemSameTags(output, input)) return false;
-        return output.getCount() + 1 <= output.getMaxStackSize();
+        if (!ItemStack.isSameItemSameTags(output, result)) return false;
+        return output.getCount() + result.getCount() <= output.getMaxStackSize();
     }
 
-    private void craft() {
-        ItemStack input = itemHandler.getStackInSlot(SLOT_INPUT);
+    private void craft(CrusherRecipe recipe) {
+        ItemStack result = recipe.getResult();
         ItemStack output = itemHandler.getStackInSlot(SLOT_OUTPUT);
 
         if (output.isEmpty()) {
-            itemHandler.setStackInSlot(SLOT_OUTPUT, new ItemStack(input.getItem(), 1));
+            itemHandler.setStackInSlot(SLOT_OUTPUT, result.copy());
         } else {
-            output.grow(1);
+            output.grow(result.getCount());
         }
-        input.shrink(1);
+        itemHandler.getStackInSlot(SLOT_INPUT).shrink(1);
     }
 
     // Gates external item-handler access through the auto in/out master toggles and restricts

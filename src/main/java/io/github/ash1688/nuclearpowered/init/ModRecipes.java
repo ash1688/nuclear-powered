@@ -1,0 +1,37 @@
+package io.github.ash1688.nuclearpowered.init;
+
+import io.github.ash1688.nuclearpowered.NuclearPowered;
+import io.github.ash1688.nuclearpowered.recipe.CrusherRecipe;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+
+public final class ModRecipes {
+    public static final DeferredRegister<RecipeSerializer<?>> SERIALIZERS =
+            DeferredRegister.create(ForgeRegistries.RECIPE_SERIALIZERS, NuclearPowered.MODID);
+
+    public static final DeferredRegister<RecipeType<?>> TYPES =
+            DeferredRegister.create(Registries.RECIPE_TYPE, NuclearPowered.MODID);
+
+    public static final RegistryObject<RecipeSerializer<CrusherRecipe>> CRUSHING_SERIALIZER =
+            SERIALIZERS.register("crushing", () -> CrusherRecipe.Serializer.INSTANCE);
+
+    public static final RegistryObject<RecipeType<CrusherRecipe>> CRUSHING_TYPE =
+            TYPES.register("crushing", () -> new RecipeType<>() {
+                @Override
+                public String toString() {
+                    return "nuclearpowered:crushing";
+                }
+            });
+
+    private ModRecipes() {}
+
+    public static void register(IEventBus eventBus) {
+        SERIALIZERS.register(eventBus);
+        TYPES.register(eventBus);
+    }
+}

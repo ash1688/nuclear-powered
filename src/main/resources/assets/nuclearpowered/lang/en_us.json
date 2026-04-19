@@ -4,5 +4,6 @@
   "block.nuclearpowered.thorium_ore": "Thorium Ore",
   "block.nuclearpowered.crusher": "Crusher",
   "item.nuclearpowered.raw_uranium": "Raw Uranium",
-  "item.nuclearpowered.raw_thorium": "Raw Thorium"
+  "item.nuclearpowered.raw_thorium": "Raw Thorium",
+  "item.nuclearpowered.crushed_uranium": "Crushed Uranium"
 }

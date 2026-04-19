@@ -1,0 +1,11 @@
+{
+  "type": "nuclearpowered:crushing",
+  "ingredient": {
+    "item": "nuclearpowered:raw_uranium"
+  },
+  "result": {
+    "item": "nuclearpowered:crushed_uranium",
+    "count": 1
+  },
+  "processing_time": 40
+}
