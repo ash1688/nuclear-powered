@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "minecraft:water_bucket" },
+    { "item": "minecraft:blaze_powder" },
+    { "item": "minecraft:slime_ball" }
+  ],
+  "result": { "item": "nuclearpowered:extraction_solvent_bucket" }
+}

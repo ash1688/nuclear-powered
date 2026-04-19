@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [ "III", "ILI", "III" ],
+  "key": {
+    "I": { "item": "minecraft:iron_ingot" },
+    "L": { "item": "minecraft:lapis_lazuli" }
+  },
+  "result": { "item": "nuclearpowered:cs_column" }
+}
