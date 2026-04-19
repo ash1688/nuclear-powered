@@ -50,12 +50,13 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     // where the pile burns most efficiently.
     private static final int SAFE_HEAT_PERCENT = 75;
     private static final int MAX_SLOWDOWN = 10;
-    // Burning adds heat aggressively up to HEAT_TARGET, then stops. Everything
-    // above HEAT_TARGET comes from runaway scenarios; thermos + decay drain it.
-    // Net climb at slowdown=1 with zero thermos: +29/tick (reach 3000 in ~100
-    // ticks / 5 s). Thermos cap drain at 1 each, so ~29 thermos is the point
-    // where rise stops winning and the pile can't reach 3000.
-    private static final int HEAT_TARGET = 3000;
+    // Burning adds +30 heat per burn-tick at slowdown=1. Above SAFE_HEAT the
+    // pile throttles itself thermally: heat produced per burn-tick is divided
+    // by the current slowdown, and slowdown also reduces how many burn-ticks
+    // happen per real tick, so effective heat rise falls off as slowdown².
+    // That keeps 3000 (SAFE_HEAT) as the sweet spot — the pile still climbs
+    // past it, but each additional degree takes longer to add and the fuel
+    // burn itself stretches out proportionally.
     private static final int HEAT_RISE_PER_BURN_TICK = 30;
     private static final int HEAT_DECAY_PER_TICK = 1;
     // Sub-tick resolution for fractional burn. A full "burn tick" is 10 sub-ticks;
@@ -269,12 +270,14 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
             //   slowdown=10 → +1/tick   = 1 burn-tick per 10 real ticks.
             burnAccumulator += Math.max(1, BURN_SUBTICKS / slowdown);
             int maxHeat = getMaxHeat();
-            int burnCeiling = Math.min(maxHeat, HEAT_TARGET);
+            // Heat rise per burn-tick throttles with the slowdown too — a hot
+            // pile not only burns slower, it produces less heat per burn-tick.
+            int riseThisBurnTick = Math.max(1, HEAT_RISE_PER_BURN_TICK / slowdown);
             while (burnAccumulator >= BURN_SUBTICKS && burnTime > 0) {
                 burnAccumulator -= BURN_SUBTICKS;
                 burnTime--;
-                if (heat < burnCeiling) {
-                    heat = Math.min(burnCeiling, heat + HEAT_RISE_PER_BURN_TICK);
+                if (heat < maxHeat) {
+                    heat = Math.min(maxHeat, heat + riseThisBurnTick);
                 }
             }
             if (burnTime == 0) {
