@@ -33,10 +33,11 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
     // Conversion ratio: 10 heat = 1 FE/tick. An 0-casing pile at ~933 heat yields
     // ~93 FE/tick; a 26-casing pile around ~3360 heat yields ~336 FE/tick.
     private static final int HEAT_PER_FE = 10;
-    // Flat cooling per active thermocouple per tick, so adding more thermos is
-    // a predictable way to dump heat without an accidental runaway (scaling by
-    // FE generated made 9 thermos instantly empty a pile).
-    private static final int HEAT_DRAIN_PER_TICK = 5;
+    // Max heat one thermo can pull out of the pile per tick. Capping per-thermo
+    // (and gating on actually producing FE) keeps high-heat piles from being
+    // emptied by a few thermos, and stops the "one more thermo tips it" threshold
+    // problem that a flat drain had.
+    private static final int MAX_HEAT_DRAIN_PER_TICK = 1;
     private static final int SCAN_INTERVAL_TICKS = 20;
     private static final int SCAN_DISTANCE = 64;
 
@@ -152,9 +153,11 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
             scanCooldown = SCAN_INTERVAL_TICKS;
         }
 
-        // Generate FE from pile heat. Also cool the pile by the amount of heat we
-        // actually converted — otherwise heat only falls via the pile's own passive
-        // decay, and players can't use thermocouples to manage reactor temperature.
+        // Generate FE from pile heat. Cooling only kicks in when our FE buffer is
+        // below half capacity — i.e. something downstream (battery, machine) is
+        // actively pulling FE out faster than we're producing it. A thermo sitting
+        // full of FE with no consumer does nothing to the pile, so "cool my pile"
+        // means "build out more batteries / consumers", not "stack more thermos".
         lastGenerationFE = 0;
         if (cachedPilePos != null && storedFE < CAPACITY_FE) {
             BlockEntity be = level.getBlockEntity(cachedPilePos);
@@ -165,7 +168,7 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
                 if (canAccept > 0) {
                     storedFE += canAccept;
                     lastGenerationFE = canAccept;
-                    pile.drainHeat(HEAT_DRAIN_PER_TICK);
+                    pile.drainHeat(Math.min(canAccept, MAX_HEAT_DRAIN_PER_TICK));
                 }
             }
         }
