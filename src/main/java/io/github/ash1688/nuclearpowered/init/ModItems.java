@@ -20,6 +20,9 @@ public final class ModItems {
     public static final RegistryObject<Item> CRUSHED_URANIUM = ITEMS.register("crushed_uranium",
             () -> new Item(new Item.Properties()));
 
+    public static final RegistryObject<Item> PURIFIED_URANIUM = ITEMS.register("purified_uranium",
+            () -> new Item(new Item.Properties()));
+
     private ModItems() {}
 
     public static void register(IEventBus eventBus) {

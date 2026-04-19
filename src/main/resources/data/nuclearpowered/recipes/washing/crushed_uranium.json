@@ -1,0 +1,15 @@
+{
+  "type": "nuclearpowered:washing",
+  "ingredient": {
+    "item": "nuclearpowered:crushed_uranium"
+  },
+  "fluid": {
+    "fluid": "minecraft:water",
+    "amount": 100
+  },
+  "result": {
+    "item": "nuclearpowered:purified_uranium",
+    "count": 1
+  },
+  "processing_time": 60
+}

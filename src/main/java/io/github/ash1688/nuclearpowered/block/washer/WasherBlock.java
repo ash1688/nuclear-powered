@@ -2,6 +2,7 @@ package io.github.ash1688.nuclearpowered.block.washer;
 
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -13,6 +14,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.network.NetworkHooks;
 
 import javax.annotation.Nullable;
 
@@ -45,7 +47,10 @@ public class WasherBlock extends BaseEntityBlock {
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
                                  InteractionHand hand, BlockHitResult hit) {
         if (!level.isClientSide) {
-            // TODO(commit 2): NetworkHooks.openScreen for the washer menu.
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof WasherBlockEntity washer && player instanceof ServerPlayer sp) {
+                NetworkHooks.openScreen(sp, washer, buf -> buf.writeBlockPos(pos));
+            }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

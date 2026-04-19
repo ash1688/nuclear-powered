@@ -2,6 +2,7 @@ package io.github.ash1688.nuclearpowered.init;
 
 import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.menu.CrusherMenu;
+import io.github.ash1688.nuclearpowered.menu.WasherMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeMenuType;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -15,6 +16,9 @@ public final class ModMenuTypes {
 
     public static final RegistryObject<MenuType<CrusherMenu>> CRUSHER =
             MENU_TYPES.register("crusher", () -> IForgeMenuType.create(CrusherMenu::new));
+
+    public static final RegistryObject<MenuType<WasherMenu>> WASHER =
+            MENU_TYPES.register("washer", () -> IForgeMenuType.create(WasherMenu::new));
 
     private ModMenuTypes() {}
 

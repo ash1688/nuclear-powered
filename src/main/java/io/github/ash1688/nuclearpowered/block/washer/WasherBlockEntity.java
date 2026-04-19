@@ -1,6 +1,9 @@
 package io.github.ash1688.nuclearpowered.block.washer;
 
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
+import io.github.ash1688.nuclearpowered.init.ModRecipes;
+import io.github.ash1688.nuclearpowered.menu.WasherMenu;
+import io.github.ash1688.nuclearpowered.recipe.WasherRecipe;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -11,6 +14,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -27,6 +31,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
+import java.util.Optional;
 
 public class WasherBlockEntity extends BlockEntity implements MenuProvider {
     public static final int SLOT_INPUT = 0;
@@ -44,7 +49,6 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
 
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
-            // Only accept water buckets in the bucket slot so players/hoppers can't jam it.
             if (slot == SLOT_BUCKET) {
                 return stack.is(Items.WATER_BUCKET);
             }
@@ -63,38 +67,57 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
     private LazyOptional<IFluidHandler> lazyFluidHandler = LazyOptional.empty();
 
+    private int progress = 0;
+    private int maxProgress = WasherRecipe.DEFAULT_PROCESSING_TIME;
+
+    private final ContainerData data = new ContainerData() {
+        @Override
+        public int get(int index) {
+            return switch (index) {
+                case 0 -> progress;
+                case 1 -> maxProgress;
+                case 2 -> waterTank.getFluidAmount();
+                case 3 -> waterTank.getCapacity();
+                default -> 0;
+            };
+        }
+
+        @Override
+        public void set(int index, int value) {
+            switch (index) {
+                case 0 -> progress = value;
+                case 1 -> maxProgress = value;
+                // 2 and 3 are driven from the tank itself; no setters.
+            }
+        }
+
+        @Override
+        public int getCount() { return 4; }
+    };
+
     public WasherBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.WASHER.get(), pos, state);
     }
 
-    public IItemHandler getItemHandlerForMenu() {
-        return itemHandler;
-    }
+    public IItemHandler getItemHandlerForMenu() { return itemHandler; }
 
-    public FluidTank getWaterTank() {
-        return waterTank;
-    }
+    public FluidTank getWaterTank() { return waterTank; }
 
     @Override
     public Component getDisplayName() {
         return Component.translatable("block.nuclearpowered.washer");
     }
 
-    // Menu creation lands in commit 2.
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return null;
+        return new WasherMenu(id, inv, this, data);
     }
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-        if (cap == ForgeCapabilities.ITEM_HANDLER) {
-            return lazyItemHandler.cast();
-        }
-        if (cap == ForgeCapabilities.FLUID_HANDLER) {
-            return lazyFluidHandler.cast();
-        }
+        if (cap == ForgeCapabilities.ITEM_HANDLER) return lazyItemHandler.cast();
+        if (cap == ForgeCapabilities.FLUID_HANDLER) return lazyFluidHandler.cast();
         return super.getCapability(cap, side);
     }
 
@@ -119,6 +142,7 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
         CompoundTag tankTag = new CompoundTag();
         waterTank.writeToNBT(tankTag);
         tag.put("water", tankTag);
+        tag.putInt("progress", progress);
     }
 
     @Override
@@ -126,6 +150,7 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
         waterTank.readFromNBT(tag.getCompound("water"));
+        progress = tag.getInt("progress");
     }
 
     public void drops() {
@@ -135,13 +160,10 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
             inv.setItem(i, itemHandler.getStackInSlot(i));
         }
         Containers.dropContents(level, worldPosition, inv);
-        // Water in the tank is intentionally discarded on break — matches how vanilla
-        // cauldrons/furnace fuel behave, and avoids dropping stray water items.
     }
 
-    // Server-tick entry wired via WasherBlock.getTicker.
     public void tick(Level level, BlockPos pos, BlockState state) {
-        // Bucket slot → tank auto-drain. One bucket per tick, only if there's room.
+        // Bucket slot auto-drain to tank.
         ItemStack bucket = itemHandler.getStackInSlot(SLOT_BUCKET);
         if (bucket.is(Items.WATER_BUCKET)
                 && waterTank.getFluidAmount() + BUCKET_VOLUME_MB <= waterTank.getCapacity()) {
@@ -150,6 +172,53 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
             setChanged(level, pos, state);
         }
 
-        // Washing logic lands in commit 2 along with the WasherRecipe lookup.
+        // Recipe tick.
+        Optional<WasherRecipe> recipe = findMatchingRecipe(level);
+        if (recipe.isPresent() && canFit(recipe.get().getResult()) && hasEnoughFluid(recipe.get().getFluid())) {
+            maxProgress = recipe.get().getProcessingTime();
+            progress++;
+            setChanged(level, pos, state);
+            if (progress >= maxProgress) {
+                craft(recipe.get());
+                progress = 0;
+            }
+        } else if (progress != 0) {
+            progress = 0;
+            setChanged(level, pos, state);
+        }
+    }
+
+    private Optional<WasherRecipe> findMatchingRecipe(Level level) {
+        if (itemHandler.getStackInSlot(SLOT_INPUT).isEmpty()) return Optional.empty();
+        SimpleContainer probe = new SimpleContainer(1);
+        probe.setItem(0, itemHandler.getStackInSlot(SLOT_INPUT));
+        return level.getRecipeManager().getRecipeFor(ModRecipes.WASHING_TYPE.get(), probe, level);
+    }
+
+    private boolean canFit(ItemStack result) {
+        ItemStack output = itemHandler.getStackInSlot(SLOT_OUTPUT);
+        if (output.isEmpty()) return true;
+        if (!ItemStack.isSameItemSameTags(output, result)) return false;
+        return output.getCount() + result.getCount() <= output.getMaxStackSize();
+    }
+
+    private boolean hasEnoughFluid(FluidStack required) {
+        FluidStack current = waterTank.getFluid();
+        if (current.isEmpty()) return false;
+        if (current.getFluid() != required.getFluid()) return false;
+        return current.getAmount() >= required.getAmount();
+    }
+
+    private void craft(WasherRecipe recipe) {
+        ItemStack result = recipe.getResult();
+        ItemStack output = itemHandler.getStackInSlot(SLOT_OUTPUT);
+
+        if (output.isEmpty()) {
+            itemHandler.setStackInSlot(SLOT_OUTPUT, result.copy());
+        } else {
+            output.grow(result.getCount());
+        }
+        itemHandler.getStackInSlot(SLOT_INPUT).shrink(1);
+        waterTank.drain(recipe.getFluid().getAmount(), IFluidHandler.FluidAction.EXECUTE);
     }
 }

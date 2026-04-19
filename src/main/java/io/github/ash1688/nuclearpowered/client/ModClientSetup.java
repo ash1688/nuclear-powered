@@ -2,6 +2,7 @@ package io.github.ash1688.nuclearpowered.client;
 
 import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.client.screen.CrusherScreen;
+import io.github.ash1688.nuclearpowered.client.screen.WasherScreen;
 import io.github.ash1688.nuclearpowered.init.ModMenuTypes;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraftforge.api.distmarker.Dist;
@@ -17,6 +18,7 @@ public final class ModClientSetup {
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             MenuScreens.register(ModMenuTypes.CRUSHER.get(), CrusherScreen::new);
+            MenuScreens.register(ModMenuTypes.WASHER.get(), WasherScreen::new);
         });
     }
 }
