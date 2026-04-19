@@ -148,7 +148,9 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
             scanCooldown = SCAN_INTERVAL_TICKS;
         }
 
-        // Generate FE from pile heat.
+        // Generate FE from pile heat. Also cool the pile by the amount of heat we
+        // actually converted — otherwise heat only falls via the pile's own passive
+        // decay, and players can't use thermocouples to manage reactor temperature.
         lastGenerationFE = 0;
         if (cachedPilePos != null && storedFE < CAPACITY_FE) {
             BlockEntity be = level.getBlockEntity(cachedPilePos);
@@ -159,6 +161,7 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
                 if (canAccept > 0) {
                     storedFE += canAccept;
                     lastGenerationFE = canAccept;
+                    pile.drainHeat(canAccept * HEAT_PER_FE);
                 }
             }
         }

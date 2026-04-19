@@ -132,6 +132,17 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
 
     public int getHeat() { return heat; }
 
+    // Remove heat from the pile (thermocouples call this when drawing energy, so
+    // pulling power out of a reactor actually cools it). Returns how much was
+    // removed, clamped to what's actually in the pile.
+    public int drainHeat(int amount) {
+        if (amount <= 0 || heat <= 0) return 0;
+        int removed = Math.min(amount, heat);
+        heat -= removed;
+        setChanged();
+        return removed;
+    }
+
     public int getMaxHeat() {
         return BASE_MAX_HEAT + cachedCasingCount * MAX_HEAT_PER_CASING;
     }
