@@ -24,6 +24,7 @@
   "block.nuclearpowered.shearer": "Fuel Shearer",
   "block.nuclearpowered.dissolver": "Dissolver",
   "block.nuclearpowered.extraction_column": "Extraction Column",
+  "block.nuclearpowered.cs_column": "Cesium Column",
   "item.nuclearpowered.nitric_acid_bucket": "Nitric Acid Bucket",
   "item.nuclearpowered.extraction_solvent_bucket": "Extraction Solvent Bucket",
   "fluid_type.nuclearpowered.nitric_acid": "Nitric Acid",

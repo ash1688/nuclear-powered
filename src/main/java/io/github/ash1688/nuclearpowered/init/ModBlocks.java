@@ -5,6 +5,7 @@ import io.github.ash1688.nuclearpowered.block.battery.BatteryBlock;
 import io.github.ash1688.nuclearpowered.block.boiler.CoalBoilerBlock;
 import io.github.ash1688.nuclearpowered.block.cable.EnergyCableBlock;
 import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlock;
+import io.github.ash1688.nuclearpowered.block.cscolumn.CsColumnBlock;
 import io.github.ash1688.nuclearpowered.block.dissolver.DissolverBlock;
 import io.github.ash1688.nuclearpowered.block.electricfurnace.ElectricFurnaceBlock;
 import io.github.ash1688.nuclearpowered.block.extractor.ExtractionColumnBlock;
@@ -177,6 +178,12 @@ public final class ModBlocks {
     public static final RegistryObject<ExtractionColumnBlock> EXTRACTION_COLUMN = registerBlock("extraction_column",
             () -> new ExtractionColumnBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_BROWN)
+                    .strength(3.5f, 4.0f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<CsColumnBlock> CS_COLUMN = registerBlock("cs_column",
+            () -> new CsColumnBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_LIGHT_BLUE)
                     .strength(3.5f, 4.0f)
                     .sound(SoundType.METAL)));
 

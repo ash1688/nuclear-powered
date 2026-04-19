@@ -50,6 +50,7 @@ public final class ModCreativeTabs {
                         out.accept(ModBlocks.SHEARER.get());
                         out.accept(ModBlocks.DISSOLVER.get());
                         out.accept(ModBlocks.EXTRACTION_COLUMN.get());
+                        out.accept(ModBlocks.CS_COLUMN.get());
                         out.accept(ModItems.NITRIC_ACID_BUCKET.get());
                         out.accept(ModItems.EXTRACTION_SOLVENT_BUCKET.get());
                         // Tier 1 reprocessing items + reagents
