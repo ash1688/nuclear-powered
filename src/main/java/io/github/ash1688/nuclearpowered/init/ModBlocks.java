@@ -4,6 +4,7 @@ import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlock;
 import io.github.ash1688.nuclearpowered.block.electricfurnace.ElectricFurnaceBlock;
 import io.github.ash1688.nuclearpowered.block.pile.PileBlock;
+import io.github.ash1688.nuclearpowered.block.thermocouple.ThermocoupleBlock;
 import io.github.ash1688.nuclearpowered.block.washer.WasherBlock;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -112,6 +113,13 @@ public final class ModBlocks {
                     .strength(3.5f, 4.0f)
                     .sound(SoundType.STONE)
                     .requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<ThermocoupleBlock> THERMOCOUPLE = registerBlock("thermocouple",
+            () -> new ThermocoupleBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_ORANGE)
+                    .strength(3.0f, 4.0f)
+                    .sound(SoundType.METAL)
+                    .lightLevel(state -> 5)));
 
     private ModBlocks() {}
 
