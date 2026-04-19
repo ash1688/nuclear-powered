@@ -30,10 +30,10 @@ public class SteamEngineBlockEntity extends BlockEntity implements MenuProvider 
     public static final int MAX_OUTPUT_FE_PER_TICK = 512;
 
     // Conversion rate: each tick, consume STEAM_PER_TICK mB of steam and produce
-    // FE_PER_STEAM_TICK FE. 2 mB steam per tick -> 20 FE/tick is roughly equivalent
-    // to the electric furnace's draw, so a single coal powers one furnace for a while.
+    // FE_PER_STEAM_TICK FE. 25 FE/tick is a +25% buff over the original 20 FE/tick
+    // so a single coal comfortably outpaces a single electric furnace's draw.
     private static final int STEAM_PER_TICK = 2;
-    private static final int FE_PER_STEAM_TICK = 20;
+    private static final int FE_PER_STEAM_TICK = 25;
 
     private final FluidTank steamTank = new FluidTank(STEAM_CAPACITY_MB,
             stack -> stack.getFluid() == ModFluids.STEAM.get()) {
