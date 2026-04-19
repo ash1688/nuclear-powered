@@ -18,6 +18,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.items.SlotItemHandler;
 
 public class WasherMenu extends AbstractContainerMenu {
+    public static final int BUTTON_TOGGLE_AUTO_INPUT = 0;
+    public static final int BUTTON_TOGGLE_AUTO_OUTPUT = 1;
+
     public final WasherBlockEntity blockEntity;
     private final Level level;
     private final ContainerData data;
@@ -25,7 +28,7 @@ public class WasherMenu extends AbstractContainerMenu {
     private static final int PLAYER_INV_SLOT_COUNT = 36;
 
     public WasherMenu(int id, Inventory inv, FriendlyByteBuf buf) {
-        this(id, inv, resolveBlockEntity(inv, buf.readBlockPos()), new SimpleContainerData(4));
+        this(id, inv, resolveBlockEntity(inv, buf.readBlockPos()), new SimpleContainerData(6));
     }
 
     public WasherMenu(int id, Inventory inv, BlockEntity be, ContainerData data) {
@@ -80,6 +83,28 @@ public class WasherMenu extends AbstractContainerMenu {
         int capacity = data.get(3);
         int tankPixels = 52;
         return (capacity == 0) ? 0 : amount * tankPixels / capacity;
+    }
+
+    public boolean isAutoInput() { return data.get(4) != 0; }
+
+    public boolean isAutoOutput() { return data.get(5) != 0; }
+
+    @Override
+    public boolean clickMenuButton(Player player, int id) {
+        if (level.isClientSide) return false;
+        switch (id) {
+            case BUTTON_TOGGLE_AUTO_INPUT -> {
+                blockEntity.toggleAutoInput();
+                return true;
+            }
+            case BUTTON_TOGGLE_AUTO_OUTPUT -> {
+                blockEntity.toggleAutoOutput();
+                return true;
+            }
+            default -> {
+                return false;
+            }
+        }
     }
 
     @Override

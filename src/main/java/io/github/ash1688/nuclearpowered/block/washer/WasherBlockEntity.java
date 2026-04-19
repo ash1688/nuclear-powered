@@ -43,32 +43,31 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(3) {
         @Override
-        protected void onContentsChanged(int slot) {
-            setChanged();
-        }
+        protected void onContentsChanged(int slot) { setChanged(); }
 
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
-            if (slot == SLOT_BUCKET) {
-                return stack.is(Items.WATER_BUCKET);
-            }
+            if (slot == SLOT_BUCKET) return stack.is(Items.WATER_BUCKET);
             return super.isItemValid(slot, stack);
         }
     };
 
+    // External wrapper gating item handler access by auto I/O toggles and slot direction.
+    private final IItemHandler externalHandler = new SidedItemHandler();
+
     private final FluidTank waterTank = new FluidTank(TANK_CAPACITY_MB,
             stack -> stack.getFluid() == Fluids.WATER) {
         @Override
-        protected void onContentsChanged() {
-            setChanged();
-        }
+        protected void onContentsChanged() { setChanged(); }
     };
 
-    private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
+    private LazyOptional<IItemHandler> lazyExternalHandler = LazyOptional.empty();
     private LazyOptional<IFluidHandler> lazyFluidHandler = LazyOptional.empty();
 
     private int progress = 0;
     private int maxProgress = WasherRecipe.DEFAULT_PROCESSING_TIME;
+    private boolean autoInput = true;
+    private boolean autoOutput = true;
 
     private final ContainerData data = new ContainerData() {
         @Override
@@ -78,6 +77,8 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
                 case 1 -> maxProgress;
                 case 2 -> waterTank.getFluidAmount();
                 case 3 -> waterTank.getCapacity();
+                case 4 -> autoInput ? 1 : 0;
+                case 5 -> autoOutput ? 1 : 0;
                 default -> 0;
             };
         }
@@ -87,12 +88,14 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
             switch (index) {
                 case 0 -> progress = value;
                 case 1 -> maxProgress = value;
-                // 2 and 3 are driven from the tank itself; no setters.
+                case 4 -> autoInput = value != 0;
+                case 5 -> autoOutput = value != 0;
+                // 2 and 3 driven by tank; no setters.
             }
         }
 
         @Override
-        public int getCount() { return 4; }
+        public int getCount() { return 6; }
     };
 
     public WasherBlockEntity(BlockPos pos, BlockState state) {
@@ -102,6 +105,14 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
     public IItemHandler getItemHandlerForMenu() { return itemHandler; }
 
     public FluidTank getWaterTank() { return waterTank; }
+
+    public boolean isAutoInput() { return autoInput; }
+
+    public boolean isAutoOutput() { return autoOutput; }
+
+    public void toggleAutoInput() { autoInput = !autoInput; setChanged(); }
+
+    public void toggleAutoOutput() { autoOutput = !autoOutput; setChanged(); }
 
     @Override
     public Component getDisplayName() {
@@ -116,7 +127,7 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-        if (cap == ForgeCapabilities.ITEM_HANDLER) return lazyItemHandler.cast();
+        if (cap == ForgeCapabilities.ITEM_HANDLER) return lazyExternalHandler.cast();
         if (cap == ForgeCapabilities.FLUID_HANDLER) return lazyFluidHandler.cast();
         return super.getCapability(cap, side);
     }
@@ -124,14 +135,14 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     public void onLoad() {
         super.onLoad();
-        lazyItemHandler = LazyOptional.of(() -> itemHandler);
+        lazyExternalHandler = LazyOptional.of(() -> externalHandler);
         lazyFluidHandler = LazyOptional.of(() -> waterTank);
     }
 
     @Override
     public void invalidateCaps() {
         super.invalidateCaps();
-        lazyItemHandler.invalidate();
+        lazyExternalHandler.invalidate();
         lazyFluidHandler.invalidate();
     }
 
@@ -143,6 +154,8 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
         waterTank.writeToNBT(tankTag);
         tag.put("water", tankTag);
         tag.putInt("progress", progress);
+        tag.putBoolean("autoInput", autoInput);
+        tag.putBoolean("autoOutput", autoOutput);
     }
 
     @Override
@@ -151,6 +164,8 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
         waterTank.readFromNBT(tag.getCompound("water"));
         progress = tag.getInt("progress");
+        autoInput = !tag.contains("autoInput") || tag.getBoolean("autoInput");
+        autoOutput = !tag.contains("autoOutput") || tag.getBoolean("autoOutput");
     }
 
     public void drops() {
@@ -163,7 +178,6 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public void tick(Level level, BlockPos pos, BlockState state) {
-        // Bucket slot auto-drain to tank.
         ItemStack bucket = itemHandler.getStackInSlot(SLOT_BUCKET);
         if (bucket.is(Items.WATER_BUCKET)
                 && waterTank.getFluidAmount() + BUCKET_VOLUME_MB <= waterTank.getCapacity()) {
@@ -172,7 +186,6 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
             setChanged(level, pos, state);
         }
 
-        // Recipe tick.
         Optional<WasherRecipe> recipe = findMatchingRecipe(level);
         if (recipe.isPresent() && canFit(recipe.get().getResult()) && hasEnoughFluid(recipe.get().getFluid())) {
             maxProgress = recipe.get().getProcessingTime();
@@ -212,7 +225,6 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
     private void craft(WasherRecipe recipe) {
         ItemStack result = recipe.getResult();
         ItemStack output = itemHandler.getStackInSlot(SLOT_OUTPUT);
-
         if (output.isEmpty()) {
             itemHandler.setStackInSlot(SLOT_OUTPUT, result.copy());
         } else {
@@ -220,5 +232,36 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
         }
         itemHandler.getStackInSlot(SLOT_INPUT).shrink(1);
         waterTank.drain(recipe.getFluid().getAmount(), IFluidHandler.FluidAction.EXECUTE);
+    }
+
+    // External hoppers/pipes see only this wrapper: inserts allowed to INPUT and BUCKET
+    // slots when autoInput is on; extracts allowed from OUTPUT and BUCKET slots when
+    // autoOutput is on. The BUCKET slot is both-direction so water buckets flow in and
+    // empty buckets flow back out.
+    private final class SidedItemHandler implements IItemHandler {
+        @Override public int getSlots() { return itemHandler.getSlots(); }
+
+        @Override public ItemStack getStackInSlot(int slot) { return itemHandler.getStackInSlot(slot); }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            if (!autoInput) return stack;
+            if (slot != SLOT_INPUT && slot != SLOT_BUCKET) return stack;
+            return itemHandler.insertItem(slot, stack, simulate);
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            if (!autoOutput) return ItemStack.EMPTY;
+            if (slot != SLOT_OUTPUT && slot != SLOT_BUCKET) return ItemStack.EMPTY;
+            return itemHandler.extractItem(slot, amount, simulate);
+        }
+
+        @Override public int getSlotLimit(int slot) { return itemHandler.getSlotLimit(slot); }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return itemHandler.isItemValid(slot, stack);
+        }
     }
 }

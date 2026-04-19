@@ -32,22 +32,21 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
     public static final int SLOT_INPUT = 0;
     public static final int SLOT_OUTPUT = 1;
 
-    // Electric furnace runs at half the vanilla smelting time — the "electric" advantage.
-    // When the mod's power system lands, this speedup will be gated on sufficient FE
-    // being available each tick; for now the machine always has power.
     private static final int SPEED_DIVISOR = 2;
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(2) {
         @Override
-        protected void onContentsChanged(int slot) {
-            setChanged();
-        }
+        protected void onContentsChanged(int slot) { setChanged(); }
     };
 
-    private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
+    private final IItemHandler externalHandler = new SidedItemHandler();
+
+    private LazyOptional<IItemHandler> lazyExternalHandler = LazyOptional.empty();
 
     private int progress = 0;
     private int maxProgress = 100;
+    private boolean autoInput = true;
+    private boolean autoOutput = true;
 
     private final ContainerData data = new ContainerData() {
         @Override
@@ -55,6 +54,8 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
             return switch (index) {
                 case 0 -> progress;
                 case 1 -> maxProgress;
+                case 2 -> autoInput ? 1 : 0;
+                case 3 -> autoOutput ? 1 : 0;
                 default -> 0;
             };
         }
@@ -64,11 +65,13 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
             switch (index) {
                 case 0 -> progress = value;
                 case 1 -> maxProgress = value;
+                case 2 -> autoInput = value != 0;
+                case 3 -> autoOutput = value != 0;
             }
         }
 
         @Override
-        public int getCount() { return 2; }
+        public int getCount() { return 4; }
     };
 
     public ElectricFurnaceBlockEntity(BlockPos pos, BlockState state) {
@@ -76,6 +79,14 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public IItemHandler getItemHandlerForMenu() { return itemHandler; }
+
+    public boolean isAutoInput() { return autoInput; }
+
+    public boolean isAutoOutput() { return autoOutput; }
+
+    public void toggleAutoInput() { autoInput = !autoInput; setChanged(); }
+
+    public void toggleAutoOutput() { autoOutput = !autoOutput; setChanged(); }
 
     @Override
     public Component getDisplayName() {
@@ -90,20 +101,20 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-        if (cap == ForgeCapabilities.ITEM_HANDLER) return lazyItemHandler.cast();
+        if (cap == ForgeCapabilities.ITEM_HANDLER) return lazyExternalHandler.cast();
         return super.getCapability(cap, side);
     }
 
     @Override
     public void onLoad() {
         super.onLoad();
-        lazyItemHandler = LazyOptional.of(() -> itemHandler);
+        lazyExternalHandler = LazyOptional.of(() -> externalHandler);
     }
 
     @Override
     public void invalidateCaps() {
         super.invalidateCaps();
-        lazyItemHandler.invalidate();
+        lazyExternalHandler.invalidate();
     }
 
     @Override
@@ -111,6 +122,8 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
         super.saveAdditional(tag);
         tag.put("inventory", itemHandler.serializeNBT());
         tag.putInt("progress", progress);
+        tag.putBoolean("autoInput", autoInput);
+        tag.putBoolean("autoOutput", autoOutput);
     }
 
     @Override
@@ -118,6 +131,8 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
         progress = tag.getInt("progress");
+        autoInput = !tag.contains("autoInput") || tag.getBoolean("autoInput");
+        autoOutput = !tag.contains("autoOutput") || tag.getBoolean("autoOutput");
     }
 
     public void drops() {
@@ -172,5 +187,30 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
             output.grow(result.getCount());
         }
         itemHandler.getStackInSlot(SLOT_INPUT).shrink(1);
+    }
+
+    private final class SidedItemHandler implements IItemHandler {
+        @Override public int getSlots() { return itemHandler.getSlots(); }
+
+        @Override public ItemStack getStackInSlot(int slot) { return itemHandler.getStackInSlot(slot); }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            if (!autoInput || slot != SLOT_INPUT) return stack;
+            return itemHandler.insertItem(slot, stack, simulate);
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            if (!autoOutput || slot != SLOT_OUTPUT) return ItemStack.EMPTY;
+            return itemHandler.extractItem(slot, amount, simulate);
+        }
+
+        @Override public int getSlotLimit(int slot) { return itemHandler.getSlotLimit(slot); }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return itemHandler.isItemValid(slot, stack);
+        }
     }
 }

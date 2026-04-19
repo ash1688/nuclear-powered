@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.menu.ElectricFurnaceMenu;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -13,8 +14,45 @@ public class ElectricFurnaceScreen extends AbstractContainerScreen<ElectricFurna
     private static final ResourceLocation TEXTURE =
             new ResourceLocation(NuclearPowered.MODID, "textures/gui/container/electric_furnace.png");
 
+    private Button autoInputButton;
+    private Button autoOutputButton;
+
     public ElectricFurnaceScreen(ElectricFurnaceMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        autoInputButton = Button.builder(autoInputLabel(), b -> sendToggle(ElectricFurnaceMenu.BUTTON_TOGGLE_AUTO_INPUT))
+                .bounds(leftPos + 8, topPos + 58, 76, 18)
+                .build();
+        autoOutputButton = Button.builder(autoOutputLabel(), b -> sendToggle(ElectricFurnaceMenu.BUTTON_TOGGLE_AUTO_OUTPUT))
+                .bounds(leftPos + 92, topPos + 58, 76, 18)
+                .build();
+        addRenderableWidget(autoInputButton);
+        addRenderableWidget(autoOutputButton);
+    }
+
+    @Override
+    protected void containerTick() {
+        super.containerTick();
+        autoInputButton.setMessage(autoInputLabel());
+        autoOutputButton.setMessage(autoOutputLabel());
+    }
+
+    private Component autoInputLabel() {
+        return Component.literal("Auto In: " + (menu.isAutoInput() ? "ON" : "OFF"));
+    }
+
+    private Component autoOutputLabel() {
+        return Component.literal("Auto Out: " + (menu.isAutoOutput() ? "ON" : "OFF"));
+    }
+
+    private void sendToggle(int buttonId) {
+        if (minecraft != null && minecraft.gameMode != null) {
+            minecraft.gameMode.handleInventoryButtonClick(menu.containerId, buttonId);
+        }
     }
 
     @Override

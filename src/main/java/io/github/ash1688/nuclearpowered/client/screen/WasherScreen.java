@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.menu.WasherMenu;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -13,14 +14,52 @@ public class WasherScreen extends AbstractContainerScreen<WasherMenu> {
     private static final ResourceLocation TEXTURE =
             new ResourceLocation(NuclearPowered.MODID, "textures/gui/container/washer.png");
 
-    // Tank geometry on the GUI (matches the frame painted into the texture).
     private static final int TANK_X = 8;
     private static final int TANK_Y = 17;
     private static final int TANK_WIDTH = 12;
     private static final int TANK_HEIGHT = 52;
 
+    private Button autoInputButton;
+    private Button autoOutputButton;
+
     public WasherScreen(WasherMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        // Buttons sit between the slot row and the player inventory, offset right
+        // of the tank so they don't clip the water bar.
+        autoInputButton = Button.builder(autoInputLabel(), b -> sendToggle(WasherMenu.BUTTON_TOGGLE_AUTO_INPUT))
+                .bounds(leftPos + 24, topPos + 58, 68, 18)
+                .build();
+        autoOutputButton = Button.builder(autoOutputLabel(), b -> sendToggle(WasherMenu.BUTTON_TOGGLE_AUTO_OUTPUT))
+                .bounds(leftPos + 96, topPos + 58, 68, 18)
+                .build();
+        addRenderableWidget(autoInputButton);
+        addRenderableWidget(autoOutputButton);
+    }
+
+    @Override
+    protected void containerTick() {
+        super.containerTick();
+        autoInputButton.setMessage(autoInputLabel());
+        autoOutputButton.setMessage(autoOutputLabel());
+    }
+
+    private Component autoInputLabel() {
+        return Component.literal("Auto In: " + (menu.isAutoInput() ? "ON" : "OFF"));
+    }
+
+    private Component autoOutputLabel() {
+        return Component.literal("Auto Out: " + (menu.isAutoOutput() ? "ON" : "OFF"));
+    }
+
+    private void sendToggle(int buttonId) {
+        if (minecraft != null && minecraft.gameMode != null) {
+            minecraft.gameMode.handleInventoryButtonClick(menu.containerId, buttonId);
+        }
     }
 
     @Override
@@ -31,7 +70,6 @@ public class WasherScreen extends AbstractContainerScreen<WasherMenu> {
         int y = (height - imageHeight) / 2;
         g.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
 
-        // Water tank fill: blue vertical bar that fills from the bottom up.
         int fluidHeight = menu.getScaledFluid();
         if (fluidHeight > 0) {
             int fillX = x + TANK_X;
@@ -40,7 +78,6 @@ public class WasherScreen extends AbstractContainerScreen<WasherMenu> {
             g.fill(fillX, fillTop, fillX + TANK_WIDTH, fillBottom, 0xFF2060D0);
         }
 
-        // Progress bar between input and output slots (same style as crusher).
         if (menu.isCrafting()) {
             int filled = menu.getScaledProgress();
             g.fill(x + 78, y + 41, x + 78 + filled, y + 45, 0xFF2080E0);
@@ -55,7 +92,6 @@ public class WasherScreen extends AbstractContainerScreen<WasherMenu> {
         renderTooltip(g, mouseX, mouseY);
     }
 
-    // Tooltip showing "X / Y mB" when hovering the tank.
     private void renderTankTooltip(GuiGraphics g, int mouseX, int mouseY) {
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
