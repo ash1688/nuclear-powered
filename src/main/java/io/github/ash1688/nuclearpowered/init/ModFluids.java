@@ -3,12 +3,15 @@ package io.github.ash1688.nuclearpowered.init;
 import io.github.ash1688.nuclearpowered.NuclearPowered;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fluids.ForgeFlowingFluid;
 import net.minecraftforge.fluids.FluidType;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+
+import java.util.function.Consumer;
 
 /**
  * Minimal Forge fluid registration for steam. Steam is used inside boilers and engines
@@ -25,6 +28,12 @@ public final class ModFluids {
 
     public static final ResourceLocation MISSING_TEXTURE = new ResourceLocation("minecraft", "block/water_still");
 
+    // Steam is never rendered as a world fluid, but JEI (and any mod that iterates
+    // fluid types) asks for its still/flowing sprite — returning null crashes the
+    // texture atlas lookup, so we point at the vanilla water sprites as a stand-in.
+    private static final ResourceLocation WATER_STILL = new ResourceLocation("block/water_still");
+    private static final ResourceLocation WATER_FLOW = new ResourceLocation("block/water_flow");
+
     public static final RegistryObject<FluidType> STEAM_TYPE = FLUID_TYPES.register("steam",
             () -> new FluidType(FluidType.Properties.create()
                     .density(-1000)          // negative = gaseous (floats up in a fluid world)
@@ -35,7 +44,16 @@ public final class ModFluids {
                     .canSwim(false)
                     .canDrown(false)
                     .canExtinguish(false)
-                    .canConvertToSource(false)));
+                    .canConvertToSource(false)) {
+                @Override
+                public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer) {
+                    consumer.accept(new IClientFluidTypeExtensions() {
+                        @Override public ResourceLocation getStillTexture() { return WATER_STILL; }
+                        @Override public ResourceLocation getFlowingTexture() { return WATER_FLOW; }
+                        @Override public int getTintColor() { return 0xFFCCCCCC; }
+                    });
+                }
+            });
 
     public static final RegistryObject<ForgeFlowingFluid.Source> STEAM =
             FLUIDS.register("steam",
