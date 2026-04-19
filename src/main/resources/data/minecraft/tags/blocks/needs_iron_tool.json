@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "nuclearpowered:uranium_ore"
+    "nuclearpowered:uranium_ore",
+    "nuclearpowered:thorium_ore"
   ]
 }

@@ -1,5 +1,6 @@
 {
   "itemGroup.nuclearpowered": "Nuclear Powered",
   "block.nuclearpowered.uranium_ore": "Uranium Ore",
+  "block.nuclearpowered.thorium_ore": "Thorium Ore",
   "item.nuclearpowered.raw_uranium": "Raw Uranium"
 }

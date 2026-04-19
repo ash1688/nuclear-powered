@@ -50,6 +50,16 @@ public class NuclearPowered {
     public static final RegistryObject<Item> RAW_URANIUM = ITEMS.register("raw_uranium",
             () -> new Item(new Item.Properties()));
 
+    public static final RegistryObject<Block> THORIUM_ORE = BLOCKS.register("thorium_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.STONE)
+                    .strength(3.0f, 3.0f)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Item> THORIUM_ORE_ITEM = ITEMS.register("thorium_ore",
+            () -> new BlockItem(THORIUM_ORE.get(), new Item.Properties()));
+
     public static final RegistryObject<CreativeModeTab> NUCLEAR_TAB = CREATIVE_MODE_TABS.register("nuclear_tab",
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup." + MODID))
@@ -57,6 +67,7 @@ public class NuclearPowered {
                     .displayItems((params, out) -> {
                         out.accept(URANIUM_ORE_ITEM.get());
                         out.accept(RAW_URANIUM.get());
+                        out.accept(THORIUM_ORE_ITEM.get());
                     })
                     .build());
 
