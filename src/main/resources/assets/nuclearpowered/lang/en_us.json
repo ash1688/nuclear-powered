@@ -7,5 +7,7 @@
   "item.nuclearpowered.raw_uranium": "Raw Uranium",
   "item.nuclearpowered.raw_thorium": "Raw Thorium",
   "item.nuclearpowered.crushed_uranium": "Crushed Uranium",
-  "item.nuclearpowered.purified_uranium": "Purified Uranium"
+  "item.nuclearpowered.crushed_thorium": "Crushed Thorium",
+  "item.nuclearpowered.purified_uranium": "Purified Uranium",
+  "item.nuclearpowered.purified_thorium": "Purified Thorium"
 }

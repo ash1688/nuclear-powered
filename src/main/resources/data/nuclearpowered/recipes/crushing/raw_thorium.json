@@ -1,0 +1,11 @@
+{
+  "type": "nuclearpowered:crushing",
+  "ingredient": {
+    "item": "nuclearpowered:raw_thorium"
+  },
+  "result": {
+    "item": "nuclearpowered:crushed_thorium",
+    "count": 1
+  },
+  "processing_time": 40
+}

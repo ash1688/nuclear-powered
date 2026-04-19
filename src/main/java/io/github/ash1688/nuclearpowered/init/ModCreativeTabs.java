@@ -23,6 +23,8 @@ public final class ModCreativeTabs {
                         out.accept(ModItems.PURIFIED_URANIUM.get());
                         out.accept(ModBlocks.THORIUM_ORE.get());
                         out.accept(ModItems.RAW_THORIUM.get());
+                        out.accept(ModItems.CRUSHED_THORIUM.get());
+                        out.accept(ModItems.PURIFIED_THORIUM.get());
                         out.accept(ModBlocks.CRUSHER.get());
                         out.accept(ModBlocks.WASHER.get());
                     })

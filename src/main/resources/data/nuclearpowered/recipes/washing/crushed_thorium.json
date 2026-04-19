@@ -1,0 +1,15 @@
+{
+  "type": "nuclearpowered:washing",
+  "ingredient": {
+    "item": "nuclearpowered:crushed_thorium"
+  },
+  "fluid": {
+    "fluid": "minecraft:water",
+    "amount": 100
+  },
+  "result": {
+    "item": "nuclearpowered:purified_thorium",
+    "count": 1
+  },
+  "processing_time": 60
+}
