@@ -28,7 +28,7 @@ public class PileMenu extends AbstractContainerMenu {
     private static final int PLAYER_INV_SLOT_COUNT = 36;
 
     public PileMenu(int id, Inventory inv, FriendlyByteBuf buf) {
-        this(id, inv, resolveBlockEntity(inv, buf.readBlockPos()), new SimpleContainerData(8));
+        this(id, inv, resolveBlockEntity(inv, buf.readBlockPos()), new SimpleContainerData(9));
     }
 
     public PileMenu(int id, Inventory inv, BlockEntity be, ContainerData data) {
@@ -86,6 +86,8 @@ public class PileMenu extends AbstractContainerMenu {
     public int getSlowdown() { return data.get(6); }
 
     public int getCasingCount() { return data.get(7); }
+
+    public boolean isStructureValid() { return data.get(8) != 0; }
 
     @Override
     public boolean clickMenuButton(Player player, int id) {

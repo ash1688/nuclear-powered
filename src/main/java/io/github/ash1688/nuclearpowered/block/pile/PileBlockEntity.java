@@ -88,6 +88,9 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     private int cachedCasingCount = 0;
     private int scanCooldown = 0;
 
+    // Strict 3x3x3 shell validity. Updated every tick (cheap — 26 block reads).
+    private boolean structureValid = false;
+
     private final ContainerData data = new ContainerData() {
         @Override
         public int get(int index) {
@@ -100,6 +103,7 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
                 case 5 -> autoOutput ? 1 : 0;
                 case 6 -> currentSlowdown();
                 case 7 -> cachedCasingCount;
+                case 8 -> structureValid ? 1 : 0;
                 default -> 0;
             };
         }
@@ -116,7 +120,7 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
         }
 
         @Override
-        public int getCount() { return 8; }
+        public int getCount() { return 9; }
     };
 
     public PileBlockEntity(BlockPos pos, BlockState state) {
@@ -136,6 +140,8 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public int getCasingCount() { return cachedCasingCount; }
+
+    public boolean isStructureValid() { return structureValid; }
 
     public boolean isBurning() { return burnTime > 0; }
 
@@ -227,6 +233,17 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
             scanCooldown = STRUCTURE_SCAN_INTERVAL_TICKS;
         }
 
+        // Cheap strict check every tick: all 26 neighbours must be graphite_casing.
+        structureValid = checkStructureValid(level);
+
+        // If the structure was broken mid-burn, kill the burn immediately. Heat in the
+        // core still decays off per the passive rules below.
+        if (!structureValid && burnTime > 0) {
+            burnTime = 0;
+            burnAccumulator = 0;
+            changed = true;
+        }
+
         if (burnTime > 0) {
             int slowdown = currentSlowdown();
             // Advance the burn accumulator by (BURN_SUBTICKS / slowdown) per real tick.
@@ -268,12 +285,31 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     private boolean canStartBurn() {
+        if (!structureValid) return false;
         if (itemHandler.getStackInSlot(SLOT_FUEL).isEmpty()) return false;
         if (!itemHandler.getStackInSlot(SLOT_FUEL).is(ModItems.URANIUM_FUEL_ROD.get())) return false;
         ItemStack depleted = itemHandler.getStackInSlot(SLOT_DEPLETED);
         if (depleted.isEmpty()) return true;
         if (!depleted.is(ModItems.DEPLETED_URANIUM_FUEL_ROD.get())) return false;
         return depleted.getCount() + 1 <= depleted.getMaxStackSize();
+    }
+
+    // Strict 3x3x3 shell check: pile block must be surrounded on every face, edge, and
+    // corner by a graphite_casing. That's 26 block reads per tick — cheap.
+    private boolean checkStructureValid(Level level) {
+        if (level == null) return false;
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    if (dx == 0 && dy == 0 && dz == 0) continue;
+                    BlockPos p = worldPosition.offset(dx, dy, dz);
+                    if (!level.getBlockState(p).is(ModBlocks.GRAPHITE_CASING.get())) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     private void produceDepletedRod() {

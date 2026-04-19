@@ -92,6 +92,14 @@ public class PileScreen extends AbstractContainerScreen<PileMenu> {
             int filled = menu.getScaledBurnProgress();
             g.fill(x + 78, y + 41, x + 78 + filled, y + 45, 0xFFE56B2B);
         }
+
+        // Red banner when the 3x3x3 shell is missing — surfaces the problem without
+        // requiring the player to hover the heat gauge for the tooltip.
+        if (!menu.isStructureValid()) {
+            String msg = "Structure Incomplete";
+            int w = font.width(msg);
+            g.drawString(font, msg, x + (imageWidth - w) / 2, y + 23, 0xFFCC3333, false);
+        }
     }
 
     @Override
@@ -112,11 +120,13 @@ public class PileScreen extends AbstractContainerScreen<PileMenu> {
             List<FormattedCharSequence> lines = new ArrayList<>();
             lines.add(Component.literal(
                     "Heat: " + menu.getHeat() + " / " + menu.getMaxHeat()).getVisualOrderText());
-            int casings = menu.getCasingCount();
-            if (casings > 0) {
-                lines.add(Component.literal("Structure: " + casings + " casings").getVisualOrderText());
+            if (menu.isStructureValid()) {
+                lines.add(Component.literal(
+                        "Structure: Complete (" + menu.getCasingCount() + " casings)").getVisualOrderText());
             } else {
-                lines.add(Component.literal("Structure: no casings").getVisualOrderText());
+                lines.add(Component.literal("Structure: Incomplete").getVisualOrderText());
+                lines.add(Component.literal(
+                        "Needs a full 3x3x3 graphite casing shell").getVisualOrderText());
             }
             int slowdown = menu.getSlowdown();
             if (slowdown > 1) {
