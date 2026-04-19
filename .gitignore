@@ -50,8 +50,8 @@ natives/
 .env
 *.local.properties
 
-# Claude Code personal settings
-.claude/settings.local.json
+# Claude Code personal state (settings, locks, caches)
+.claude/
 
 # Local texture staging — raw AI-generated PNGs before downscale/placement
 images/
