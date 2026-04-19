@@ -47,7 +47,10 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     // SAFE_HEAT is 40% of dynamic MAX_HEAT; above that, slowdown begins.
     private static final int SAFE_HEAT_PERCENT = 40;
     private static final int MAX_SLOWDOWN = 10;
-    private static final int HEAT_RISE_PER_BURN_TICK = 1;
+    // Net heat change at slowdown=1 is rise - decay = +1/tick. Cold -> SAFE_HEAT (800) takes
+    // ~40s. Equilibrium lands just inside the warning zone, so the slowdown mechanic is
+    // always visible without dominating gameplay.
+    private static final int HEAT_RISE_PER_BURN_TICK = 2;
     private static final int HEAT_DECAY_PER_TICK = 1;
     // Sub-tick resolution for fractional burn. A full "burn tick" is 10 sub-ticks;
     // slowdown controls how many sub-ticks accrue per real tick.
