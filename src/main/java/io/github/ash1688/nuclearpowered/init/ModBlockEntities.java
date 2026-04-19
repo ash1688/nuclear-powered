@@ -11,6 +11,7 @@ import io.github.ash1688.nuclearpowered.block.fabricator.FuelFabricatorBlockEnti
 import io.github.ash1688.nuclearpowered.block.heater.HeaterBlockEntity;
 import io.github.ash1688.nuclearpowered.block.pile.PileBlockEntity;
 import io.github.ash1688.nuclearpowered.block.pipe.SteamPipeBlockEntity;
+import io.github.ash1688.nuclearpowered.block.shearer.ShearerBlockEntity;
 import io.github.ash1688.nuclearpowered.block.thermocouple.ThermocoupleBlockEntity;
 import io.github.ash1688.nuclearpowered.block.washer.WasherBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -66,6 +67,10 @@ public final class ModBlockEntities {
     public static final RegistryObject<BlockEntityType<SteamPipeBlockEntity>> STEAM_PIPE =
             BLOCK_ENTITIES.register("steam_pipe", () ->
                     BlockEntityType.Builder.of(SteamPipeBlockEntity::new, ModBlocks.STEAM_PIPE.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<ShearerBlockEntity>> SHEARER =
+            BLOCK_ENTITIES.register("shearer", () ->
+                    BlockEntityType.Builder.of(ShearerBlockEntity::new, ModBlocks.SHEARER.get()).build(null));
 
     public static final RegistryObject<BlockEntityType<HeaterBlockEntity>> HEATER =
             BLOCK_ENTITIES.register("heater", () ->

@@ -11,6 +11,7 @@ import io.github.ash1688.nuclearpowered.block.fabricator.FuelFabricatorBlock;
 import io.github.ash1688.nuclearpowered.block.heater.HeaterBlock;
 import io.github.ash1688.nuclearpowered.block.pile.PileBlock;
 import io.github.ash1688.nuclearpowered.block.pipe.SteamPipeBlock;
+import io.github.ash1688.nuclearpowered.block.shearer.ShearerBlock;
 import io.github.ash1688.nuclearpowered.block.thermocouple.ThermocoupleBlock;
 import io.github.ash1688.nuclearpowered.block.washer.WasherBlock;
 import net.minecraft.world.item.BlockItem;
@@ -157,6 +158,12 @@ public final class ModBlocks {
             () -> new SteamEngineBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_ORANGE)
                     .strength(3.0f, 4.0f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<ShearerBlock> SHEARER = registerBlock("shearer",
+            () -> new ShearerBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(3.5f, 4.0f)
                     .sound(SoundType.METAL)));
 
     public static final RegistryObject<HeaterBlock> HEATER = registerBlock("heater",

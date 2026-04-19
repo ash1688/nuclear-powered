@@ -7,6 +7,7 @@ import io.github.ash1688.nuclearpowered.menu.CrusherMenu;
 import io.github.ash1688.nuclearpowered.menu.ElectricFurnaceMenu;
 import io.github.ash1688.nuclearpowered.menu.FuelFabricatorMenu;
 import io.github.ash1688.nuclearpowered.menu.PileMenu;
+import io.github.ash1688.nuclearpowered.menu.ShearerMenu;
 import io.github.ash1688.nuclearpowered.menu.SteamEngineMenu;
 import io.github.ash1688.nuclearpowered.menu.ThermocoupleMenu;
 import io.github.ash1688.nuclearpowered.menu.WasherMenu;
@@ -47,6 +48,9 @@ public final class ModMenuTypes {
 
     public static final RegistryObject<MenuType<SteamEngineMenu>> STEAM_ENGINE =
             MENU_TYPES.register("steam_engine", () -> IForgeMenuType.create(SteamEngineMenu::new));
+
+    public static final RegistryObject<MenuType<ShearerMenu>> SHEARER =
+            MENU_TYPES.register("shearer", () -> IForgeMenuType.create(ShearerMenu::new));
 
     private ModMenuTypes() {}
 

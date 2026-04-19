@@ -69,6 +69,57 @@ public final class ModFluids {
                 .levelDecreasePerBlock(2);
     }
 
+    // --- Tier 1 reprocessing reagents ---
+    public static final RegistryObject<FluidType> NITRIC_ACID_TYPE = FLUID_TYPES.register("nitric_acid",
+            () -> new FluidType(FluidType.Properties.create()
+                    .density(1500).viscosity(1000).temperature(300)
+                    .canPushEntity(false).canSwim(false).canDrown(false)
+                    .canExtinguish(true).canConvertToSource(false)) {
+                @Override
+                public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer) {
+                    consumer.accept(new IClientFluidTypeExtensions() {
+                        @Override public ResourceLocation getStillTexture() { return WATER_STILL; }
+                        @Override public ResourceLocation getFlowingTexture() { return WATER_FLOW; }
+                        @Override public int getTintColor() { return 0xFFE0D060; }
+                    });
+                }
+            });
+
+    public static final RegistryObject<ForgeFlowingFluid.Source> NITRIC_ACID =
+            FLUIDS.register("nitric_acid", () -> new ForgeFlowingFluid.Source(nitricProperties()));
+    public static final RegistryObject<ForgeFlowingFluid.Flowing> NITRIC_ACID_FLOWING =
+            FLUIDS.register("flowing_nitric_acid", () -> new ForgeFlowingFluid.Flowing(nitricProperties()));
+
+    private static ForgeFlowingFluid.Properties nitricProperties() {
+        return new ForgeFlowingFluid.Properties(NITRIC_ACID_TYPE, NITRIC_ACID, NITRIC_ACID_FLOWING)
+                .slopeFindDistance(2).levelDecreasePerBlock(2);
+    }
+
+    public static final RegistryObject<FluidType> EXTRACTION_SOLVENT_TYPE = FLUID_TYPES.register("extraction_solvent",
+            () -> new FluidType(FluidType.Properties.create()
+                    .density(800).viscosity(1000).temperature(290)
+                    .canPushEntity(false).canSwim(false).canDrown(false)
+                    .canExtinguish(false).canConvertToSource(false)) {
+                @Override
+                public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer) {
+                    consumer.accept(new IClientFluidTypeExtensions() {
+                        @Override public ResourceLocation getStillTexture() { return WATER_STILL; }
+                        @Override public ResourceLocation getFlowingTexture() { return WATER_FLOW; }
+                        @Override public int getTintColor() { return 0xFFA06020; }
+                    });
+                }
+            });
+
+    public static final RegistryObject<ForgeFlowingFluid.Source> EXTRACTION_SOLVENT =
+            FLUIDS.register("extraction_solvent", () -> new ForgeFlowingFluid.Source(extractionProperties()));
+    public static final RegistryObject<ForgeFlowingFluid.Flowing> EXTRACTION_SOLVENT_FLOWING =
+            FLUIDS.register("flowing_extraction_solvent", () -> new ForgeFlowingFluid.Flowing(extractionProperties()));
+
+    private static ForgeFlowingFluid.Properties extractionProperties() {
+        return new ForgeFlowingFluid.Properties(EXTRACTION_SOLVENT_TYPE, EXTRACTION_SOLVENT, EXTRACTION_SOLVENT_FLOWING)
+                .slopeFindDistance(2).levelDecreasePerBlock(2);
+    }
+
     private ModFluids() {}
 
     public static void register(IEventBus eventBus) {

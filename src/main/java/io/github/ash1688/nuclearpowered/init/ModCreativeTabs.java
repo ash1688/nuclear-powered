@@ -47,6 +47,20 @@ public final class ModCreativeTabs {
                         out.accept(ModBlocks.STEAM_ENGINE.get());
                         out.accept(ModBlocks.STEAM_PIPE.get());
                         out.accept(ModBlocks.HEATER.get());
+                        out.accept(ModBlocks.SHEARER.get());
+                        // Tier 1 reprocessing items + reagents
+                        out.accept(ModItems.CHOPPED_FUEL.get());
+                        out.accept(ModItems.CLADDING_SCRAP.get());
+                        out.accept(ModItems.DISSOLVED_FUEL.get());
+                        out.accept(ModItems.REACTOR_SLUDGE.get());
+                        out.accept(ModItems.FISSION_PRODUCT_STREAM.get());
+                        out.accept(ModItems.RESIDUAL_WASTE.get());
+                        out.accept(ModItems.RECLAIMED_URANIUM.get());
+                        out.accept(ModItems.PLUTONIUM_239.get());
+                        out.accept(ModItems.CESIUM_137.get());
+                        out.accept(ModItems.VITRIFIED_WASTE.get());
+                        out.accept(ModItems.GLASS_FRIT.get());
+                        out.accept(ModItems.ION_EXCHANGE_RESIN.get());
                     })
                     .build());
 
