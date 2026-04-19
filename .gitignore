@@ -1,0 +1,44 @@
+# Gradle / NeoForge build outputs
+.gradle/
+build/
+out/
+bin/
+run/
+runs/
+run-*/
+logs/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+*.launch
+.apt_generated/
+.factorypath
+.metadata/
+.recommenders/
+
+# Eclipse / JDT
+.eclipse/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# NeoForge / Minecraft dev artefacts
+*.class
+forge-*.jar
+neoforge-*.jar
+mcp-*.zip
+libs/*.jar
+natives/
+
+# Local env
+.env
+*.local.properties
