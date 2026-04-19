@@ -24,6 +24,7 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
@@ -190,6 +191,7 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
 
     public void tick(Level level, BlockPos pos, BlockState state) {
         Optional<SmeltingRecipe> recipe = findMatchingRecipe(level);
+        boolean smeltedThisTick = false;
         if (recipe.isPresent()) {
             ItemStack result = recipe.get().getResultItem(level.registryAccess());
             if (canFit(result)) {
@@ -206,13 +208,34 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
                         progress = 0;
                     }
                 }
-                return;
+                smeltedThisTick = true;
             }
         }
-        // No valid recipe or output slot full — clear any stale progress.
-        if (progress != 0) {
+        if (!smeltedThisTick && progress != 0) {
             progress = 0;
             setChanged(level, pos, state);
+        }
+
+        if (autoOutput && !itemHandler.getStackInSlot(SLOT_OUTPUT).isEmpty()) {
+            autoPushSlot(level, pos, SLOT_OUTPUT);
+        }
+    }
+
+    private void autoPushSlot(Level level, BlockPos pos, int slot) {
+        for (Direction dir : Direction.values()) {
+            ItemStack source = itemHandler.getStackInSlot(slot);
+            if (source.isEmpty()) return;
+            BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
+            if (neighbour == null) continue;
+            IItemHandler sink = neighbour.getCapability(ForgeCapabilities.ITEM_HANDLER, dir.getOpposite()).orElse(null);
+            if (sink == null) continue;
+            ItemStack attempt = source.copy();
+            ItemStack remaining = ItemHandlerHelper.insertItemStacked(sink, attempt, false);
+            int moved = attempt.getCount() - remaining.getCount();
+            if (moved > 0) {
+                source.shrink(moved);
+                setChanged();
+            }
         }
     }
 

@@ -23,6 +23,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
@@ -179,6 +180,32 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
         } else if (progress != 0) {
             progress = 0;
             setChanged(level, pos, state);
+        }
+
+        if (autoOutput && !itemHandler.getStackInSlot(SLOT_OUTPUT).isEmpty()) {
+            autoPushSlot(level, pos, SLOT_OUTPUT);
+        }
+    }
+
+    // Active push of an output-slot stack into any adjacent block that exposes an
+    // IItemHandler capability. Receiving block decides what slots will accept — its
+    // own isItemValid / sided-filter logic still applies, so a downstream machine
+    // with "Auto In: OFF" will reject the incoming item.
+    private void autoPushSlot(Level level, BlockPos pos, int slot) {
+        for (Direction dir : Direction.values()) {
+            ItemStack source = itemHandler.getStackInSlot(slot);
+            if (source.isEmpty()) return;
+            BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
+            if (neighbour == null) continue;
+            IItemHandler sink = neighbour.getCapability(ForgeCapabilities.ITEM_HANDLER, dir.getOpposite()).orElse(null);
+            if (sink == null) continue;
+            ItemStack attempt = source.copy();
+            ItemStack remaining = ItemHandlerHelper.insertItemStacked(sink, attempt, false);
+            int moved = attempt.getCount() - remaining.getCount();
+            if (moved > 0) {
+                source.shrink(moved);
+                setChanged();
+            }
         }
     }
 

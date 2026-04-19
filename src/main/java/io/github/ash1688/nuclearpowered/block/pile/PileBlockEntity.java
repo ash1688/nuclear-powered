@@ -23,6 +23,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
@@ -281,6 +282,28 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
 
         if (changed) {
             setChanged(level, pos, state);
+        }
+
+        if (autoOutput && !itemHandler.getStackInSlot(SLOT_DEPLETED).isEmpty()) {
+            autoPushSlot(level, pos, SLOT_DEPLETED);
+        }
+    }
+
+    private void autoPushSlot(Level level, BlockPos pos, int slot) {
+        for (Direction dir : Direction.values()) {
+            ItemStack source = itemHandler.getStackInSlot(slot);
+            if (source.isEmpty()) return;
+            BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
+            if (neighbour == null) continue;
+            IItemHandler sink = neighbour.getCapability(ForgeCapabilities.ITEM_HANDLER, dir.getOpposite()).orElse(null);
+            if (sink == null) continue;
+            ItemStack attempt = source.copy();
+            ItemStack remaining = ItemHandlerHelper.insertItemStacked(sink, attempt, false);
+            int moved = attempt.getCount() - remaining.getCount();
+            if (moved > 0) {
+                source.shrink(moved);
+                setChanged();
+            }
         }
     }
 

@@ -28,6 +28,7 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.templates.FluidTank;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
@@ -198,6 +199,35 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
         } else if (progress != 0) {
             progress = 0;
             setChanged(level, pos, state);
+        }
+
+        if (autoOutput) {
+            if (!itemHandler.getStackInSlot(SLOT_OUTPUT).isEmpty()) {
+                autoPushSlot(level, pos, SLOT_OUTPUT);
+            }
+            // Empty buckets in the bucket slot also auto-push out for full-cycle water supply.
+            ItemStack bucketSlot = itemHandler.getStackInSlot(SLOT_BUCKET);
+            if (bucketSlot.is(Items.BUCKET)) {
+                autoPushSlot(level, pos, SLOT_BUCKET);
+            }
+        }
+    }
+
+    private void autoPushSlot(Level level, BlockPos pos, int slot) {
+        for (Direction dir : Direction.values()) {
+            ItemStack source = itemHandler.getStackInSlot(slot);
+            if (source.isEmpty()) return;
+            BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
+            if (neighbour == null) continue;
+            IItemHandler sink = neighbour.getCapability(ForgeCapabilities.ITEM_HANDLER, dir.getOpposite()).orElse(null);
+            if (sink == null) continue;
+            ItemStack attempt = source.copy();
+            ItemStack remaining = ItemHandlerHelper.insertItemStacked(sink, attempt, false);
+            int moved = attempt.getCount() - remaining.getCount();
+            if (moved > 0) {
+                source.shrink(moved);
+                setChanged();
+            }
         }
     }
 
