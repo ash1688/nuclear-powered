@@ -18,11 +18,13 @@ public final class ModCreativeTabs {
                     .icon(() -> ModItems.RAW_URANIUM.get().getDefaultInstance())
                     .displayItems((params, out) -> {
                         out.accept(ModBlocks.URANIUM_ORE.get());
+                        out.accept(ModBlocks.DEEPSLATE_URANIUM_ORE.get());
                         out.accept(ModItems.RAW_URANIUM.get());
                         out.accept(ModItems.CRUSHED_URANIUM.get());
                         out.accept(ModItems.YELLOWCAKE.get());
                         out.accept(ModItems.URANIUM_INGOT.get());
                         out.accept(ModBlocks.THORIUM_ORE.get());
+                        out.accept(ModBlocks.DEEPSLATE_THORIUM_ORE.get());
                         out.accept(ModItems.RAW_THORIUM.get());
                         out.accept(ModItems.CRUSHED_THORIUM.get());
                         out.accept(ModItems.THORIUM_CONCENTRATE.get());

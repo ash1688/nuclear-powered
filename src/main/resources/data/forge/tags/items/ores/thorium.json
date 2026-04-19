@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "nuclearpowered:thorium_ore"
+    "nuclearpowered:thorium_ore",
+    "nuclearpowered:deepslate_thorium_ore"
   ]
 }

@@ -2,7 +2,9 @@
   "replace": false,
   "values": [
     "nuclearpowered:uranium_ore",
+    "nuclearpowered:deepslate_uranium_ore",
     "nuclearpowered:thorium_ore",
+    "nuclearpowered:deepslate_thorium_ore",
     "nuclearpowered:crusher",
     "nuclearpowered:washer",
     "nuclearpowered:electric_furnace"

@@ -28,11 +28,25 @@ public final class ModBlocks {
                     .sound(SoundType.STONE)
                     .requiresCorrectToolForDrops()));
 
+    public static final RegistryObject<Block> DEEPSLATE_URANIUM_ORE = registerBlock("deepslate_uranium_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.DEEPSLATE)
+                    .strength(4.5f, 3.0f)
+                    .sound(SoundType.DEEPSLATE)
+                    .requiresCorrectToolForDrops()));
+
     public static final RegistryObject<Block> THORIUM_ORE = registerBlock("thorium_ore",
             () -> new Block(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.STONE)
                     .strength(3.0f, 3.0f)
                     .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> DEEPSLATE_THORIUM_ORE = registerBlock("deepslate_thorium_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.DEEPSLATE)
+                    .strength(4.5f, 3.0f)
+                    .sound(SoundType.DEEPSLATE)
                     .requiresCorrectToolForDrops()));
 
     public static final RegistryObject<CrusherBlock> CRUSHER = registerBlock("crusher",
