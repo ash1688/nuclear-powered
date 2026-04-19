@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 
@@ -33,6 +34,12 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
     public static final int SLOT_OUTPUT = 1;
 
     private static final int SPEED_DIVISOR = 2;
+
+    // Power requirements. The furnace only advances progress while the buffer has at
+    // least FE_PER_TICK stored; progress pauses (doesn't reset) when power runs dry.
+    public static final int ENERGY_CAPACITY = 10_000;
+    public static final int ENERGY_MAX_INPUT_PER_TICK = 256;
+    public static final int FE_PER_TICK = 20;
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(2) {
         @Override
@@ -48,6 +55,34 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
     private boolean autoInput = true;
     private boolean autoOutput = true;
 
+    // Internal FE counter. Exposed externally via receive-only IEnergyStorage.
+    private int storedFE = 0;
+
+    private final IEnergyStorage externalEnergy = new IEnergyStorage() {
+        @Override
+        public int receiveEnergy(int amount, boolean simulate) {
+            int canAccept = Math.min(ENERGY_CAPACITY - storedFE, Math.min(amount, ENERGY_MAX_INPUT_PER_TICK));
+            if (canAccept <= 0) return 0;
+            if (!simulate) {
+                storedFE += canAccept;
+                setChanged();
+            }
+            return canAccept;
+        }
+
+        @Override
+        public int extractEnergy(int maxExtract, boolean simulate) {
+            return 0;
+        }
+
+        @Override public int getEnergyStored() { return storedFE; }
+        @Override public int getMaxEnergyStored() { return ENERGY_CAPACITY; }
+        @Override public boolean canExtract() { return false; }
+        @Override public boolean canReceive() { return true; }
+    };
+
+    private LazyOptional<IEnergyStorage> lazyEnergy = LazyOptional.empty();
+
     private final ContainerData data = new ContainerData() {
         @Override
         public int get(int index) {
@@ -56,6 +91,8 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
                 case 1 -> maxProgress;
                 case 2 -> autoInput ? 1 : 0;
                 case 3 -> autoOutput ? 1 : 0;
+                case 4 -> storedFE;
+                case 5 -> ENERGY_CAPACITY;
                 default -> 0;
             };
         }
@@ -67,11 +104,13 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
                 case 1 -> maxProgress = value;
                 case 2 -> autoInput = value != 0;
                 case 3 -> autoOutput = value != 0;
+                case 4 -> storedFE = value;
+                // capacity is static
             }
         }
 
         @Override
-        public int getCount() { return 4; }
+        public int getCount() { return 6; }
     };
 
     public ElectricFurnaceBlockEntity(BlockPos pos, BlockState state) {
@@ -102,6 +141,7 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
         if (cap == ForgeCapabilities.ITEM_HANDLER) return lazyExternalHandler.cast();
+        if (cap == ForgeCapabilities.ENERGY) return lazyEnergy.cast();
         return super.getCapability(cap, side);
     }
 
@@ -109,12 +149,14 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
     public void onLoad() {
         super.onLoad();
         lazyExternalHandler = LazyOptional.of(() -> externalHandler);
+        lazyEnergy = LazyOptional.of(() -> externalEnergy);
     }
 
     @Override
     public void invalidateCaps() {
         super.invalidateCaps();
         lazyExternalHandler.invalidate();
+        lazyEnergy.invalidate();
     }
 
     @Override
@@ -122,6 +164,7 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
         super.saveAdditional(tag);
         tag.put("inventory", itemHandler.serializeNBT());
         tag.putInt("progress", progress);
+        tag.putInt("fe", storedFE);
         tag.putBoolean("autoInput", autoInput);
         tag.putBoolean("autoOutput", autoOutput);
     }
@@ -131,6 +174,7 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
         progress = tag.getInt("progress");
+        storedFE = tag.getInt("fe");
         autoInput = !tag.contains("autoInput") || tag.getBoolean("autoInput");
         autoOutput = !tag.contains("autoOutput") || tag.getBoolean("autoOutput");
     }
@@ -150,15 +194,22 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
             ItemStack result = recipe.get().getResultItem(level.registryAccess());
             if (canFit(result)) {
                 maxProgress = Math.max(1, recipe.get().getCookingTime() / SPEED_DIVISOR);
-                progress++;
-                setChanged(level, pos, state);
-                if (progress >= maxProgress) {
-                    craft(result);
-                    progress = 0;
+                // Only advance progress when power is available. Consume power per tick
+                // of actual progress, not per tick of real time — so a starved furnace
+                // simply pauses until power returns.
+                if (storedFE >= FE_PER_TICK) {
+                    storedFE -= FE_PER_TICK;
+                    progress++;
+                    setChanged(level, pos, state);
+                    if (progress >= maxProgress) {
+                        craft(result);
+                        progress = 0;
+                    }
                 }
                 return;
             }
         }
+        // No valid recipe or output slot full — clear any stale progress.
         if (progress != 0) {
             progress = 0;
             setChanged(level, pos, state);
