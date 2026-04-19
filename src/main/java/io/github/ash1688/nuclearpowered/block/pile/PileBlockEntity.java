@@ -294,15 +294,32 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
         return depleted.getCount() + 1 <= depleted.getMaxStackSize();
     }
 
-    // Strict 3x3x3 shell check: pile block must be surrounded on every face, edge, and
-    // corner by a graphite_casing. That's 26 block reads per tick — cheap.
+    // Strict 3x3x3 shell check. The pile sits at one of the 4 horizontal face-centre
+    // positions (N / E / S / W) of the cube so one side face is open for player
+    // interaction. Top and bottom face-centres are intentionally NOT accepted —
+    // piles need to be approached from a walkable side, not climbed onto. For each
+    // candidate outward direction D, the structure centre is the neighbour OPPOSITE
+    // that direction; every non-pile position in the 3x3x3 around that centre must
+    // be a graphite_casing. Any matching orientation counts.
+    private static final Direction[] VALID_OPEN_FACES = {
+            Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST
+    };
+
     private boolean checkStructureValid(Level level) {
         if (level == null) return false;
+        for (Direction d : VALID_OPEN_FACES) {
+            BlockPos center = worldPosition.relative(d.getOpposite());
+            if (isShellAround(level, center)) return true;
+        }
+        return false;
+    }
+
+    private boolean isShellAround(Level level, BlockPos center) {
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dz = -1; dz <= 1; dz++) {
-                    if (dx == 0 && dy == 0 && dz == 0) continue;
-                    BlockPos p = worldPosition.offset(dx, dy, dz);
+                    BlockPos p = center.offset(dx, dy, dz);
+                    if (p.equals(worldPosition)) continue; // skip the pile itself
                     if (!level.getBlockState(p).is(ModBlocks.GRAPHITE_CASING.get())) {
                         return false;
                     }
