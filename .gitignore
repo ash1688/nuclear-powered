@@ -1,4 +1,4 @@
-# Gradle / NeoForge build outputs
+# Gradle / Forge build outputs
 .gradle/
 build/
 out/
@@ -6,7 +6,14 @@ bin/
 run/
 runs/
 run-*/
+run-data/
 logs/
+
+# Gradle maven-publish output (see build.gradle publishing{})
+repo/
+
+# Datagen cache
+src/generated/.cache/
 
 # IDE
 .idea/
@@ -31,7 +38,7 @@ logs/
 Thumbs.db
 desktop.ini
 
-# NeoForge / Minecraft dev artefacts
+# Forge / Minecraft dev artefacts
 *.class
 forge-*.jar
 neoforge-*.jar
@@ -42,3 +49,6 @@ natives/
 # Local env
 .env
 *.local.properties
+
+# Claude Code personal settings
+.claude/settings.local.json

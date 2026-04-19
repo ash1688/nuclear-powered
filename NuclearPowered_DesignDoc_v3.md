@@ -12,7 +12,7 @@ Nuclear Powered is a nuclear power mod for Minecraft 1.20.1, grounded in real-wo
 ## Mod Identity
 
 - Name: Nuclear Powered
-- Target MC version: 1.20.1 (with NeoForge as primary loader; Forge compat optional)
+- Target MC version: 1.20.1, loader Forge 47.x (NeoForge does not ship for 1.20.1; repo is built with NeoForge's ModDevGradle tooling targeting legacy Forge)
 - Primary target pack: SkyGreg (GTCEu-based skyblock), with tag-based compatibility for ATM/FTB-style packs and standalone play
 - Release strategy: Incremental — ship a complete, self-sustaining Tier 1 first, expand via updates
 
