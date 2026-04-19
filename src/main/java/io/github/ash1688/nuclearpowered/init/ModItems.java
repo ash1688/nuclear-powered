@@ -14,6 +14,9 @@ public final class ModItems {
     public static final RegistryObject<Item> RAW_URANIUM = ITEMS.register("raw_uranium",
             () -> new Item(new Item.Properties()));
 
+    public static final RegistryObject<Item> RAW_THORIUM = ITEMS.register("raw_thorium",
+            () -> new Item(new Item.Properties()));
+
     private ModItems() {}
 
     public static void register(IEventBus eventBus) {
