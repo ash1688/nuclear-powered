@@ -18,8 +18,8 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.Nullable;
 
 public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
     public static final int SLOT_INPUT = 0;
@@ -39,18 +39,19 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     @Override
-    public @NotNull Component getDisplayName() {
+    public Component getDisplayName() {
         return Component.translatable("block.nuclearpowered.crusher");
     }
 
     // Menu creation is wired up in commit 2 — until then the block has no GUI.
+    @Nullable
     @Override
-    public @Nullable AbstractContainerMenu createMenu(int id, @NotNull Inventory inv, @NotNull Player player) {
+    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
         return null;
     }
 
     @Override
-    public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
+    public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
         if (cap == ForgeCapabilities.ITEM_HANDLER) {
             return lazyItemHandler.cast();
         }
@@ -70,13 +71,13 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     @Override
-    protected void saveAdditional(@NotNull CompoundTag tag) {
+    protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.put("inventory", itemHandler.serializeNBT());
     }
 
     @Override
-    public void load(@NotNull CompoundTag tag) {
+    public void load(CompoundTag tag) {
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
     }

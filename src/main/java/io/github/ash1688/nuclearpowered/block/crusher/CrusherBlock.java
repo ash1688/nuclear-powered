@@ -10,8 +10,6 @@ import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class CrusherBlock extends BaseEntityBlock {
     public CrusherBlock(Properties props) {
@@ -19,20 +17,19 @@ public class CrusherBlock extends BaseEntityBlock {
     }
 
     @Override
-    public @NotNull RenderShape getRenderShape(@NotNull BlockState state) {
+    public RenderShape getRenderShape(BlockState state) {
         // BaseEntityBlock defaults to INVISIBLE. Return MODEL so the block renders its JSON model.
         return RenderShape.MODEL;
     }
 
     @Override
-    public @Nullable BlockEntity newBlockEntity(@NotNull BlockPos pos, @NotNull BlockState state) {
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new CrusherBlockEntity(pos, state);
     }
 
     @Override
-    public @NotNull InteractionResult use(@NotNull BlockState state, @NotNull Level level,
-                                          @NotNull BlockPos pos, @NotNull Player player,
-                                          @NotNull InteractionHand hand, @NotNull BlockHitResult hit) {
+    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
+                                 InteractionHand hand, BlockHitResult hit) {
         // GUI opening is wired in commit 2. For now, acknowledge the click so placement
         // behaviour matches the final crusher (right-click → machine interaction, not place).
         if (!level.isClientSide) {
@@ -42,8 +39,7 @@ public class CrusherBlock extends BaseEntityBlock {
     }
 
     @Override
-    public void onRemove(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos,
-                         @NotNull BlockState newState, boolean moved) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
         if (!state.is(newState.getBlock())) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof CrusherBlockEntity crusher) {
