@@ -15,22 +15,22 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.items.SlotItemHandler;
 
 public class CrusherMenu extends AbstractContainerMenu {
+    public static final int BUTTON_TOGGLE_AUTO_INPUT = 0;
+    public static final int BUTTON_TOGGLE_AUTO_OUTPUT = 1;
+
     public final CrusherBlockEntity blockEntity;
     private final Level level;
     private final ContainerData data;
 
     private static final int PLAYER_INV_SLOT_COUNT = 36;
 
-    // Client-side constructor invoked by IForgeMenuType.create.
     public CrusherMenu(int id, Inventory inv, FriendlyByteBuf buf) {
-        this(id, inv, resolveBlockEntity(inv, buf.readBlockPos()), new SimpleContainerData(2));
+        this(id, inv, resolveBlockEntity(inv, buf.readBlockPos()), new SimpleContainerData(4));
     }
 
-    // Server-side constructor invoked from CrusherBlockEntity.createMenu.
     public CrusherMenu(int id, Inventory inv, BlockEntity be, ContainerData data) {
         super(ModMenuTypes.CRUSHER.get(), id);
         this.blockEntity = (CrusherBlockEntity) be;
@@ -40,10 +40,11 @@ public class CrusherMenu extends AbstractContainerMenu {
         addPlayerInventory(inv);
         addPlayerHotbar(inv);
 
-        blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(handler -> {
-            addSlot(new SlotItemHandler(handler, CrusherBlockEntity.SLOT_INPUT, 56, 35));
-            addSlot(new SlotItemHandler(handler, CrusherBlockEntity.SLOT_OUTPUT, 116, 35));
-        });
+        // Raw handler so player-driven clicks always work regardless of auto in/out toggles.
+        addSlot(new SlotItemHandler(blockEntity.getItemHandlerForMenu(),
+                CrusherBlockEntity.SLOT_INPUT, 56, 35));
+        addSlot(new SlotItemHandler(blockEntity.getItemHandlerForMenu(),
+                CrusherBlockEntity.SLOT_OUTPUT, 116, 35));
 
         addDataSlots(data);
     }
@@ -51,7 +52,7 @@ public class CrusherMenu extends AbstractContainerMenu {
     private static CrusherBlockEntity resolveBlockEntity(Inventory inv, BlockPos pos) {
         BlockEntity be = inv.player.level().getBlockEntity(pos);
         if (!(be instanceof CrusherBlockEntity crusher)) {
-            throw new IllegalStateException("CrusherMenu opened for a block that has no CrusherBlockEntity at " + pos);
+            throw new IllegalStateException("CrusherMenu opened without a CrusherBlockEntity at " + pos);
         }
         return crusher;
     }
@@ -60,12 +61,37 @@ public class CrusherMenu extends AbstractContainerMenu {
         return data.get(0) > 0;
     }
 
-    // Returns the filled width in pixels for the progress arrow on-screen.
     public int getScaledProgress() {
         int progress = data.get(0);
         int maxProgress = data.get(1);
         int arrowWidth = 24;
         return (maxProgress == 0 || progress == 0) ? 0 : progress * arrowWidth / maxProgress;
+    }
+
+    public boolean isAutoInput() {
+        return data.get(2) != 0;
+    }
+
+    public boolean isAutoOutput() {
+        return data.get(3) != 0;
+    }
+
+    @Override
+    public boolean clickMenuButton(Player player, int id) {
+        if (level.isClientSide) return false;
+        switch (id) {
+            case BUTTON_TOGGLE_AUTO_INPUT -> {
+                blockEntity.toggleAutoInput();
+                return true;
+            }
+            case BUTTON_TOGGLE_AUTO_OUTPUT -> {
+                blockEntity.toggleAutoOutput();
+                return true;
+            }
+            default -> {
+                return false;
+            }
+        }
     }
 
     @Override
@@ -79,12 +105,10 @@ public class CrusherMenu extends AbstractContainerMenu {
         int crusherOutput = PLAYER_INV_SLOT_COUNT + 1;
 
         if (slotIndex < PLAYER_INV_SLOT_COUNT) {
-            // From player inventory → crusher input
             if (!moveItemStackTo(source, crusherInput, crusherInput + 1, false)) {
                 return ItemStack.EMPTY;
             }
         } else if (slotIndex <= crusherOutput) {
-            // From crusher → player inventory
             if (!moveItemStackTo(source, 0, PLAYER_INV_SLOT_COUNT, false)) {
                 return ItemStack.EMPTY;
             }

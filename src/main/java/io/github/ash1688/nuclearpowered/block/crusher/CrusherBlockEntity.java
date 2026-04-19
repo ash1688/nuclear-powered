@@ -38,18 +38,26 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
         }
     };
 
-    private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
+    // Wraps the raw handler for external (hopper/pipe) access only — obeys the auto in/out
+    // toggles and restricts inserts to the input slot and extracts to the output slot.
+    // The menu uses the raw handler directly so the player can always click items in/out.
+    private final IItemHandler externalHandler = new SidedItemHandler();
+
+    private LazyOptional<IItemHandler> lazyExternalHandler = LazyOptional.empty();
 
     private int progress = 0;
     private int maxProgress = MAX_PROGRESS;
+    private boolean autoInput = true;
+    private boolean autoOutput = true;
 
-    // ContainerData bridges server-side progress/maxProgress to the client screen.
     private final ContainerData data = new ContainerData() {
         @Override
         public int get(int index) {
             return switch (index) {
                 case 0 -> progress;
                 case 1 -> maxProgress;
+                case 2 -> autoInput ? 1 : 0;
+                case 3 -> autoOutput ? 1 : 0;
                 default -> 0;
             };
         }
@@ -59,17 +67,41 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
             switch (index) {
                 case 0 -> progress = value;
                 case 1 -> maxProgress = value;
+                case 2 -> autoInput = value != 0;
+                case 3 -> autoOutput = value != 0;
             }
         }
 
         @Override
         public int getCount() {
-            return 2;
+            return 4;
         }
     };
 
     public CrusherBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.CRUSHER.get(), pos, state);
+    }
+
+    public IItemHandler getItemHandlerForMenu() {
+        return itemHandler;
+    }
+
+    public boolean isAutoInput() {
+        return autoInput;
+    }
+
+    public boolean isAutoOutput() {
+        return autoOutput;
+    }
+
+    public void toggleAutoInput() {
+        autoInput = !autoInput;
+        setChanged();
+    }
+
+    public void toggleAutoOutput() {
+        autoOutput = !autoOutput;
+        setChanged();
     }
 
     @Override
@@ -86,7 +118,7 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
         if (cap == ForgeCapabilities.ITEM_HANDLER) {
-            return lazyItemHandler.cast();
+            return lazyExternalHandler.cast();
         }
         return super.getCapability(cap, side);
     }
@@ -94,13 +126,13 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     public void onLoad() {
         super.onLoad();
-        lazyItemHandler = LazyOptional.of(() -> itemHandler);
+        lazyExternalHandler = LazyOptional.of(() -> externalHandler);
     }
 
     @Override
     public void invalidateCaps() {
         super.invalidateCaps();
-        lazyItemHandler.invalidate();
+        lazyExternalHandler.invalidate();
     }
 
     @Override
@@ -108,6 +140,8 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
         super.saveAdditional(tag);
         tag.put("inventory", itemHandler.serializeNBT());
         tag.putInt("progress", progress);
+        tag.putBoolean("autoInput", autoInput);
+        tag.putBoolean("autoOutput", autoOutput);
     }
 
     @Override
@@ -115,6 +149,9 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
         progress = tag.getInt("progress");
+        // Default to true for worlds created before the toggles existed.
+        autoInput = !tag.contains("autoInput") || tag.getBoolean("autoInput");
+        autoOutput = !tag.contains("autoOutput") || tag.getBoolean("autoOutput");
     }
 
     public void drops() {
@@ -126,7 +163,6 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
         Containers.dropContents(level, worldPosition, inv);
     }
 
-    // Server-tick entry. Called from CrusherBlock.getTicker.
     public void tick(Level level, BlockPos pos, BlockState state) {
         if (hasInput() && canOutput()) {
             progress++;
@@ -145,7 +181,6 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
         return !itemHandler.getStackInSlot(SLOT_INPUT).isEmpty();
     }
 
-    // True if the output slot can accept another copy of whatever's in input.
     private boolean canOutput() {
         ItemStack input = itemHandler.getStackInSlot(SLOT_INPUT);
         ItemStack output = itemHandler.getStackInSlot(SLOT_OUTPUT);
@@ -154,8 +189,6 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
         return output.getCount() + 1 <= output.getMaxStackSize();
     }
 
-    // Hardcoded passthrough recipe: consume one from input, produce one of the same thing in output.
-    // Real recipe logic (option D) will replace this with a data-driven lookup.
     private void craft() {
         ItemStack input = itemHandler.getStackInSlot(SLOT_INPUT);
         ItemStack output = itemHandler.getStackInSlot(SLOT_OUTPUT);
@@ -166,5 +199,33 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
             output.grow(1);
         }
         input.shrink(1);
+    }
+
+    // Gates external item-handler access through the auto in/out master toggles and restricts
+    // external writes to the input slot / external reads to the output slot. Pipes and hoppers
+    // see this wrapper; the in-game slot GUI sees the raw handler.
+    private final class SidedItemHandler implements IItemHandler {
+        @Override public int getSlots() { return itemHandler.getSlots(); }
+
+        @Override public ItemStack getStackInSlot(int slot) { return itemHandler.getStackInSlot(slot); }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            if (!autoInput || slot != SLOT_INPUT) return stack;
+            return itemHandler.insertItem(slot, stack, simulate);
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            if (!autoOutput || slot != SLOT_OUTPUT) return ItemStack.EMPTY;
+            return itemHandler.extractItem(slot, amount, simulate);
+        }
+
+        @Override public int getSlotLimit(int slot) { return itemHandler.getSlotLimit(slot); }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return itemHandler.isItemValid(slot, stack);
+        }
     }
 }
