@@ -8,7 +8,11 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.player.Inventory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class PileScreen extends AbstractContainerScreen<PileMenu> {
     private static final ResourceLocation TEXTURE =
@@ -69,16 +73,16 @@ public class PileScreen extends AbstractContainerScreen<PileMenu> {
         int y = (height - imageHeight) / 2;
         g.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
 
-        // Heat gauge — red/orange bar that fills up as heat rises.
+        // Heat gauge — colour ramps from yellow-green (cool) through orange (warning)
+        // to red (critical) as heat rises.
         int heatBar = menu.getScaledHeat();
         if (heatBar > 0) {
             int fillX = x + HEAT_X;
             int fillTop = y + HEAT_Y + (HEAT_HEIGHT - heatBar);
             int fillBottom = y + HEAT_Y + HEAT_HEIGHT;
-            // Colour shifts from yellow (low) → red (high) roughly proportional to intensity.
             int intensity = Math.min(255, menu.getHeat() * 255 / Math.max(1, menu.getMaxHeat()));
-            int red = 0xE0;
-            int green = Math.max(0x20, 0xC0 - intensity);
+            int red = 0x40 + intensity * 0xA0 / 255;
+            int green = 0xC0 - intensity * 0xA0 / 255;
             int color = 0xFF000000 | (red << 16) | (green << 8) | 0x20;
             g.fill(fillX, fillTop, fillX + HEAT_WIDTH, fillBottom, color);
         }
@@ -105,9 +109,15 @@ public class PileScreen extends AbstractContainerScreen<PileMenu> {
         int top = y + HEAT_Y;
         if (mouseX >= left && mouseX < left + HEAT_WIDTH
                 && mouseY >= top && mouseY < top + HEAT_HEIGHT) {
-            Component line = Component.literal(
-                    "Heat: " + menu.getHeat() + " / " + menu.getMaxHeat());
-            g.renderTooltip(font, line, mouseX, mouseY);
+            List<FormattedCharSequence> lines = new ArrayList<>();
+            lines.add(Component.literal(
+                    "Heat: " + menu.getHeat() + " / " + menu.getMaxHeat()).getVisualOrderText());
+            int slowdown = menu.getSlowdown();
+            if (slowdown > 1) {
+                lines.add(Component.literal("Burn rate: " + slowdown + "x slower").getVisualOrderText());
+                lines.add(Component.literal("(overheating, self-limiting)").getVisualOrderText());
+            }
+            g.renderTooltip(font, lines, mouseX, mouseY);
         }
     }
 }
