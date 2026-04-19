@@ -45,6 +45,7 @@ public final class ModCreativeTabs {
                         out.accept(ModBlocks.BATTERY.get());
                         out.accept(ModBlocks.COAL_BOILER.get());
                         out.accept(ModBlocks.STEAM_ENGINE.get());
+                        out.accept(ModBlocks.STEAM_PIPE.get());
                     })
                     .build());
 

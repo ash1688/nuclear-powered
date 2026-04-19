@@ -9,6 +9,7 @@ import io.github.ash1688.nuclearpowered.block.electricfurnace.ElectricFurnaceBlo
 import io.github.ash1688.nuclearpowered.block.engine.SteamEngineBlockEntity;
 import io.github.ash1688.nuclearpowered.block.fabricator.FuelFabricatorBlockEntity;
 import io.github.ash1688.nuclearpowered.block.pile.PileBlockEntity;
+import io.github.ash1688.nuclearpowered.block.pipe.SteamPipeBlockEntity;
 import io.github.ash1688.nuclearpowered.block.thermocouple.ThermocoupleBlockEntity;
 import io.github.ash1688.nuclearpowered.block.washer.WasherBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -60,6 +61,10 @@ public final class ModBlockEntities {
     public static final RegistryObject<BlockEntityType<SteamEngineBlockEntity>> STEAM_ENGINE =
             BLOCK_ENTITIES.register("steam_engine", () ->
                     BlockEntityType.Builder.of(SteamEngineBlockEntity::new, ModBlocks.STEAM_ENGINE.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<SteamPipeBlockEntity>> STEAM_PIPE =
+            BLOCK_ENTITIES.register("steam_pipe", () ->
+                    BlockEntityType.Builder.of(SteamPipeBlockEntity::new, ModBlocks.STEAM_PIPE.get()).build(null));
 
     private ModBlockEntities() {}
 

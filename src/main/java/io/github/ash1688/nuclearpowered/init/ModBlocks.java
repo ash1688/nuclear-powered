@@ -9,6 +9,7 @@ import io.github.ash1688.nuclearpowered.block.electricfurnace.ElectricFurnaceBlo
 import io.github.ash1688.nuclearpowered.block.engine.SteamEngineBlock;
 import io.github.ash1688.nuclearpowered.block.fabricator.FuelFabricatorBlock;
 import io.github.ash1688.nuclearpowered.block.pile.PileBlock;
+import io.github.ash1688.nuclearpowered.block.pipe.SteamPipeBlock;
 import io.github.ash1688.nuclearpowered.block.thermocouple.ThermocoupleBlock;
 import io.github.ash1688.nuclearpowered.block.washer.WasherBlock;
 import net.minecraft.world.item.BlockItem;
@@ -155,6 +156,12 @@ public final class ModBlocks {
             () -> new SteamEngineBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_ORANGE)
                     .strength(3.0f, 4.0f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<SteamPipeBlock> STEAM_PIPE = registerBlock("steam_pipe",
+            () -> new SteamPipeBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_LIGHT_GRAY)
+                    .strength(1.5f, 2.0f)
                     .sound(SoundType.METAL)));
 
     private ModBlocks() {}
