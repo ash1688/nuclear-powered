@@ -16,6 +16,7 @@ import io.github.ash1688.nuclearpowered.block.pile.PileBlock;
 import io.github.ash1688.nuclearpowered.block.pipe.SteamPipeBlock;
 import io.github.ash1688.nuclearpowered.block.shearer.ShearerBlock;
 import io.github.ash1688.nuclearpowered.block.thermocouple.ThermocoupleBlock;
+import io.github.ash1688.nuclearpowered.block.vitrifier.VitrifierBlock;
 import io.github.ash1688.nuclearpowered.block.washer.WasherBlock;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -184,6 +185,12 @@ public final class ModBlocks {
     public static final RegistryObject<CsColumnBlock> CS_COLUMN = registerBlock("cs_column",
             () -> new CsColumnBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_LIGHT_BLUE)
+                    .strength(3.5f, 4.0f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<VitrifierBlock> VITRIFIER = registerBlock("vitrifier",
+            () -> new VitrifierBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_GREEN)
                     .strength(3.5f, 4.0f)
                     .sound(SoundType.METAL)));
 

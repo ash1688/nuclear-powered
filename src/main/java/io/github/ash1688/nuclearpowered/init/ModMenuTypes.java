@@ -13,6 +13,7 @@ import io.github.ash1688.nuclearpowered.menu.PileMenu;
 import io.github.ash1688.nuclearpowered.menu.ShearerMenu;
 import io.github.ash1688.nuclearpowered.menu.SteamEngineMenu;
 import io.github.ash1688.nuclearpowered.menu.ThermocoupleMenu;
+import io.github.ash1688.nuclearpowered.menu.VitrifierMenu;
 import io.github.ash1688.nuclearpowered.menu.WasherMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeMenuType;
@@ -63,6 +64,9 @@ public final class ModMenuTypes {
 
     public static final RegistryObject<MenuType<CsColumnMenu>> CS_COLUMN =
             MENU_TYPES.register("cs_column", () -> IForgeMenuType.create(CsColumnMenu::new));
+
+    public static final RegistryObject<MenuType<VitrifierMenu>> VITRIFIER =
+            MENU_TYPES.register("vitrifier", () -> IForgeMenuType.create(VitrifierMenu::new));
 
     private ModMenuTypes() {}
 

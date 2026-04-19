@@ -13,6 +13,7 @@ import io.github.ash1688.nuclearpowered.client.screen.PileScreen;
 import io.github.ash1688.nuclearpowered.client.screen.ShearerScreen;
 import io.github.ash1688.nuclearpowered.client.screen.SteamEngineScreen;
 import io.github.ash1688.nuclearpowered.client.screen.ThermocoupleScreen;
+import io.github.ash1688.nuclearpowered.client.screen.VitrifierScreen;
 import io.github.ash1688.nuclearpowered.client.screen.WasherScreen;
 import io.github.ash1688.nuclearpowered.init.ModMenuTypes;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -41,6 +42,7 @@ public final class ModClientSetup {
             MenuScreens.register(ModMenuTypes.DISSOLVER.get(), DissolverScreen::new);
             MenuScreens.register(ModMenuTypes.EXTRACTION_COLUMN.get(), ExtractionColumnScreen::new);
             MenuScreens.register(ModMenuTypes.CS_COLUMN.get(), CsColumnScreen::new);
+            MenuScreens.register(ModMenuTypes.VITRIFIER.get(), VitrifierScreen::new);
         });
     }
 }
