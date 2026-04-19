@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "I I",
+    "UUU",
+    "I I"
+  ],
+  "key": {
+    "I": { "item": "minecraft:iron_ingot" },
+    "U": { "item": "nuclearpowered:purified_uranium" }
+  },
+  "result": {
+    "item": "nuclearpowered:uranium_fuel_rod",
+    "count": 1
+  }
+}
