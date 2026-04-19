@@ -8,7 +8,8 @@
   "item.nuclearpowered.raw_thorium": "Raw Thorium",
   "item.nuclearpowered.crushed_uranium": "Crushed Uranium",
   "item.nuclearpowered.crushed_thorium": "Crushed Thorium",
-  "item.nuclearpowered.purified_uranium": "Purified Uranium",
-  "item.nuclearpowered.purified_thorium": "Purified Thorium",
+  "item.nuclearpowered.yellowcake": "Yellowcake",
+  "item.nuclearpowered.thorium_concentrate": "Thorium Concentrate",
+  "item.nuclearpowered.uranium_ingot": "Uranium Ingot",
   "item.nuclearpowered.uranium_fuel_rod": "Uranium Fuel Rod"
 }

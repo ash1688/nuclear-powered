@@ -7,7 +7,7 @@
   ],
   "key": {
     "I": { "item": "minecraft:iron_ingot" },
-    "U": { "item": "nuclearpowered:purified_uranium" }
+    "U": { "item": "nuclearpowered:uranium_ingot" }
   },
   "result": {
     "item": "nuclearpowered:uranium_fuel_rod",

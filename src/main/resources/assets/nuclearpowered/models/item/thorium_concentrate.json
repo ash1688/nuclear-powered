@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "nuclearpowered:item/purified_uranium"
+    "layer0": "nuclearpowered:item/thorium_concentrate"
   }
 }

@@ -20,13 +20,16 @@ public final class ModItems {
     public static final RegistryObject<Item> CRUSHED_URANIUM = ITEMS.register("crushed_uranium",
             () -> new Item(new Item.Properties()));
 
-    public static final RegistryObject<Item> PURIFIED_URANIUM = ITEMS.register("purified_uranium",
+    public static final RegistryObject<Item> YELLOWCAKE = ITEMS.register("yellowcake",
+            () -> new Item(new Item.Properties()));
+
+    public static final RegistryObject<Item> URANIUM_INGOT = ITEMS.register("uranium_ingot",
             () -> new Item(new Item.Properties()));
 
     public static final RegistryObject<Item> CRUSHED_THORIUM = ITEMS.register("crushed_thorium",
             () -> new Item(new Item.Properties()));
 
-    public static final RegistryObject<Item> PURIFIED_THORIUM = ITEMS.register("purified_thorium",
+    public static final RegistryObject<Item> THORIUM_CONCENTRATE = ITEMS.register("thorium_concentrate",
             () -> new Item(new Item.Properties()));
 
     public static final RegistryObject<Item> URANIUM_FUEL_ROD = ITEMS.register("uranium_fuel_rod",

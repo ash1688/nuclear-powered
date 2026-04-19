@@ -8,7 +8,7 @@
     "amount": 100
   },
   "result": {
-    "item": "nuclearpowered:purified_thorium",
+    "item": "nuclearpowered:thorium_concentrate",
     "count": 1
   },
   "processing_time": 60
