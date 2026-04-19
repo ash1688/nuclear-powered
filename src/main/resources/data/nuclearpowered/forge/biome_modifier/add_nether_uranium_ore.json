@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#minecraft:is_nether",
+  "features": "nuclearpowered:nether_uranium_ore",
+  "step": "underground_ores"
+}

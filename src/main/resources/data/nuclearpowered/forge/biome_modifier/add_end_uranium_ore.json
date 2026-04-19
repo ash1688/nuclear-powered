@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#minecraft:is_end",
+  "features": "nuclearpowered:end_uranium_ore",
+  "step": "underground_ores"
+}

@@ -35,6 +35,20 @@ public final class ModBlocks {
                     .sound(SoundType.DEEPSLATE)
                     .requiresCorrectToolForDrops()));
 
+    public static final RegistryObject<Block> NETHER_URANIUM_ORE = registerBlock("nether_uranium_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.NETHER)
+                    .strength(3.0f, 3.0f)
+                    .sound(SoundType.NETHER_ORE)
+                    .requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> END_URANIUM_ORE = registerBlock("end_uranium_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.SAND)
+                    .strength(3.0f, 9.0f)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops()));
+
     public static final RegistryObject<Block> THORIUM_ORE = registerBlock("thorium_ore",
             () -> new Block(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.STONE)
@@ -47,6 +61,20 @@ public final class ModBlocks {
                     .mapColor(MapColor.DEEPSLATE)
                     .strength(4.5f, 3.0f)
                     .sound(SoundType.DEEPSLATE)
+                    .requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> NETHER_THORIUM_ORE = registerBlock("nether_thorium_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.NETHER)
+                    .strength(3.0f, 3.0f)
+                    .sound(SoundType.NETHER_ORE)
+                    .requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<Block> END_THORIUM_ORE = registerBlock("end_thorium_ore",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.SAND)
+                    .strength(3.0f, 9.0f)
+                    .sound(SoundType.STONE)
                     .requiresCorrectToolForDrops()));
 
     public static final RegistryObject<CrusherBlock> CRUSHER = registerBlock("crusher",

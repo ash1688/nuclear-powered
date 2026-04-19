@@ -3,7 +3,11 @@
   "values": [
     "nuclearpowered:uranium_ore",
     "nuclearpowered:deepslate_uranium_ore",
+    "nuclearpowered:nether_uranium_ore",
+    "nuclearpowered:end_uranium_ore",
     "nuclearpowered:thorium_ore",
-    "nuclearpowered:deepslate_thorium_ore"
+    "nuclearpowered:deepslate_thorium_ore",
+    "nuclearpowered:nether_thorium_ore",
+    "nuclearpowered:end_thorium_ore"
   ]
 }

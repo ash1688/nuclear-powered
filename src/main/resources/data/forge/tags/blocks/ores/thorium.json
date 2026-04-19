@@ -2,6 +2,8 @@
   "replace": false,
   "values": [
     "nuclearpowered:thorium_ore",
-    "nuclearpowered:deepslate_thorium_ore"
+    "nuclearpowered:deepslate_thorium_ore",
+    "nuclearpowered:nether_thorium_ore",
+    "nuclearpowered:end_thorium_ore"
   ]
 }
