@@ -1,6 +1,7 @@
 package io.github.ash1688.nuclearpowered.init;
 
 import io.github.ash1688.nuclearpowered.NuclearPowered;
+import io.github.ash1688.nuclearpowered.block.battery.BatteryBlock;
 import io.github.ash1688.nuclearpowered.block.cable.EnergyCableBlock;
 import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlock;
 import io.github.ash1688.nuclearpowered.block.electricfurnace.ElectricFurnaceBlock;
@@ -126,6 +127,12 @@ public final class ModBlocks {
             () -> new EnergyCableBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_GRAY)
                     .strength(1.5f, 2.0f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<BatteryBlock> BATTERY = registerBlock("battery",
+            () -> new BatteryBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_GRAY)
+                    .strength(3.5f, 4.5f)
                     .sound(SoundType.METAL)));
 
     private ModBlocks() {}

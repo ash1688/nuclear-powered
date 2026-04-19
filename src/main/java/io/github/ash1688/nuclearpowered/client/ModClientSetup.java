@@ -1,6 +1,7 @@
 package io.github.ash1688.nuclearpowered.client;
 
 import io.github.ash1688.nuclearpowered.NuclearPowered;
+import io.github.ash1688.nuclearpowered.client.screen.BatteryScreen;
 import io.github.ash1688.nuclearpowered.client.screen.CrusherScreen;
 import io.github.ash1688.nuclearpowered.client.screen.ElectricFurnaceScreen;
 import io.github.ash1688.nuclearpowered.client.screen.PileScreen;
@@ -25,6 +26,7 @@ public final class ModClientSetup {
             MenuScreens.register(ModMenuTypes.ELECTRIC_FURNACE.get(), ElectricFurnaceScreen::new);
             MenuScreens.register(ModMenuTypes.GRAPHITE_PILE.get(), PileScreen::new);
             MenuScreens.register(ModMenuTypes.THERMOCOUPLE.get(), ThermocoupleScreen::new);
+            MenuScreens.register(ModMenuTypes.BATTERY.get(), BatteryScreen::new);
         });
     }
 }

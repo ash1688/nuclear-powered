@@ -1,6 +1,7 @@
 package io.github.ash1688.nuclearpowered.init;
 
 import io.github.ash1688.nuclearpowered.NuclearPowered;
+import io.github.ash1688.nuclearpowered.menu.BatteryMenu;
 import io.github.ash1688.nuclearpowered.menu.CrusherMenu;
 import io.github.ash1688.nuclearpowered.menu.ElectricFurnaceMenu;
 import io.github.ash1688.nuclearpowered.menu.PileMenu;
@@ -31,6 +32,9 @@ public final class ModMenuTypes {
 
     public static final RegistryObject<MenuType<ThermocoupleMenu>> THERMOCOUPLE =
             MENU_TYPES.register("thermocouple", () -> IForgeMenuType.create(ThermocoupleMenu::new));
+
+    public static final RegistryObject<MenuType<BatteryMenu>> BATTERY =
+            MENU_TYPES.register("battery", () -> IForgeMenuType.create(BatteryMenu::new));
 
     private ModMenuTypes() {}
 

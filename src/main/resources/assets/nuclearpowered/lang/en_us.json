@@ -15,6 +15,7 @@
   "block.nuclearpowered.graphite_casing": "Graphite Casing",
   "block.nuclearpowered.thermocouple": "Thermocouple",
   "block.nuclearpowered.energy_cable": "Energy Cable",
+  "block.nuclearpowered.battery": "Battery",
   "item.nuclearpowered.raw_uranium": "Raw Uranium",
   "item.nuclearpowered.raw_thorium": "Raw Thorium",
   "item.nuclearpowered.crushed_uranium": "Crushed Uranium",
