@@ -111,10 +111,23 @@ public class EnergyCableBlockEntity extends BlockEntity {
                 changed = true;
             }
         }
+        // Non-cable buffers (batteries) get priority so direction iteration can't
+        // dump the whole buffer into a sideways cable and starve the real destination.
+        changed |= pushToBuffers(level, pos, false);
+        changed |= pushToBuffers(level, pos, true);
+        if (changed) {
+            setChanged(level, pos, state);
+        }
+    }
+
+    private boolean pushToBuffers(Level level, BlockPos pos, boolean cablesOnly) {
+        boolean changed = false;
         for (Direction dir : Direction.values()) {
             if (storedFE <= 0) break;
             BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
             if (neighbour == null) continue;
+            boolean isCable = neighbour instanceof EnergyCableBlockEntity;
+            if (isCable != cablesOnly) continue;
             int delta = neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).map(sink -> {
                 if (!sink.canReceive() || !sink.canExtract()) return 0;
                 int other = sink.getEnergyStored();
@@ -127,8 +140,6 @@ public class EnergyCableBlockEntity extends BlockEntity {
                 changed = true;
             }
         }
-        if (changed) {
-            setChanged(level, pos, state);
-        }
+        return changed;
     }
 }
