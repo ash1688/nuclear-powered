@@ -3,6 +3,7 @@ package io.github.ash1688.nuclearpowered.init;
 import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlock;
 import io.github.ash1688.nuclearpowered.block.electricfurnace.ElectricFurnaceBlock;
+import io.github.ash1688.nuclearpowered.block.pile.PileBlock;
 import io.github.ash1688.nuclearpowered.block.washer.WasherBlock;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -95,6 +96,13 @@ public final class ModBlocks {
                     .strength(3.5f, 4.0f)
                     .sound(SoundType.METAL)
                     .lightLevel(state -> 7)));
+
+    public static final RegistryObject<PileBlock> GRAPHITE_PILE = registerBlock("graphite_pile",
+            () -> new PileBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_BLACK)
+                    .strength(4.0f, 5.0f)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops()));
 
     private ModBlocks() {}
 

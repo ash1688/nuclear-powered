@@ -11,6 +11,7 @@
   "block.nuclearpowered.crusher": "Crusher",
   "block.nuclearpowered.washer": "Ore Washer",
   "block.nuclearpowered.electric_furnace": "Electric Furnace",
+  "block.nuclearpowered.graphite_pile": "Graphite Pile",
   "item.nuclearpowered.raw_uranium": "Raw Uranium",
   "item.nuclearpowered.raw_thorium": "Raw Thorium",
   "item.nuclearpowered.crushed_uranium": "Crushed Uranium",
@@ -18,5 +19,6 @@
   "item.nuclearpowered.yellowcake": "Yellowcake",
   "item.nuclearpowered.thorium_concentrate": "Thorium Concentrate",
   "item.nuclearpowered.uranium_ingot": "Uranium Ingot",
-  "item.nuclearpowered.uranium_fuel_rod": "Uranium Fuel Rod"
+  "item.nuclearpowered.uranium_fuel_rod": "Uranium Fuel Rod",
+  "item.nuclearpowered.depleted_uranium_fuel_rod": "Depleted Uranium Fuel Rod"
 }

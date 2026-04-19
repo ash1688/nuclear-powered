@@ -33,9 +33,11 @@ public final class ModCreativeTabs {
                         out.accept(ModItems.CRUSHED_THORIUM.get());
                         out.accept(ModItems.THORIUM_CONCENTRATE.get());
                         out.accept(ModItems.URANIUM_FUEL_ROD.get());
+                        out.accept(ModItems.DEPLETED_URANIUM_FUEL_ROD.get());
                         out.accept(ModBlocks.CRUSHER.get());
                         out.accept(ModBlocks.WASHER.get());
                         out.accept(ModBlocks.ELECTRIC_FURNACE.get());
+                        out.accept(ModBlocks.GRAPHITE_PILE.get());
                     })
                     .build());
 

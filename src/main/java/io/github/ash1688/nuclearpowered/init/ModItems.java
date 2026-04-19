@@ -35,6 +35,9 @@ public final class ModItems {
     public static final RegistryObject<Item> URANIUM_FUEL_ROD = ITEMS.register("uranium_fuel_rod",
             () -> new Item(new Item.Properties().stacksTo(16)));
 
+    public static final RegistryObject<Item> DEPLETED_URANIUM_FUEL_ROD = ITEMS.register("depleted_uranium_fuel_rod",
+            () -> new Item(new Item.Properties().stacksTo(16)));
+
     private ModItems() {}
 
     public static void register(IEventBus eventBus) {

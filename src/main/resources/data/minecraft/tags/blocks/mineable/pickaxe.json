@@ -11,6 +11,7 @@
     "nuclearpowered:end_thorium_ore",
     "nuclearpowered:crusher",
     "nuclearpowered:washer",
-    "nuclearpowered:electric_furnace"
+    "nuclearpowered:electric_furnace",
+    "nuclearpowered:graphite_pile"
   ]
 }

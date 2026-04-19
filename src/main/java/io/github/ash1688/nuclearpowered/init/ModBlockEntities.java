@@ -3,6 +3,7 @@ package io.github.ash1688.nuclearpowered.init;
 import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlockEntity;
 import io.github.ash1688.nuclearpowered.block.electricfurnace.ElectricFurnaceBlockEntity;
+import io.github.ash1688.nuclearpowered.block.pile.PileBlockEntity;
 import io.github.ash1688.nuclearpowered.block.washer.WasherBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -25,6 +26,10 @@ public final class ModBlockEntities {
     public static final RegistryObject<BlockEntityType<ElectricFurnaceBlockEntity>> ELECTRIC_FURNACE =
             BLOCK_ENTITIES.register("electric_furnace", () ->
                     BlockEntityType.Builder.of(ElectricFurnaceBlockEntity::new, ModBlocks.ELECTRIC_FURNACE.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<PileBlockEntity>> GRAPHITE_PILE =
+            BLOCK_ENTITIES.register("graphite_pile", () ->
+                    BlockEntityType.Builder.of(PileBlockEntity::new, ModBlocks.GRAPHITE_PILE.get()).build(null));
 
     private ModBlockEntities() {}
 

@@ -3,6 +3,7 @@ package io.github.ash1688.nuclearpowered.init;
 import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.menu.CrusherMenu;
 import io.github.ash1688.nuclearpowered.menu.ElectricFurnaceMenu;
+import io.github.ash1688.nuclearpowered.menu.PileMenu;
 import io.github.ash1688.nuclearpowered.menu.WasherMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeMenuType;
@@ -23,6 +24,9 @@ public final class ModMenuTypes {
 
     public static final RegistryObject<MenuType<ElectricFurnaceMenu>> ELECTRIC_FURNACE =
             MENU_TYPES.register("electric_furnace", () -> IForgeMenuType.create(ElectricFurnaceMenu::new));
+
+    public static final RegistryObject<MenuType<PileMenu>> GRAPHITE_PILE =
+            MENU_TYPES.register("graphite_pile", () -> IForgeMenuType.create(PileMenu::new));
 
     private ModMenuTypes() {}
 
