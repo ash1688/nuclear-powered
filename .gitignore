@@ -52,3 +52,6 @@ natives/
 
 # Claude Code personal settings
 .claude/settings.local.json
+
+# Local texture staging — raw AI-generated PNGs before downscale/placement
+images/
