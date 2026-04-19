@@ -34,12 +34,10 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
     // ~93 FE/tick; a 26-casing pile around ~3360 heat yields ~336 FE/tick.
     private static final int HEAT_PER_FE = 10;
     // Heat drain scales with the FE the thermo actually accepts this tick, capped
-    // at this per-thermo max. Effect: thermos with lots of free buffer (downstream
-    // FE demand is high) cool the pile hard; thermos sitting near full do almost
-    // nothing. That produces the swing-up / swing-down behaviour — pile heats up
-    // when thermos back up, cools when consumers draw power, speed of swing
-    // scales with thermo count.
-    private static final int MAX_HEAT_DRAIN_PER_TICK = 3;
+    // at this per-thermo max. At 1 heat/tick, the pile's 30/tick rise outruns the
+    // drain until ~29 active thermos — so typical builds see the pile climb to
+    // its target heat (3000) then swing below when consumers pull FE hard.
+    private static final int MAX_HEAT_DRAIN_PER_TICK = 1;
     private static final int SCAN_INTERVAL_TICKS = 20;
     private static final int SCAN_DISTANCE = 64;
 

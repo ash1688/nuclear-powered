@@ -43,15 +43,20 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     // Above SAFE_HEAT the burn slows down — never melts, just takes longer.
     // MAX_HEAT and SAFE_HEAT are dynamic: they scale with the number of connected
     // graphite_casing blocks detected in the structure scan.
-    private static final int BASE_MAX_HEAT = 2000;
+    private static final int BASE_MAX_HEAT = 4000;
     private static final int MAX_HEAT_PER_CASING = 200;
-    // SAFE_HEAT is 40% of dynamic MAX_HEAT; above that, slowdown begins.
-    private static final int SAFE_HEAT_PERCENT = 40;
+    // SAFE_HEAT is 75% of dynamic MAX_HEAT; above that, slowdown begins.
+    // With the base 4000 cap that puts SAFE at 3000 — the designed equilibrium
+    // where the pile burns most efficiently.
+    private static final int SAFE_HEAT_PERCENT = 75;
     private static final int MAX_SLOWDOWN = 10;
-    // Net heat change at slowdown=1 is rise - decay = +1/tick. Cold -> SAFE_HEAT (800) takes
-    // ~40s. Equilibrium lands just inside the warning zone, so the slowdown mechanic is
-    // always visible without dominating gameplay.
-    private static final int HEAT_RISE_PER_BURN_TICK = 2;
+    // Burning adds heat aggressively up to HEAT_TARGET, then stops. Everything
+    // above HEAT_TARGET comes from runaway scenarios; thermos + decay drain it.
+    // Net climb at slowdown=1 with zero thermos: +29/tick (reach 3000 in ~100
+    // ticks / 5 s). Thermos cap drain at 1 each, so ~29 thermos is the point
+    // where rise stops winning and the pile can't reach 3000.
+    private static final int HEAT_TARGET = 3000;
+    private static final int HEAT_RISE_PER_BURN_TICK = 30;
     private static final int HEAT_DECAY_PER_TICK = 1;
     // Sub-tick resolution for fractional burn. A full "burn tick" is 10 sub-ticks;
     // slowdown controls how many sub-ticks accrue per real tick.
@@ -264,11 +269,12 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
             //   slowdown=10 → +1/tick   = 1 burn-tick per 10 real ticks.
             burnAccumulator += Math.max(1, BURN_SUBTICKS / slowdown);
             int maxHeat = getMaxHeat();
+            int burnCeiling = Math.min(maxHeat, HEAT_TARGET);
             while (burnAccumulator >= BURN_SUBTICKS && burnTime > 0) {
                 burnAccumulator -= BURN_SUBTICKS;
                 burnTime--;
-                if (heat < maxHeat) {
-                    heat = Math.min(maxHeat, heat + HEAT_RISE_PER_BURN_TICK);
+                if (heat < burnCeiling) {
+                    heat = Math.min(burnCeiling, heat + HEAT_RISE_PER_BURN_TICK);
                 }
             }
             if (burnTime == 0) {
