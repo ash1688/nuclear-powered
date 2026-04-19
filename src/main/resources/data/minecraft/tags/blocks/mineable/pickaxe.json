@@ -4,6 +4,7 @@
     "nuclearpowered:uranium_ore",
     "nuclearpowered:thorium_ore",
     "nuclearpowered:crusher",
-    "nuclearpowered:washer"
+    "nuclearpowered:washer",
+    "nuclearpowered:electric_furnace"
   ]
 }

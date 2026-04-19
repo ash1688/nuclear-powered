@@ -29,6 +29,7 @@ public final class ModCreativeTabs {
                         out.accept(ModItems.URANIUM_FUEL_ROD.get());
                         out.accept(ModBlocks.CRUSHER.get());
                         out.accept(ModBlocks.WASHER.get());
+                        out.accept(ModBlocks.ELECTRIC_FURNACE.get());
                     })
                     .build());
 
