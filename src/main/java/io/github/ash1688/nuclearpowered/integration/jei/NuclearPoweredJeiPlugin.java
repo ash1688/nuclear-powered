@@ -29,6 +29,7 @@ public class NuclearPoweredJeiPlugin implements IModPlugin {
         var helper = registration.getJeiHelpers().getGuiHelper();
         registration.addRecipeCategories(new CrushingRecipeCategory(helper));
         registration.addRecipeCategories(new WashingRecipeCategory(helper));
+        registration.addRecipeCategories(new FabricatingRecipeCategory(helper));
     }
 
     @Override
@@ -40,6 +41,8 @@ public class NuclearPoweredJeiPlugin implements IModPlugin {
                 rm.getAllRecipesFor(ModRecipes.CRUSHING_TYPE.get()));
         registration.addRecipes(WashingRecipeCategory.RECIPE_TYPE,
                 rm.getAllRecipesFor(ModRecipes.WASHING_TYPE.get()));
+        registration.addRecipes(FabricatingRecipeCategory.RECIPE_TYPE,
+                rm.getAllRecipesFor(ModRecipes.FABRICATING_TYPE.get()));
     }
 
     @Override
@@ -52,5 +55,7 @@ public class NuclearPoweredJeiPlugin implements IModPlugin {
         // built-in smelting category — clicking the furnace in JEI shows every smelting recipe.
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.ELECTRIC_FURNACE.get()),
                 RecipeTypes.SMELTING);
+        registration.addRecipeCatalyst(new ItemStack(ModBlocks.FUEL_FABRICATOR.get()),
+                FabricatingRecipeCategory.RECIPE_TYPE);
     }
 }

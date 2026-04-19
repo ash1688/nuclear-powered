@@ -1,0 +1,16 @@
+{
+  "type": "nuclearpowered:fabricating",
+  "fuel_ingredient": {
+    "item": "nuclearpowered:uranium_ingot"
+  },
+  "fuel_count": 3,
+  "cladding_ingredient": {
+    "item": "minecraft:iron_ingot"
+  },
+  "cladding_count": 4,
+  "result": {
+    "item": "nuclearpowered:uranium_fuel_rod",
+    "count": 1
+  },
+  "processing_time": 200
+}

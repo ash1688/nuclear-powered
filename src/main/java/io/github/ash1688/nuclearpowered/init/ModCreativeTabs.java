@@ -37,6 +37,7 @@ public final class ModCreativeTabs {
                         out.accept(ModBlocks.CRUSHER.get());
                         out.accept(ModBlocks.WASHER.get());
                         out.accept(ModBlocks.ELECTRIC_FURNACE.get());
+                        out.accept(ModBlocks.FUEL_FABRICATOR.get());
                         out.accept(ModBlocks.GRAPHITE_PILE.get());
                         out.accept(ModBlocks.GRAPHITE_CASING.get());
                         out.accept(ModBlocks.THERMOCOUPLE.get());

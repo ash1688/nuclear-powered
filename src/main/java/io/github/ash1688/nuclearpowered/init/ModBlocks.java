@@ -5,6 +5,7 @@ import io.github.ash1688.nuclearpowered.block.battery.BatteryBlock;
 import io.github.ash1688.nuclearpowered.block.cable.EnergyCableBlock;
 import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlock;
 import io.github.ash1688.nuclearpowered.block.electricfurnace.ElectricFurnaceBlock;
+import io.github.ash1688.nuclearpowered.block.fabricator.FuelFabricatorBlock;
 import io.github.ash1688.nuclearpowered.block.pile.PileBlock;
 import io.github.ash1688.nuclearpowered.block.thermocouple.ThermocoupleBlock;
 import io.github.ash1688.nuclearpowered.block.washer.WasherBlock;
@@ -133,6 +134,12 @@ public final class ModBlocks {
             () -> new BatteryBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_GRAY)
                     .strength(3.5f, 4.5f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<FuelFabricatorBlock> FUEL_FABRICATOR = registerBlock("fuel_fabricator",
+            () -> new FuelFabricatorBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(3.5f, 4.0f)
                     .sound(SoundType.METAL)));
 
     private ModBlocks() {}

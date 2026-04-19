@@ -5,6 +5,7 @@ import io.github.ash1688.nuclearpowered.block.battery.BatteryBlockEntity;
 import io.github.ash1688.nuclearpowered.block.cable.EnergyCableBlockEntity;
 import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlockEntity;
 import io.github.ash1688.nuclearpowered.block.electricfurnace.ElectricFurnaceBlockEntity;
+import io.github.ash1688.nuclearpowered.block.fabricator.FuelFabricatorBlockEntity;
 import io.github.ash1688.nuclearpowered.block.pile.PileBlockEntity;
 import io.github.ash1688.nuclearpowered.block.thermocouple.ThermocoupleBlockEntity;
 import io.github.ash1688.nuclearpowered.block.washer.WasherBlockEntity;
@@ -45,6 +46,10 @@ public final class ModBlockEntities {
     public static final RegistryObject<BlockEntityType<BatteryBlockEntity>> BATTERY =
             BLOCK_ENTITIES.register("battery", () ->
                     BlockEntityType.Builder.of(BatteryBlockEntity::new, ModBlocks.BATTERY.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<FuelFabricatorBlockEntity>> FUEL_FABRICATOR =
+            BLOCK_ENTITIES.register("fuel_fabricator", () ->
+                    BlockEntityType.Builder.of(FuelFabricatorBlockEntity::new, ModBlocks.FUEL_FABRICATOR.get()).build(null));
 
     private ModBlockEntities() {}
 

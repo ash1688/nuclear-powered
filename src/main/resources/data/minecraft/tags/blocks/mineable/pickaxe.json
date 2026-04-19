@@ -16,6 +16,7 @@
     "nuclearpowered:graphite_casing",
     "nuclearpowered:thermocouple",
     "nuclearpowered:energy_cable",
-    "nuclearpowered:battery"
+    "nuclearpowered:battery",
+    "nuclearpowered:fuel_fabricator"
   ]
 }

@@ -2,6 +2,7 @@ package io.github.ash1688.nuclearpowered.init;
 
 import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.recipe.CrusherRecipe;
+import io.github.ash1688.nuclearpowered.recipe.FuelFabricatorRecipe;
 import io.github.ash1688.nuclearpowered.recipe.WasherRecipe;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.crafting.RecipeSerializer;
@@ -37,6 +38,17 @@ public final class ModRecipes {
                 @Override
                 public String toString() {
                     return "nuclearpowered:washing";
+                }
+            });
+
+    public static final RegistryObject<RecipeSerializer<FuelFabricatorRecipe>> FABRICATING_SERIALIZER =
+            SERIALIZERS.register("fabricating", () -> FuelFabricatorRecipe.Serializer.INSTANCE);
+
+    public static final RegistryObject<RecipeType<FuelFabricatorRecipe>> FABRICATING_TYPE =
+            TYPES.register("fabricating", () -> new RecipeType<>() {
+                @Override
+                public String toString() {
+                    return "nuclearpowered:fabricating";
                 }
             });
 
