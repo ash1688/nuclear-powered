@@ -33,6 +33,10 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
     // Conversion ratio: 10 heat = 1 FE/tick. An 0-casing pile at ~933 heat yields
     // ~93 FE/tick; a 26-casing pile around ~3360 heat yields ~336 FE/tick.
     private static final int HEAT_PER_FE = 10;
+    // Flat cooling per active thermocouple per tick, so adding more thermos is
+    // a predictable way to dump heat without an accidental runaway (scaling by
+    // FE generated made 9 thermos instantly empty a pile).
+    private static final int HEAT_DRAIN_PER_TICK = 5;
     private static final int SCAN_INTERVAL_TICKS = 20;
     private static final int SCAN_DISTANCE = 64;
 
@@ -161,7 +165,7 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
                 if (canAccept > 0) {
                     storedFE += canAccept;
                     lastGenerationFE = canAccept;
-                    pile.drainHeat(canAccept * HEAT_PER_FE);
+                    pile.drainHeat(HEAT_DRAIN_PER_TICK);
                 }
             }
         }
