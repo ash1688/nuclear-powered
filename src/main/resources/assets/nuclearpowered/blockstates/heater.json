@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "active=false": { "model": "nuclearpowered:block/heater" },
+    "active=true":  { "model": "nuclearpowered:block/heater_on" }
+  }
+}

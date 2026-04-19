@@ -8,6 +8,7 @@ import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlock;
 import io.github.ash1688.nuclearpowered.block.electricfurnace.ElectricFurnaceBlock;
 import io.github.ash1688.nuclearpowered.block.engine.SteamEngineBlock;
 import io.github.ash1688.nuclearpowered.block.fabricator.FuelFabricatorBlock;
+import io.github.ash1688.nuclearpowered.block.heater.HeaterBlock;
 import io.github.ash1688.nuclearpowered.block.pile.PileBlock;
 import io.github.ash1688.nuclearpowered.block.pipe.SteamPipeBlock;
 import io.github.ash1688.nuclearpowered.block.thermocouple.ThermocoupleBlock;
@@ -157,6 +158,13 @@ public final class ModBlocks {
                     .mapColor(MapColor.COLOR_ORANGE)
                     .strength(3.0f, 4.0f)
                     .sound(SoundType.METAL)));
+
+    public static final RegistryObject<HeaterBlock> HEATER = registerBlock("heater",
+            () -> new HeaterBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_RED)
+                    .strength(3.0f, 4.0f)
+                    .sound(SoundType.METAL)
+                    .lightLevel(state -> state.getValue(HeaterBlock.ACTIVE) ? 10 : 0)));
 
     public static final RegistryObject<SteamPipeBlock> STEAM_PIPE = registerBlock("steam_pipe",
             () -> new SteamPipeBlock(BlockBehaviour.Properties.of()

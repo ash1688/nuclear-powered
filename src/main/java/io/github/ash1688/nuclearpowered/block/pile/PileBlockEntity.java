@@ -138,6 +138,17 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
 
     public int getHeat() { return heat; }
 
+    // Add heat from an external source (e.g. a heater block priming the pile
+    // before the fuel rod gets it hot). Clamps to the pile's max heat so a
+    // heater can't push the core past its MAX_HEAT safety ceiling.
+    public void addHeat(int amount) {
+        if (amount <= 0) return;
+        int cap = getMaxHeat();
+        if (heat >= cap) return;
+        heat = Math.min(cap, heat + amount);
+        setChanged();
+    }
+
     // Remove heat from the pile (thermocouples call this when drawing energy, so
     // pulling power out of a reactor actually cools it). Returns how much was
     // removed, clamped to what's actually in the pile.

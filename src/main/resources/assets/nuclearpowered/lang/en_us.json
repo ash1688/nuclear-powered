@@ -20,6 +20,7 @@
   "block.nuclearpowered.coal_boiler": "Coal Boiler",
   "block.nuclearpowered.steam_engine": "Steam Engine",
   "block.nuclearpowered.steam_pipe": "Steam Pipe",
+  "block.nuclearpowered.heater": "Heater",
   "fluid_type.nuclearpowered.steam": "Steam",
   "item.nuclearpowered.raw_uranium": "Raw Uranium",
   "item.nuclearpowered.raw_thorium": "Raw Thorium",
