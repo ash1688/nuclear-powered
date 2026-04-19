@@ -3,8 +3,6 @@ package io.github.ash1688.nuclearpowered.block.cable;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
@@ -13,41 +11,34 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.energy.IEnergyStorage;
 
 import javax.annotation.Nullable;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
+// Network-based conduit. Cables do not buffer FE — when a producer (thermocouple,
+// steam engine, battery) pushes into a cable, that push is distributed immediately
+// across all non-cable consumers reachable through the connected cable network.
+// This mirrors how Forge/RF pipe mods (Thermal, Mekanism, Flux) route energy:
+// one transfer per push, producer → network → consumers, no per-cable storage and
+// therefore no ordering or oscillation bugs.
 public class EnergyCableBlockEntity extends BlockEntity {
-    public static final int CAPACITY = 500;
-    // Per-face transfer ceiling. Matches the thermocouple's push rate so a cable never
-    // becomes the bottleneck for a single generator.
-    public static final int TRANSFER_RATE = 256;
+    // Bound BFS so a pathologically large network can't stall the server thread.
+    public static final int MAX_NETWORK_SIZE = 512;
 
-    private int storedFE = 0;
-
-    private final IEnergyStorage externalEnergy = new IEnergyStorage() {
+    private final IEnergyStorage passThrough = new IEnergyStorage() {
         @Override
         public int receiveEnergy(int amount, boolean simulate) {
-            int accept = Math.min(CAPACITY - storedFE, Math.min(amount, TRANSFER_RATE));
-            if (accept <= 0) return 0;
-            if (!simulate) {
-                storedFE += accept;
-                setChanged();
-            }
-            return accept;
+            if (level == null || level.isClientSide || amount <= 0) return 0;
+            return distribute(amount, simulate);
         }
 
-        @Override
-        public int extractEnergy(int maxExtract, boolean simulate) {
-            int take = Math.min(storedFE, Math.min(maxExtract, TRANSFER_RATE));
-            if (take <= 0) return 0;
-            if (!simulate) {
-                storedFE -= take;
-                setChanged();
-            }
-            return take;
-        }
-
-        @Override public int getEnergyStored() { return storedFE; }
-        @Override public int getMaxEnergyStored() { return CAPACITY; }
-        @Override public boolean canExtract() { return true; }
+        @Override public int extractEnergy(int maxExtract, boolean simulate) { return 0; }
+        @Override public int getEnergyStored() { return 0; }
+        @Override public int getMaxEnergyStored() { return 0; }
+        @Override public boolean canExtract() { return false; }
         @Override public boolean canReceive() { return true; }
     };
 
@@ -66,7 +57,7 @@ public class EnergyCableBlockEntity extends BlockEntity {
     @Override
     public void onLoad() {
         super.onLoad();
-        lazyEnergy = LazyOptional.of(() -> externalEnergy);
+        lazyEnergy = LazyOptional.of(() -> passThrough);
     }
 
     @Override
@@ -75,71 +66,54 @@ public class EnergyCableBlockEntity extends BlockEntity {
         lazyEnergy.invalidate();
     }
 
-    @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
-        tag.putInt("fe", storedFE);
+    // BFS the connected cable network, then push `amount` into the non-cable
+    // consumers we discovered. Pure sinks (canReceive && !canExtract: furnace,
+    // crusher, etc.) go first so a battery next to a furnace can't swallow all
+    // the FE while the furnace starves. Leftover FE spills into buffers
+    // (batteries) via their own receiveEnergy cap.
+    private int distribute(int amount, boolean simulate) {
+        List<IEnergyStorage> pureSinks = new ArrayList<>();
+        List<IEnergyStorage> buffers = new ArrayList<>();
+        discoverNetwork(pureSinks, buffers);
+
+        int remaining = pushInto(pureSinks, amount, simulate);
+        if (remaining > 0) remaining = pushInto(buffers, remaining, simulate);
+        return amount - remaining;
     }
 
-    @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
-        storedFE = tag.getInt("fe");
+    private int pushInto(List<IEnergyStorage> sinks, int remaining, boolean simulate) {
+        for (IEnergyStorage sink : sinks) {
+            if (remaining <= 0) break;
+            remaining -= sink.receiveEnergy(remaining, simulate);
+        }
+        return remaining;
     }
 
-    public int getStoredFE() { return storedFE; }
-
-    // Cable tick: two passes so FE flows forward instead of oscillating back into
-    // sources. Pass 1 drains into terminal consumers (canReceive && !canExtract) —
-    // furnaces, crushers, washers. Pass 2 delivers to buffer blocks (canExtract too:
-    // cables, batteries) but only when their stored FE is strictly lower than ours,
-    // so a full battery or an equal-fill cable can't flow back in the same tick.
-    public void tick(Level level, BlockPos pos, BlockState state) {
-        if (level.isClientSide || storedFE <= 0) return;
-        boolean changed = false;
-        for (Direction dir : Direction.values()) {
-            if (storedFE <= 0) break;
-            BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
-            if (neighbour == null) continue;
-            final int snapshot = storedFE;
-            int delta = neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).map(sink -> {
-                if (!sink.canReceive() || sink.canExtract()) return 0;
-                return sink.receiveEnergy(Math.min(snapshot, TRANSFER_RATE), false);
-            }).orElse(0);
-            if (delta > 0) {
-                storedFE -= delta;
-                changed = true;
+    private void discoverNetwork(List<IEnergyStorage> pureSinks, List<IEnergyStorage> buffers) {
+        Set<BlockPos> visited = new HashSet<>();
+        Set<BlockPos> consumersSeen = new HashSet<>();
+        Deque<BlockPos> queue = new ArrayDeque<>();
+        visited.add(worldPosition);
+        queue.add(worldPosition);
+        while (!queue.isEmpty() && visited.size() <= MAX_NETWORK_SIZE) {
+            BlockPos cur = queue.poll();
+            for (Direction dir : Direction.values()) {
+                BlockPos npos = cur.relative(dir);
+                BlockEntity be = level.getBlockEntity(npos);
+                if (be == null) continue;
+                if (be instanceof EnergyCableBlockEntity) {
+                    if (visited.add(npos)) queue.add(npos);
+                    continue;
+                }
+                // A single non-cable machine might border the network from several
+                // cables; only probe each position once.
+                if (!consumersSeen.add(npos)) continue;
+                be.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).ifPresent(cap -> {
+                    if (!cap.canReceive()) return;
+                    if (cap.canExtract()) buffers.add(cap);
+                    else pureSinks.add(cap);
+                });
             }
         }
-        // Non-cable buffers (batteries) get priority so direction iteration can't
-        // dump the whole buffer into a sideways cable and starve the real destination.
-        changed |= pushToBuffers(level, pos, false);
-        changed |= pushToBuffers(level, pos, true);
-        if (changed) {
-            setChanged(level, pos, state);
-        }
-    }
-
-    private boolean pushToBuffers(Level level, BlockPos pos, boolean cablesOnly) {
-        boolean changed = false;
-        for (Direction dir : Direction.values()) {
-            if (storedFE <= 0) break;
-            BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
-            if (neighbour == null) continue;
-            boolean isCable = neighbour instanceof EnergyCableBlockEntity;
-            if (isCable != cablesOnly) continue;
-            int delta = neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).map(sink -> {
-                if (!sink.canReceive() || !sink.canExtract()) return 0;
-                int other = sink.getEnergyStored();
-                if (other >= storedFE) return 0;
-                int offered = Math.min(Math.min(storedFE, TRANSFER_RATE), storedFE - other);
-                return sink.receiveEnergy(offered, false);
-            }).orElse(0);
-            if (delta > 0) {
-                storedFE -= delta;
-                changed = true;
-            }
-        }
-        return changed;
     }
 }
