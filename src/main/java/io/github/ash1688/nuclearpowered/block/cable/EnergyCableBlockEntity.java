@@ -90,18 +90,17 @@ public class EnergyCableBlockEntity extends BlockEntity {
     public int getStoredFE() { return storedFE; }
 
     // Cable tick: two passes so FE flows forward instead of oscillating back into
-    // sources. Pass 1 drains into terminal consumers (canReceive && !canExtract),
-    // skipping anything that could push back (batteries, generators, other cables).
-    // Pass 2 propagates along the cable network, but only into cables whose buffer
-    // is strictly lower than ours — that one-way gradient prevents two neighbouring
-    // cables from ping-ponging the same FE back and forth every tick.
+    // sources. Pass 1 drains into terminal consumers (canReceive && !canExtract) —
+    // furnaces, crushers, washers. Pass 2 delivers to buffer blocks (canExtract too:
+    // cables, batteries) but only when their stored FE is strictly lower than ours,
+    // so a full battery or an equal-fill cable can't flow back in the same tick.
     public void tick(Level level, BlockPos pos, BlockState state) {
         if (level.isClientSide || storedFE <= 0) return;
         boolean changed = false;
         for (Direction dir : Direction.values()) {
             if (storedFE <= 0) break;
             BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
-            if (neighbour == null || neighbour instanceof EnergyCableBlockEntity) continue;
+            if (neighbour == null) continue;
             final int snapshot = storedFE;
             int delta = neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).map(sink -> {
                 if (!sink.canReceive() || sink.canExtract()) return 0;
@@ -115,12 +114,12 @@ public class EnergyCableBlockEntity extends BlockEntity {
         for (Direction dir : Direction.values()) {
             if (storedFE <= 0) break;
             BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
-            if (!(neighbour instanceof EnergyCableBlockEntity otherCable)) continue;
-            int other = otherCable.getStoredFE();
-            if (other >= storedFE) continue;
-            final int offered = Math.min(Math.min(storedFE, TRANSFER_RATE), storedFE - other);
+            if (neighbour == null) continue;
             int delta = neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).map(sink -> {
-                if (!sink.canReceive()) return 0;
+                if (!sink.canReceive() || !sink.canExtract()) return 0;
+                int other = sink.getEnergyStored();
+                if (other >= storedFE) return 0;
+                int offered = Math.min(Math.min(storedFE, TRANSFER_RATE), storedFE - other);
                 return sink.receiveEnergy(offered, false);
             }).orElse(0);
             if (delta > 0) {
