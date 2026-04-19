@@ -1,7 +1,9 @@
 package io.github.ash1688.nuclearpowered.init;
 
 import io.github.ash1688.nuclearpowered.NuclearPowered;
+import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -78,6 +80,18 @@ public final class ModItems {
 
     public static final RegistryObject<Item> ION_EXCHANGE_RESIN = ITEMS.register("ion_exchange_resin",
             () -> new Item(new Item.Properties()));
+
+    // Filled buckets for the reprocessing reagents. Registered here rather than
+    // inside ModFluids so we can reference the Items registry cleanly; the
+    // ForgeFlowingFluid.Properties in ModFluids then points back at these via
+    // a supplier to close the loop.
+    public static final RegistryObject<BucketItem> NITRIC_ACID_BUCKET = ITEMS.register("nitric_acid_bucket",
+            () -> new BucketItem(ModFluids.NITRIC_ACID,
+                    new Item.Properties().craftRemainder(Items.BUCKET).stacksTo(1)));
+
+    public static final RegistryObject<BucketItem> EXTRACTION_SOLVENT_BUCKET = ITEMS.register("extraction_solvent_bucket",
+            () -> new BucketItem(ModFluids.EXTRACTION_SOLVENT,
+                    new Item.Properties().craftRemainder(Items.BUCKET).stacksTo(1)));
 
     private ModItems() {}
 

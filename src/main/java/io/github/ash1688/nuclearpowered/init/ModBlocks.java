@@ -5,6 +5,7 @@ import io.github.ash1688.nuclearpowered.block.battery.BatteryBlock;
 import io.github.ash1688.nuclearpowered.block.boiler.CoalBoilerBlock;
 import io.github.ash1688.nuclearpowered.block.cable.EnergyCableBlock;
 import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlock;
+import io.github.ash1688.nuclearpowered.block.dissolver.DissolverBlock;
 import io.github.ash1688.nuclearpowered.block.electricfurnace.ElectricFurnaceBlock;
 import io.github.ash1688.nuclearpowered.block.engine.SteamEngineBlock;
 import io.github.ash1688.nuclearpowered.block.fabricator.FuelFabricatorBlock;
@@ -163,6 +164,12 @@ public final class ModBlocks {
     public static final RegistryObject<ShearerBlock> SHEARER = registerBlock("shearer",
             () -> new ShearerBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.METAL)
+                    .strength(3.5f, 4.0f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<DissolverBlock> DISSOLVER = registerBlock("dissolver",
+            () -> new DissolverBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_YELLOW)
                     .strength(3.5f, 4.0f)
                     .sound(SoundType.METAL)));
 

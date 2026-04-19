@@ -48,6 +48,9 @@ public final class ModCreativeTabs {
                         out.accept(ModBlocks.STEAM_PIPE.get());
                         out.accept(ModBlocks.HEATER.get());
                         out.accept(ModBlocks.SHEARER.get());
+                        out.accept(ModBlocks.DISSOLVER.get());
+                        out.accept(ModItems.NITRIC_ACID_BUCKET.get());
+                        out.accept(ModItems.EXTRACTION_SOLVENT_BUCKET.get());
                         // Tier 1 reprocessing items + reagents
                         out.accept(ModItems.CHOPPED_FUEL.get());
                         out.accept(ModItems.CLADDING_SCRAP.get());

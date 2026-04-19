@@ -92,7 +92,8 @@ public final class ModFluids {
 
     private static ForgeFlowingFluid.Properties nitricProperties() {
         return new ForgeFlowingFluid.Properties(NITRIC_ACID_TYPE, NITRIC_ACID, NITRIC_ACID_FLOWING)
-                .slopeFindDistance(2).levelDecreasePerBlock(2);
+                .slopeFindDistance(2).levelDecreasePerBlock(2)
+                .bucket(ModItems.NITRIC_ACID_BUCKET);
     }
 
     public static final RegistryObject<FluidType> EXTRACTION_SOLVENT_TYPE = FLUID_TYPES.register("extraction_solvent",
@@ -117,7 +118,8 @@ public final class ModFluids {
 
     private static ForgeFlowingFluid.Properties extractionProperties() {
         return new ForgeFlowingFluid.Properties(EXTRACTION_SOLVENT_TYPE, EXTRACTION_SOLVENT, EXTRACTION_SOLVENT_FLOWING)
-                .slopeFindDistance(2).levelDecreasePerBlock(2);
+                .slopeFindDistance(2).levelDecreasePerBlock(2)
+                .bucket(ModItems.EXTRACTION_SOLVENT_BUCKET);
     }
 
     private ModFluids() {}
