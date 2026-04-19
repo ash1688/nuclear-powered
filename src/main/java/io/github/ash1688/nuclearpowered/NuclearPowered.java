@@ -1,6 +1,7 @@
 package io.github.ash1688.nuclearpowered;
 
 import com.mojang.logging.LogUtils;
+import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModBlocks;
 import io.github.ash1688.nuclearpowered.init.ModCreativeTabs;
 import io.github.ash1688.nuclearpowered.init.ModItems;
@@ -25,6 +26,7 @@ public class NuclearPowered {
 
         ModBlocks.register(modEventBus);
         ModItems.register(modEventBus);
+        ModBlockEntities.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
 
         MinecraftForge.EVENT_BUS.register(this);

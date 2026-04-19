@@ -1,6 +1,7 @@
 package io.github.ash1688.nuclearpowered.init;
 
 import io.github.ash1688.nuclearpowered.NuclearPowered;
+import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlock;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -31,6 +32,12 @@ public final class ModBlocks {
                     .strength(3.0f, 3.0f)
                     .sound(SoundType.STONE)
                     .requiresCorrectToolForDrops()));
+
+    public static final RegistryObject<CrusherBlock> CRUSHER = registerBlock("crusher",
+            () -> new CrusherBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(3.5f, 4.0f)
+                    .sound(SoundType.METAL)));
 
     private ModBlocks() {}
 
