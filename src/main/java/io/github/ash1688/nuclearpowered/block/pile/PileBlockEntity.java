@@ -1,6 +1,7 @@
 package io.github.ash1688.nuclearpowered.block.pile;
 
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
+import io.github.ash1688.nuclearpowered.init.ModBlocks;
 import io.github.ash1688.nuclearpowered.init.ModItems;
 import io.github.ash1688.nuclearpowered.menu.PileMenu;
 import net.minecraft.core.BlockPos;
@@ -25,6 +26,10 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Set;
 
 public class PileBlockEntity extends BlockEntity implements MenuProvider {
     public static final int SLOT_FUEL = 0;
@@ -35,14 +40,22 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
 
     // Heat system. Heat rises while burning, decays passively.
     // Above SAFE_HEAT the burn slows down — never melts, just takes longer.
-    public static final int MAX_HEAT = 2000;
-    public static final int SAFE_HEAT = 800;
+    // MAX_HEAT and SAFE_HEAT are dynamic: they scale with the number of connected
+    // graphite_casing blocks detected in the structure scan.
+    private static final int BASE_MAX_HEAT = 2000;
+    private static final int MAX_HEAT_PER_CASING = 200;
+    // SAFE_HEAT is 40% of dynamic MAX_HEAT; above that, slowdown begins.
+    private static final int SAFE_HEAT_PERCENT = 40;
     private static final int MAX_SLOWDOWN = 10;
-    private static final int HEAT_RISE_PER_BURN_TICK = 5;
+    private static final int HEAT_RISE_PER_BURN_TICK = 1;
     private static final int HEAT_DECAY_PER_TICK = 1;
     // Sub-tick resolution for fractional burn. A full "burn tick" is 10 sub-ticks;
     // slowdown controls how many sub-ticks accrue per real tick.
     private static final int BURN_SUBTICKS = 10;
+
+    // Multiblock structure scan parameters.
+    private static final int STRUCTURE_SCAN_INTERVAL_TICKS = 20;
+    private static final int MAX_STRUCTURE_BLOCKS = 128;
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(2) {
         @Override
@@ -67,17 +80,23 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     private boolean autoInput = true;
     private boolean autoOutput = true;
 
+    // Multiblock scan cache. Recomputed on an interval to avoid hammering the world
+    // on every tick. Not persisted — it's derived data.
+    private int cachedCasingCount = 0;
+    private int scanCooldown = 0;
+
     private final ContainerData data = new ContainerData() {
         @Override
         public int get(int index) {
             return switch (index) {
                 case 0 -> heat;
-                case 1 -> MAX_HEAT;
+                case 1 -> getMaxHeat();
                 case 2 -> burnTime;
                 case 3 -> BURN_TICKS_PER_ROD;
                 case 4 -> autoInput ? 1 : 0;
                 case 5 -> autoOutput ? 1 : 0;
                 case 6 -> currentSlowdown();
+                case 7 -> cachedCasingCount;
                 default -> 0;
             };
         }
@@ -89,12 +108,12 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
                 case 2 -> burnTime = value;
                 case 4 -> autoInput = value != 0;
                 case 5 -> autoOutput = value != 0;
-                // slowdown is derived, no setter
+                // slowdown, max heat, casing count are derived — no setter.
             }
         }
 
         @Override
-        public int getCount() { return 7; }
+        public int getCount() { return 8; }
     };
 
     public PileBlockEntity(BlockPos pos, BlockState state) {
@@ -104,6 +123,16 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     public IItemHandler getItemHandlerForMenu() { return itemHandler; }
 
     public int getHeat() { return heat; }
+
+    public int getMaxHeat() {
+        return BASE_MAX_HEAT + cachedCasingCount * MAX_HEAT_PER_CASING;
+    }
+
+    public int getSafeHeat() {
+        return getMaxHeat() * SAFE_HEAT_PERCENT / 100;
+    }
+
+    public int getCasingCount() { return cachedCasingCount; }
 
     public boolean isBurning() { return burnTime > 0; }
 
@@ -117,10 +146,13 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
 
     // Slowdown multiplier: 1 at/below SAFE_HEAT, up to MAX_SLOWDOWN at MAX_HEAT.
     private int currentSlowdown() {
-        if (heat <= SAFE_HEAT) return 1;
-        if (heat >= MAX_HEAT) return MAX_SLOWDOWN;
-        int range = MAX_HEAT - SAFE_HEAT;
-        return 1 + (heat - SAFE_HEAT) * (MAX_SLOWDOWN - 1) / range;
+        int safe = getSafeHeat();
+        int max = getMaxHeat();
+        if (heat <= safe) return 1;
+        if (heat >= max) return MAX_SLOWDOWN;
+        int range = max - safe;
+        if (range <= 0) return MAX_SLOWDOWN;
+        return 1 + (heat - safe) * (MAX_SLOWDOWN - 1) / range;
     }
 
     @Override
@@ -186,6 +218,12 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     public void tick(Level level, BlockPos pos, BlockState state) {
         boolean changed = false;
 
+        // Refresh the connected-casing count on a cadence so we don't re-scan every tick.
+        if (scanCooldown-- <= 0) {
+            rescanStructure(level);
+            scanCooldown = STRUCTURE_SCAN_INTERVAL_TICKS;
+        }
+
         if (burnTime > 0) {
             int slowdown = currentSlowdown();
             // Advance the burn accumulator by (BURN_SUBTICKS / slowdown) per real tick.
@@ -193,11 +231,12 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
             //   slowdown=5  → +2/tick   = 1 burn-tick per 5 real ticks.
             //   slowdown=10 → +1/tick   = 1 burn-tick per 10 real ticks.
             burnAccumulator += Math.max(1, BURN_SUBTICKS / slowdown);
+            int maxHeat = getMaxHeat();
             while (burnAccumulator >= BURN_SUBTICKS && burnTime > 0) {
                 burnAccumulator -= BURN_SUBTICKS;
                 burnTime--;
-                if (heat < MAX_HEAT) {
-                    heat = Math.min(MAX_HEAT, heat + HEAT_RISE_PER_BURN_TICK);
+                if (heat < maxHeat) {
+                    heat = Math.min(maxHeat, heat + HEAT_RISE_PER_BURN_TICK);
                 }
             }
             if (burnTime == 0) {
@@ -241,6 +280,32 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
         } else {
             depleted.grow(1);
         }
+    }
+
+    // Bounded flood-fill from this pile's position out through connected graphite_casing
+    // blocks. Stops after MAX_STRUCTURE_BLOCKS visits to keep the cost cheap. The resulting
+    // count drives the dynamic MAX_HEAT / SAFE_HEAT values.
+    private void rescanStructure(Level level) {
+        if (level == null || level.isClientSide) return;
+        Set<BlockPos> visited = new HashSet<>();
+        Deque<BlockPos> queue = new ArrayDeque<>();
+        for (Direction dir : Direction.values()) {
+            queue.offer(worldPosition.relative(dir));
+        }
+        int count = 0;
+        while (!queue.isEmpty() && visited.size() < MAX_STRUCTURE_BLOCKS) {
+            BlockPos pos = queue.poll();
+            if (!visited.add(pos)) continue;
+            BlockState bs = level.getBlockState(pos);
+            if (bs.is(ModBlocks.GRAPHITE_CASING.get())) {
+                count++;
+                for (Direction dir : Direction.values()) {
+                    BlockPos next = pos.relative(dir);
+                    if (!visited.contains(next)) queue.offer(next);
+                }
+            }
+        }
+        cachedCasingCount = count;
     }
 
     private final class SidedItemHandler implements IItemHandler {

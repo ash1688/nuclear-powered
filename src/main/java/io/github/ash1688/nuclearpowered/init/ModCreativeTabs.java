@@ -38,6 +38,7 @@ public final class ModCreativeTabs {
                         out.accept(ModBlocks.WASHER.get());
                         out.accept(ModBlocks.ELECTRIC_FURNACE.get());
                         out.accept(ModBlocks.GRAPHITE_PILE.get());
+                        out.accept(ModBlocks.GRAPHITE_CASING.get());
                     })
                     .build());
 

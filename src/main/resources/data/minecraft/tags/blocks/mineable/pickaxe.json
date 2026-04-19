@@ -12,6 +12,7 @@
     "nuclearpowered:crusher",
     "nuclearpowered:washer",
     "nuclearpowered:electric_furnace",
-    "nuclearpowered:graphite_pile"
+    "nuclearpowered:graphite_pile",
+    "nuclearpowered:graphite_casing"
   ]
 }

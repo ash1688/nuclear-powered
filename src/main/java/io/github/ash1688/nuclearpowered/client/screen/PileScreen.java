@@ -112,6 +112,12 @@ public class PileScreen extends AbstractContainerScreen<PileMenu> {
             List<FormattedCharSequence> lines = new ArrayList<>();
             lines.add(Component.literal(
                     "Heat: " + menu.getHeat() + " / " + menu.getMaxHeat()).getVisualOrderText());
+            int casings = menu.getCasingCount();
+            if (casings > 0) {
+                lines.add(Component.literal("Structure: " + casings + " casings").getVisualOrderText());
+            } else {
+                lines.add(Component.literal("Structure: no casings").getVisualOrderText());
+            }
             int slowdown = menu.getSlowdown();
             if (slowdown > 1) {
                 lines.add(Component.literal("Burn rate: " + slowdown + "x slower").getVisualOrderText());

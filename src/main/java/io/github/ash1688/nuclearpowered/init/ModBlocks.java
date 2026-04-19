@@ -104,6 +104,15 @@ public final class ModBlocks {
                     .sound(SoundType.STONE)
                     .requiresCorrectToolForDrops()));
 
+    // Plain graphite brick used as pile casing. Detected by the pile at runtime to
+    // expand the structure's heat capacity — no BlockEntity, purely decorative.
+    public static final RegistryObject<Block> GRAPHITE_CASING = registerBlock("graphite_casing",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_BLACK)
+                    .strength(3.5f, 4.0f)
+                    .sound(SoundType.STONE)
+                    .requiresCorrectToolForDrops()));
+
     private ModBlocks() {}
 
     // Registers a block and its corresponding BlockItem in one call.
