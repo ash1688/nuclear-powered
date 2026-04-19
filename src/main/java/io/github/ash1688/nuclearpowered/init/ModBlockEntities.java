@@ -2,6 +2,7 @@ package io.github.ash1688.nuclearpowered.init;
 
 import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlockEntity;
+import io.github.ash1688.nuclearpowered.block.washer.WasherBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -15,6 +16,10 @@ public final class ModBlockEntities {
     public static final RegistryObject<BlockEntityType<CrusherBlockEntity>> CRUSHER =
             BLOCK_ENTITIES.register("crusher", () ->
                     BlockEntityType.Builder.of(CrusherBlockEntity::new, ModBlocks.CRUSHER.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<WasherBlockEntity>> WASHER =
+            BLOCK_ENTITIES.register("washer", () ->
+                    BlockEntityType.Builder.of(WasherBlockEntity::new, ModBlocks.WASHER.get()).build(null));
 
     private ModBlockEntities() {}
 

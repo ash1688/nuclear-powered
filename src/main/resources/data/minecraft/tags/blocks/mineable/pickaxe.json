@@ -3,6 +3,7 @@
   "values": [
     "nuclearpowered:uranium_ore",
     "nuclearpowered:thorium_ore",
-    "nuclearpowered:crusher"
+    "nuclearpowered:crusher",
+    "nuclearpowered:washer"
   ]
 }

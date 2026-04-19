@@ -2,6 +2,7 @@ package io.github.ash1688.nuclearpowered.init;
 
 import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlock;
+import io.github.ash1688.nuclearpowered.block.washer.WasherBlock;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -35,6 +36,12 @@ public final class ModBlocks {
 
     public static final RegistryObject<CrusherBlock> CRUSHER = registerBlock("crusher",
             () -> new CrusherBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(3.5f, 4.0f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<WasherBlock> WASHER = registerBlock("washer",
+            () -> new WasherBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.METAL)
                     .strength(3.5f, 4.0f)
                     .sound(SoundType.METAL)));
