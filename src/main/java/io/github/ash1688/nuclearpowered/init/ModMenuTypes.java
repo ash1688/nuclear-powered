@@ -6,6 +6,7 @@ import io.github.ash1688.nuclearpowered.menu.CoalBoilerMenu;
 import io.github.ash1688.nuclearpowered.menu.CrusherMenu;
 import io.github.ash1688.nuclearpowered.menu.DissolverMenu;
 import io.github.ash1688.nuclearpowered.menu.ElectricFurnaceMenu;
+import io.github.ash1688.nuclearpowered.menu.ExtractionColumnMenu;
 import io.github.ash1688.nuclearpowered.menu.FuelFabricatorMenu;
 import io.github.ash1688.nuclearpowered.menu.PileMenu;
 import io.github.ash1688.nuclearpowered.menu.ShearerMenu;
@@ -55,6 +56,9 @@ public final class ModMenuTypes {
 
     public static final RegistryObject<MenuType<DissolverMenu>> DISSOLVER =
             MENU_TYPES.register("dissolver", () -> IForgeMenuType.create(DissolverMenu::new));
+
+    public static final RegistryObject<MenuType<ExtractionColumnMenu>> EXTRACTION_COLUMN =
+            MENU_TYPES.register("extraction_column", () -> IForgeMenuType.create(ExtractionColumnMenu::new));
 
     private ModMenuTypes() {}
 

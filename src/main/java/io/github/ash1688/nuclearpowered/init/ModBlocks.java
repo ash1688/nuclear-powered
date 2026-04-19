@@ -7,6 +7,7 @@ import io.github.ash1688.nuclearpowered.block.cable.EnergyCableBlock;
 import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlock;
 import io.github.ash1688.nuclearpowered.block.dissolver.DissolverBlock;
 import io.github.ash1688.nuclearpowered.block.electricfurnace.ElectricFurnaceBlock;
+import io.github.ash1688.nuclearpowered.block.extractor.ExtractionColumnBlock;
 import io.github.ash1688.nuclearpowered.block.engine.SteamEngineBlock;
 import io.github.ash1688.nuclearpowered.block.fabricator.FuelFabricatorBlock;
 import io.github.ash1688.nuclearpowered.block.heater.HeaterBlock;
@@ -170,6 +171,12 @@ public final class ModBlocks {
     public static final RegistryObject<DissolverBlock> DISSOLVER = registerBlock("dissolver",
             () -> new DissolverBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_YELLOW)
+                    .strength(3.5f, 4.0f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<ExtractionColumnBlock> EXTRACTION_COLUMN = registerBlock("extraction_column",
+            () -> new ExtractionColumnBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_BROWN)
                     .strength(3.5f, 4.0f)
                     .sound(SoundType.METAL)));
 

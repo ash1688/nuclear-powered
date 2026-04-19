@@ -6,6 +6,7 @@ import io.github.ash1688.nuclearpowered.client.screen.CoalBoilerScreen;
 import io.github.ash1688.nuclearpowered.client.screen.CrusherScreen;
 import io.github.ash1688.nuclearpowered.client.screen.DissolverScreen;
 import io.github.ash1688.nuclearpowered.client.screen.ElectricFurnaceScreen;
+import io.github.ash1688.nuclearpowered.client.screen.ExtractionColumnScreen;
 import io.github.ash1688.nuclearpowered.client.screen.FuelFabricatorScreen;
 import io.github.ash1688.nuclearpowered.client.screen.PileScreen;
 import io.github.ash1688.nuclearpowered.client.screen.ShearerScreen;
@@ -37,6 +38,7 @@ public final class ModClientSetup {
             MenuScreens.register(ModMenuTypes.STEAM_ENGINE.get(), SteamEngineScreen::new);
             MenuScreens.register(ModMenuTypes.SHEARER.get(), ShearerScreen::new);
             MenuScreens.register(ModMenuTypes.DISSOLVER.get(), DissolverScreen::new);
+            MenuScreens.register(ModMenuTypes.EXTRACTION_COLUMN.get(), ExtractionColumnScreen::new);
         });
     }
 }
