@@ -40,6 +40,7 @@ public final class ModCreativeTabs {
                         out.accept(ModBlocks.GRAPHITE_PILE.get());
                         out.accept(ModBlocks.GRAPHITE_CASING.get());
                         out.accept(ModBlocks.THERMOCOUPLE.get());
+                        out.accept(ModBlocks.ENERGY_CABLE.get());
                     })
                     .build());
 

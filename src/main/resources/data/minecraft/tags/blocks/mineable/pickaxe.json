@@ -14,6 +14,7 @@
     "nuclearpowered:electric_furnace",
     "nuclearpowered:graphite_pile",
     "nuclearpowered:graphite_casing",
-    "nuclearpowered:thermocouple"
+    "nuclearpowered:thermocouple",
+    "nuclearpowered:energy_cable"
   ]
 }
