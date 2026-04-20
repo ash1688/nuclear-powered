@@ -1,0 +1,18 @@
+{
+  "parent": "nuclearpowered:reprocessing",
+  "display": {
+    "icon": { "item": "nuclearpowered:reclaimed_uranium" },
+    "title": { "translate": "advancement.nuclearpowered.closed_loop.title" },
+    "description": { "translate": "advancement.nuclearpowered.closed_loop.description" },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "got_reclaimed": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [ { "items": [ "nuclearpowered:reclaimed_uranium" ] } ] }
+    }
+  },
+  "requirements": [ [ "got_reclaimed" ] ]
+}

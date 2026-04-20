@@ -1,0 +1,17 @@
+{
+  "parent": "nuclearpowered:reprocessing",
+  "display": {
+    "icon": { "item": "nuclearpowered:cesium_137" },
+    "title": { "translate": "advancement.nuclearpowered.cesium.title" },
+    "description": { "translate": "advancement.nuclearpowered.cesium.description" },
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "got_cs": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [ { "items": [ "nuclearpowered:cesium_137" ] } ] }
+    }
+  },
+  "requirements": [ [ "got_cs" ] ]
+}

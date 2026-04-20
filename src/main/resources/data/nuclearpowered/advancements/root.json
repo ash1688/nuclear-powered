@@ -1,0 +1,17 @@
+{
+  "display": {
+    "icon": { "item": "nuclearpowered:raw_uranium" },
+    "title": { "translate": "advancement.nuclearpowered.root.title" },
+    "description": { "translate": "advancement.nuclearpowered.root.description" },
+    "background": "minecraft:textures/block/deepslate.png",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "got_raw_uranium": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [ { "items": [ "nuclearpowered:raw_uranium" ] } ] }
+    }
+  },
+  "requirements": [ [ "got_raw_uranium" ] ]
+}

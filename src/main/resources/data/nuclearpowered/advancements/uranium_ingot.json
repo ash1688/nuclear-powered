@@ -1,0 +1,17 @@
+{
+  "parent": "nuclearpowered:root",
+  "display": {
+    "icon": { "item": "nuclearpowered:uranium_ingot" },
+    "title": { "translate": "advancement.nuclearpowered.uranium_ingot.title" },
+    "description": { "translate": "advancement.nuclearpowered.uranium_ingot.description" },
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "got_ingot": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [ { "items": [ "nuclearpowered:uranium_ingot" ] } ] }
+    }
+  },
+  "requirements": [ [ "got_ingot" ] ]
+}

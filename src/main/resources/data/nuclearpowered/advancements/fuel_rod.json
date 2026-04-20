@@ -1,0 +1,17 @@
+{
+  "parent": "nuclearpowered:uranium_ingot",
+  "display": {
+    "icon": { "item": "nuclearpowered:uranium_fuel_rod" },
+    "title": { "translate": "advancement.nuclearpowered.fuel_rod.title" },
+    "description": { "translate": "advancement.nuclearpowered.fuel_rod.description" },
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "got_rod": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [ { "items": [ "nuclearpowered:uranium_fuel_rod" ] } ] }
+    }
+  },
+  "requirements": [ [ "got_rod" ] ]
+}

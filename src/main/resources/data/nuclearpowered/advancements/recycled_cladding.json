@@ -1,0 +1,17 @@
+{
+  "parent": "nuclearpowered:reprocessing",
+  "display": {
+    "icon": { "item": "nuclearpowered:fuel_rod_cladding" },
+    "title": { "translate": "advancement.nuclearpowered.recycled_cladding.title" },
+    "description": { "translate": "advancement.nuclearpowered.recycled_cladding.description" },
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "got_cladding": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [ { "items": [ "nuclearpowered:fuel_rod_cladding" ] } ] }
+    }
+  },
+  "requirements": [ [ "got_cladding" ] ]
+}

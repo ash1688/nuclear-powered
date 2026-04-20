@@ -1,0 +1,17 @@
+{
+  "parent": "nuclearpowered:criticality",
+  "display": {
+    "icon": { "item": "nuclearpowered:shearer" },
+    "title": { "translate": "advancement.nuclearpowered.reprocessing.title" },
+    "description": { "translate": "advancement.nuclearpowered.reprocessing.description" },
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "got_chopped": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [ { "items": [ "nuclearpowered:chopped_fuel" ] } ] }
+    }
+  },
+  "requirements": [ [ "got_chopped" ] ]
+}

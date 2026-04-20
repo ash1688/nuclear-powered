@@ -1,0 +1,17 @@
+{
+  "parent": "nuclearpowered:root",
+  "display": {
+    "icon": { "item": "nuclearpowered:steam_engine" },
+    "title": { "translate": "advancement.nuclearpowered.steam_power.title" },
+    "description": { "translate": "advancement.nuclearpowered.steam_power.description" },
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "got_engine": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [ { "items": [ "nuclearpowered:steam_engine" ] } ] }
+    }
+  },
+  "requirements": [ [ "got_engine" ] ]
+}

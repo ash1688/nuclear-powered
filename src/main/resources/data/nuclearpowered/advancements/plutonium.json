@@ -1,0 +1,18 @@
+{
+  "parent": "nuclearpowered:reprocessing",
+  "display": {
+    "icon": { "item": "nuclearpowered:plutonium_239" },
+    "title": { "translate": "advancement.nuclearpowered.plutonium.title" },
+    "description": { "translate": "advancement.nuclearpowered.plutonium.description" },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "got_pu": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [ { "items": [ "nuclearpowered:plutonium_239" ] } ] }
+    }
+  },
+  "requirements": [ [ "got_pu" ] ]
+}

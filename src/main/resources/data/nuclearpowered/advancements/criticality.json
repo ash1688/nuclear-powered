@@ -1,0 +1,18 @@
+{
+  "parent": "nuclearpowered:fuel_rod",
+  "display": {
+    "icon": { "item": "nuclearpowered:depleted_uranium_fuel_rod" },
+    "title": { "translate": "advancement.nuclearpowered.criticality.title" },
+    "description": { "translate": "advancement.nuclearpowered.criticality.description" },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "got_depleted": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [ { "items": [ "nuclearpowered:depleted_uranium_fuel_rod" ] } ] }
+    }
+  },
+  "requirements": [ [ "got_depleted" ] ]
+}

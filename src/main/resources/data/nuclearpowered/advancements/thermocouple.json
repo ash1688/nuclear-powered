@@ -1,0 +1,17 @@
+{
+  "parent": "nuclearpowered:graphite_pile",
+  "display": {
+    "icon": { "item": "nuclearpowered:thermocouple" },
+    "title": { "translate": "advancement.nuclearpowered.thermocouple.title" },
+    "description": { "translate": "advancement.nuclearpowered.thermocouple.description" },
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "got_thermo": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [ { "items": [ "nuclearpowered:thermocouple" ] } ] }
+    }
+  },
+  "requirements": [ [ "got_thermo" ] ]
+}
