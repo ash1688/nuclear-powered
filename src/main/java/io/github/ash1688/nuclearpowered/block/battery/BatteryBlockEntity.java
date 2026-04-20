@@ -22,12 +22,11 @@ import net.minecraftforge.energy.IEnergyStorage;
 import javax.annotation.Nullable;
 
 public class BatteryBlockEntity extends BlockEntity implements MenuProvider {
-    // Sized to hold ~4 full reprocessing cycles' worth (1 cycle ~240K FE across
-    // the five machines). One battery won't power the full chain in parallel
-    // (MAX_IO_PER_TICK < 1200 FE/tick chain draw), but it'll comfortably buffer
-    // surpluses overnight and smooth out thermo output gaps.
-    public static final int CAPACITY_FE = 1_000_000;
-    public static final int MAX_IO_PER_TICK = 1024;
+    // Holds ~20 reprocessing cycles' worth (1 cycle ~240K FE). IO ceiling
+    // 2048/tick means a single battery comfortably covers the 1200 FE/tick
+    // reprocessing chain on its own, with headroom.
+    public static final int CAPACITY_FE = 5_000_000;
+    public static final int MAX_IO_PER_TICK = 2048;
 
     private int storedFE = 0;
 
