@@ -19,6 +19,7 @@ import io.github.ash1688.nuclearpowered.block.shearer.ShearerBlockEntity;
 import io.github.ash1688.nuclearpowered.block.thermocouple.ThermocoupleBlockEntity;
 import io.github.ash1688.nuclearpowered.block.vitrifier.VitrifierBlockEntity;
 import io.github.ash1688.nuclearpowered.block.washer.WasherBlockEntity;
+import io.github.ash1688.nuclearpowered.block.watersource.InfiniteWaterSourceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -96,6 +97,10 @@ public final class ModBlockEntities {
     public static final RegistryObject<BlockEntityType<CladdingRecyclerBlockEntity>> CLADDING_RECYCLER =
             BLOCK_ENTITIES.register("cladding_recycler", () ->
                     BlockEntityType.Builder.of(CladdingRecyclerBlockEntity::new, ModBlocks.CLADDING_RECYCLER.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<InfiniteWaterSourceBlockEntity>> INFINITE_WATER_SOURCE =
+            BLOCK_ENTITIES.register("infinite_water_source", () ->
+                    BlockEntityType.Builder.of(InfiniteWaterSourceBlockEntity::new, ModBlocks.INFINITE_WATER_SOURCE.get()).build(null));
 
     public static final RegistryObject<BlockEntityType<HeaterBlockEntity>> HEATER =
             BLOCK_ENTITIES.register("heater", () ->

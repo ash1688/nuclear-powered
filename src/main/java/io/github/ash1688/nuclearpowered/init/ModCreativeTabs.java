@@ -47,6 +47,7 @@ public final class ModCreativeTabs {
                         out.accept(ModBlocks.STEAM_ENGINE.get());
                         out.accept(ModBlocks.STEAM_PIPE.get());
                         out.accept(ModBlocks.HEATER.get());
+                        out.accept(ModBlocks.INFINITE_WATER_SOURCE.get());
                         out.accept(ModBlocks.SHEARER.get());
                         out.accept(ModBlocks.DISSOLVER.get());
                         out.accept(ModBlocks.EXTRACTION_COLUMN.get());

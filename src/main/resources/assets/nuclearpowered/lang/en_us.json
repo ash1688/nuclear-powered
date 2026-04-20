@@ -27,6 +27,7 @@
   "block.nuclearpowered.cs_column": "Cesium Column",
   "block.nuclearpowered.vitrifier": "Vitrifier",
   "block.nuclearpowered.cladding_recycler": "Cladding Recycler",
+  "block.nuclearpowered.infinite_water_source": "Infinite Water Source (Creative)",
   "item.nuclearpowered.fuel_rod_cladding": "Fuel Rod Cladding",
   "advancement.nuclearpowered.root.title": "Nuclear Dawn",
   "advancement.nuclearpowered.root.description": "Mine your first chunk of uranium ore.",

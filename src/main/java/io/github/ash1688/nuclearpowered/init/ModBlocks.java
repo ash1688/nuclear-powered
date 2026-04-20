@@ -18,6 +18,7 @@ import io.github.ash1688.nuclearpowered.block.recycler.CladdingRecyclerBlock;
 import io.github.ash1688.nuclearpowered.block.shearer.ShearerBlock;
 import io.github.ash1688.nuclearpowered.block.thermocouple.ThermocoupleBlock;
 import io.github.ash1688.nuclearpowered.block.vitrifier.VitrifierBlock;
+import io.github.ash1688.nuclearpowered.block.watersource.InfiniteWaterSourceBlock;
 import io.github.ash1688.nuclearpowered.block.washer.WasherBlock;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -200,6 +201,13 @@ public final class ModBlocks {
                     .mapColor(MapColor.METAL)
                     .strength(3.5f, 4.0f)
                     .sound(SoundType.METAL)));
+
+    // Creative / test helper — no recipe, grab from creative tab.
+    public static final RegistryObject<InfiniteWaterSourceBlock> INFINITE_WATER_SOURCE = registerBlock("infinite_water_source",
+            () -> new InfiniteWaterSourceBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_LIGHT_BLUE)
+                    .strength(3.0f, 4.0f)
+                    .sound(SoundType.GLASS)));
 
     public static final RegistryObject<HeaterBlock> HEATER = registerBlock("heater",
             () -> new HeaterBlock(BlockBehaviour.Properties.of()
