@@ -33,16 +33,19 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
     // Conversion ratio: 10 heat = 1 FE/tick. An 0-casing pile at ~933 heat yields
     // ~93 FE/tick; a 26-casing pile around ~3360 heat yields ~336 FE/tick.
     private static final int HEAT_PER_FE = 10;
-    // Heat drain scales with the FE the thermo actually accepts this tick, capped
-    // at this per-thermo max. At 1 heat/tick, the pile's 30/tick rise outruns the
-    // drain until ~29 active thermos — so typical builds see the pile climb to
-    // its target heat (3000) then swing below when consumers pull FE hard.
-    private static final int MAX_HEAT_DRAIN_PER_TICK = 1;
+    // Each thermo cools the connected pile once per second. "Idle" = thermo
+    // is attached and generating FE but nothing drew from it in the last
+    // second. "Active" = at least one extractEnergy call pulled FE out.
+    private static final int COOL_INTERVAL_TICKS = 20;
+    private static final int COOL_IDLE_PER_INTERVAL = 1;
+    private static final int COOL_ACTIVE_PER_INTERVAL = 2;
     private static final int SCAN_INTERVAL_TICKS = 20;
     private static final int SCAN_DISTANCE = 64;
 
     // Internal energy counter. Exposed externally as extract-only via `externalEnergy`.
     private int storedFE = 0;
+    private int coolTickCounter = 0;
+    private boolean extractedThisInterval = false;
 
     private final IEnergyStorage externalEnergy = new IEnergyStorage() {
         @Override
@@ -56,6 +59,7 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
             if (take <= 0) return 0;
             if (!simulate) {
                 storedFE -= take;
+                extractedThisInterval = true;
                 setChanged();
             }
             return take;
@@ -153,11 +157,9 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
             scanCooldown = SCAN_INTERVAL_TICKS;
         }
 
-        // Generate FE from pile heat. Cooling only kicks in when our FE buffer is
-        // below half capacity — i.e. something downstream (battery, machine) is
-        // actively pulling FE out faster than we're producing it. A thermo sitting
-        // full of FE with no consumer does nothing to the pile, so "cool my pile"
-        // means "build out more batteries / consumers", not "stack more thermos".
+        // Generate FE from pile heat. Per-tick FE production is kept as-is;
+        // the pile's heat balance is handled separately by the casing model
+        // and the per-second cooling tick below.
         lastGenerationFE = 0;
         if (cachedPilePos != null && storedFE < CAPACITY_FE) {
             BlockEntity be = level.getBlockEntity(cachedPilePos);
@@ -168,9 +170,22 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
                 if (canAccept > 0) {
                     storedFE += canAccept;
                     lastGenerationFE = canAccept;
-                    pile.drainHeat(Math.min(canAccept, MAX_HEAT_DRAIN_PER_TICK));
                 }
             }
+        }
+
+        // Cool the pile once per second. Amount depends on whether anything
+        // pulled FE out of this thermo since the previous cooling tick.
+        coolTickCounter++;
+        if (coolTickCounter >= COOL_INTERVAL_TICKS) {
+            coolTickCounter = 0;
+            if (cachedPilePos != null) {
+                BlockEntity be = level.getBlockEntity(cachedPilePos);
+                if (be instanceof PileBlockEntity pile) {
+                    pile.drainHeat(extractedThisInterval ? COOL_ACTIVE_PER_INTERVAL : COOL_IDLE_PER_INTERVAL);
+                }
+            }
+            extractedThisInterval = false;
         }
 
         // Push FE to adjacent consumers. Target is each neighbour's ENERGY capability

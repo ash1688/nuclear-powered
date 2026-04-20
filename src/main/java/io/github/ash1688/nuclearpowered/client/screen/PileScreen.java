@@ -128,10 +128,10 @@ public class PileScreen extends AbstractContainerScreen<PileMenu> {
                 lines.add(Component.literal(
                         "Needs a full 3x3x3 graphite casing shell").getVisualOrderText());
             }
-            int slowdown = menu.getSlowdown();
-            if (slowdown > 1) {
-                lines.add(Component.literal("Burn rate: " + slowdown + "x slower").getVisualOrderText());
-                lines.add(Component.literal("(overheating, self-limiting)").getVisualOrderText());
+            int delta = menu.getHeatDelta();
+            if (delta != 0) {
+                String sign = delta > 0 ? "+" : "";
+                lines.add(Component.literal("Heat rate: " + sign + delta + " / sec").getVisualOrderText());
             }
             g.renderTooltip(font, lines, mouseX, mouseY);
         }

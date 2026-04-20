@@ -39,29 +39,26 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     // Burn duration per fuel rod at 1x speed (~200s / 3.3 min).
     public static final int BURN_TICKS_PER_ROD = 4000;
 
-    // Heat system. Heat rises while burning, decays passively.
-    // Above SAFE_HEAT the burn slows down — never melts, just takes longer.
-    // MAX_HEAT and SAFE_HEAT are dynamic: they scale with the number of connected
-    // graphite_casing blocks detected in the structure scan.
-    private static final int BASE_MAX_HEAT = 4000;
-    private static final int MAX_HEAT_PER_CASING = 200;
-    // SAFE_HEAT is 75% of dynamic MAX_HEAT; above that, slowdown begins.
-    // With the base 4000 cap that puts SAFE at 3000 — the designed equilibrium
-    // where the pile burns most efficiently.
-    private static final int SAFE_HEAT_PERCENT = 75;
-    private static final int MAX_SLOWDOWN = 10;
-    // Burning adds +30 heat per burn-tick at slowdown=1. Above SAFE_HEAT the
-    // pile throttles itself thermally: heat produced per burn-tick is divided
-    // by the current slowdown, and slowdown also reduces how many burn-ticks
-    // happen per real tick, so effective heat rise falls off as slowdown².
-    // That keeps 3000 (SAFE_HEAT) as the sweet spot — the pile still climbs
-    // past it, but each additional degree takes longer to add and the fuel
-    // burn itself stretches out proportionally.
-    private static final int HEAT_RISE_PER_BURN_TICK = 30;
-    private static final int HEAT_DECAY_PER_TICK = 1;
-    // Sub-tick resolution for fractional burn. A full "burn tick" is 10 sub-ticks;
-    // slowdown controls how many sub-ticks accrue per real tick.
-    private static final int BURN_SUBTICKS = 10;
+    // Heat model — applied once per second.
+    //
+    //  fuel (burning)     +30 /s
+    //  casings below 3K   +5  /s each
+    //  casings 3K-4K      -1  /s each
+    //  casings 4K-5K      -2  /s each (cumulative)
+    //  casings 5K-6K      -3  /s each
+    //  casings 6K-7K      -4  /s each
+    //  casings 7K+        -5  /s each
+    //  thermo idle        -1  /s each      (attached, not draining FE)
+    //  thermo active      -2  /s each      (someone pulled FE this second)
+    //
+    // Equilibrium naturally sits around 3000 with any real thermo load. No
+    // slowdown curve — the casing-band mechanic does the self-limiting.
+    private static final int HEAT_UPDATE_INTERVAL_TICKS = 20;
+    private static final int FUEL_HEAT_PER_SEC = 30;
+    private static final int CASING_HEAT_BELOW_3K = 5;
+    private static final int HEAT_BAND_START = 3000;
+    private static final int HEAT_BAND_WIDTH = 1000;
+    private static final int MAX_HEAT = 10_000;
 
     // Multiblock structure scan parameters.
     private static final int STRUCTURE_SCAN_INTERVAL_TICKS = 20;
@@ -85,8 +82,9 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     private LazyOptional<IItemHandler> lazyExternalHandler = LazyOptional.empty();
 
     private int heat = 0;
-    private int burnTime = 0;           // burn ticks remaining on the current rod (1x scale)
-    private int burnAccumulator = 0;    // 0..BURN_SUBTICKS; overflow decrements burnTime
+    private int burnTime = 0;           // burn ticks remaining on the current rod
+    private int heatTickCounter = 0;    // 0..HEAT_UPDATE_INTERVAL_TICKS, fires the once-per-second heat update
+    private int lastHeatDelta = 0;      // last computed per-second delta, shown in the GUI tooltip
     private boolean autoInput = true;
     private boolean autoOutput = true;
 
@@ -108,7 +106,7 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
                 case 3 -> BURN_TICKS_PER_ROD;
                 case 4 -> autoInput ? 1 : 0;
                 case 5 -> autoOutput ? 1 : 0;
-                case 6 -> currentSlowdown();
+                case 6 -> lastHeatDelta;
                 case 7 -> cachedCasingCount;
                 case 8 -> structureValid ? 1 : 0;
                 default -> 0;
@@ -160,13 +158,9 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
         return removed;
     }
 
-    public int getMaxHeat() {
-        return BASE_MAX_HEAT + cachedCasingCount * MAX_HEAT_PER_CASING;
-    }
+    public int getMaxHeat() { return MAX_HEAT; }
 
-    public int getSafeHeat() {
-        return getMaxHeat() * SAFE_HEAT_PERCENT / 100;
-    }
+    public int getSafeHeat() { return HEAT_BAND_START; }
 
     public int getCasingCount() { return cachedCasingCount; }
 
@@ -182,16 +176,16 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
 
     public void toggleAutoOutput() { autoOutput = !autoOutput; setChanged(); }
 
-    // Slowdown multiplier: 1 at/below SAFE_HEAT, up to MAX_SLOWDOWN at MAX_HEAT.
-    private int currentSlowdown() {
-        int safe = getSafeHeat();
-        int max = getMaxHeat();
-        if (heat <= safe) return 1;
-        if (heat >= max) return MAX_SLOWDOWN;
-        int range = max - safe;
-        if (range <= 0) return MAX_SLOWDOWN;
-        return 1 + (heat - safe) * (MAX_SLOWDOWN - 1) / range;
+    // Per-second heat coefficient each casing contributes at the current heat
+    // level. Below 3K each casing heats (+5). At 3K and above each casing
+    // cools, stacking an extra -1 for every 1K band crossed.
+    private int casingCoefficient(int currentHeat) {
+        if (currentHeat < HEAT_BAND_START) return CASING_HEAT_BELOW_3K;
+        int bandsAbove = 1 + (currentHeat - HEAT_BAND_START) / HEAT_BAND_WIDTH;
+        return -Math.min(5, bandsAbove);
     }
+
+    public int getLastHeatDelta() { return lastHeatDelta; }
 
     @Override
     public Component getDisplayName() {
@@ -228,7 +222,7 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
         tag.put("inventory", itemHandler.serializeNBT());
         tag.putInt("heat", heat);
         tag.putInt("burnTime", burnTime);
-        tag.putInt("burnAccumulator", burnAccumulator);
+        tag.putInt("heatTickCounter", heatTickCounter);
         tag.putBoolean("autoInput", autoInput);
         tag.putBoolean("autoOutput", autoOutput);
     }
@@ -239,7 +233,7 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
         heat = tag.getInt("heat");
         burnTime = tag.getInt("burnTime");
-        burnAccumulator = tag.getInt("burnAccumulator");
+        heatTickCounter = tag.getInt("heatTickCounter");
         autoInput = !tag.contains("autoInput") || tag.getBoolean("autoInput");
         autoOutput = !tag.contains("autoOutput") || tag.getBoolean("autoOutput");
     }
@@ -265,50 +259,37 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
         // Cheap strict check every tick: all 26 neighbours must be graphite_casing.
         structureValid = checkStructureValid(level);
 
-        // If the structure was broken mid-burn, kill the burn immediately. Heat in the
-        // core still decays off per the passive rules below.
+        // If the structure was broken mid-burn, kill the burn immediately. Residual
+        // heat still cools naturally via casing coefficients.
         if (!structureValid && burnTime > 0) {
             burnTime = 0;
-            burnAccumulator = 0;
             changed = true;
         }
 
+        // Fuel burns at a constant rate — one burn-tick per real tick. A rod
+        // lasts BURN_TICKS_PER_ROD real ticks (~200 s at 20 TPS).
         if (burnTime > 0) {
-            int slowdown = currentSlowdown();
-            // Advance the burn accumulator by (BURN_SUBTICKS / slowdown) per real tick.
-            //   slowdown=1  → +10/tick  = 1 burn-tick per real tick (full speed).
-            //   slowdown=5  → +2/tick   = 1 burn-tick per 5 real ticks.
-            //   slowdown=10 → +1/tick   = 1 burn-tick per 10 real ticks.
-            burnAccumulator += Math.max(1, BURN_SUBTICKS / slowdown);
-            int maxHeat = getMaxHeat();
-            // Heat rise per burn-tick throttles with the slowdown too — a hot
-            // pile not only burns slower, it produces less heat per burn-tick.
-            int riseThisBurnTick = Math.max(1, HEAT_RISE_PER_BURN_TICK / slowdown);
-            while (burnAccumulator >= BURN_SUBTICKS && burnTime > 0) {
-                burnAccumulator -= BURN_SUBTICKS;
-                burnTime--;
-                if (heat < maxHeat) {
-                    heat = Math.min(maxHeat, heat + riseThisBurnTick);
-                }
-            }
-            if (burnTime == 0) {
-                produceDepletedRod();
-                burnAccumulator = 0;
-            }
+            burnTime--;
+            if (burnTime == 0) produceDepletedRod();
             changed = true;
-        } else {
-            if (canStartBurn()) {
-                itemHandler.getStackInSlot(SLOT_FUEL).shrink(1);
-                burnTime = BURN_TICKS_PER_ROD;
-                burnAccumulator = 0;
-                changed = true;
-            }
+        } else if (canStartBurn()) {
+            itemHandler.getStackInSlot(SLOT_FUEL).shrink(1);
+            burnTime = BURN_TICKS_PER_ROD;
+            changed = true;
         }
 
-        // Passive decay runs every tick regardless of burn state.
-        if (heat > 0) {
-            heat = Math.max(0, heat - HEAT_DECAY_PER_TICK);
-            changed = true;
+        // Heat bookkeeping once per second — fuel contributes +30, each casing
+        // contributes +5 below 3K or a cumulative penalty above it. Thermo
+        // cooling is applied separately by each thermocouple on the same cadence.
+        heatTickCounter++;
+        if (heatTickCounter >= HEAT_UPDATE_INTERVAL_TICKS) {
+            heatTickCounter = 0;
+            int delta = (burnTime > 0 ? FUEL_HEAT_PER_SEC : 0)
+                    + cachedCasingCount * casingCoefficient(heat);
+            int oldHeat = heat;
+            heat = Math.max(0, Math.min(MAX_HEAT, heat + delta));
+            lastHeatDelta = heat - oldHeat; // reflects any clamping
+            if (heat != oldHeat) changed = true;
         }
 
         if (changed) {
