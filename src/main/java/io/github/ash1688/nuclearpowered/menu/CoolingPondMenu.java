@@ -37,7 +37,9 @@ public class CoolingPondMenu extends AbstractContainerMenu {
         addPlayerHotbar(inv);
 
         addSlot(new SlotItemHandler(blockEntity.getItemHandlerForMenu(),
-                CoolingPondBlockEntity.SLOT, 80, 35));
+                CoolingPondBlockEntity.SLOT_INPUT, 44, 35));
+        addSlot(new SlotItemHandler(blockEntity.getItemHandlerForMenu(),
+                CoolingPondBlockEntity.SLOT_COOLING, 116, 35));
 
         addDataSlots(data);
     }
@@ -65,11 +67,13 @@ public class CoolingPondMenu extends AbstractContainerMenu {
         if (!slot.hasItem()) return ItemStack.EMPTY;
         ItemStack source = slot.getItem();
         ItemStack copy = source.copy();
-        int pondSlot = PLAYER_INV_SLOT_COUNT;
+        int pondFirst = PLAYER_INV_SLOT_COUNT;
+        int pondLastExclusive = PLAYER_INV_SLOT_COUNT + 2;
 
         if (slotIndex < PLAYER_INV_SLOT_COUNT) {
-            if (!moveItemStackTo(source, pondSlot, pondSlot + 1, false)) return ItemStack.EMPTY;
-        } else if (slotIndex == pondSlot) {
+            // Shift-clicking hot rods from player inv goes to the input queue only.
+            if (!moveItemStackTo(source, pondFirst, pondFirst + 1, false)) return ItemStack.EMPTY;
+        } else if (slotIndex < pondLastExclusive) {
             if (!moveItemStackTo(source, 0, PLAYER_INV_SLOT_COUNT, false)) return ItemStack.EMPTY;
         } else {
             return ItemStack.EMPTY;

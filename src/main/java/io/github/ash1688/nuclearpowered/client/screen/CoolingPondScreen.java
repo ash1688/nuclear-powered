@@ -27,18 +27,17 @@ public class CoolingPondScreen extends AbstractContainerScreen<CoolingPondMenu> 
         int y = (height - imageHeight) / 2;
         g.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
 
-        // Ghost icon in empty input slot
-        ItemStack inSlot = menu.slots.get(36).getItem();
-        if (inSlot.isEmpty()) {
+        // Ghost on empty input slot (rest of slots handled by vanilla rendering).
+        if (menu.slots.get(36).getItem().isEmpty()) {
             g.setColor(1.0F, 1.0F, 1.0F, 0.35F);
-            g.renderFakeItem(new ItemStack(ModItems.HOT_SPENT_FUEL_ROD.get()), x + 80, y + 35);
+            g.renderFakeItem(new ItemStack(ModItems.HOT_SPENT_FUEL_ROD.get()), x + 44, y + 35);
             g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         }
 
-        // Cool progress bar — horizontal beneath the slot
+        // Horizontal progress bar between input (left) and cooling (right) slots.
         int filled = menu.getScaledProgress(52);
         if (filled > 0) {
-            g.fill(x + 62, y + 58, x + 62 + filled, y + 62, 0xFF4090E0);
+            g.fill(x + 62, y + 40, x + 62 + filled, y + 44, 0xFF4090E0);
         }
     }
 
@@ -49,7 +48,7 @@ public class CoolingPondScreen extends AbstractContainerScreen<CoolingPondMenu> 
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
         // Tooltip over the progress bar
-        if (mouseX >= x + 62 && mouseX < x + 114 && mouseY >= y + 58 && mouseY < y + 62) {
+        if (mouseX >= x + 62 && mouseX < x + 114 && mouseY >= y + 40 && mouseY < y + 44) {
             int p = menu.getCoolProgress();
             int m = menu.getCoolTicks();
             int remainingSec = Math.max(0, (m - p) / 20);

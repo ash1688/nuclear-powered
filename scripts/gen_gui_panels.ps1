@@ -145,10 +145,11 @@ MakePanel 'cladding_recycler' {
     StdFe $g
 }
 
-# --- Cooling Pond: single centered slot + horizontal cool-progress bar
+# --- Cooling Pond: left input queue + right cooling slot + horizontal
+#     progress-bar groove between them (player sees rods flow left to right).
 MakePanel 'cooling_pond' {
     param($g)
-    DrawSlot $g 80 35
-    # Horizontal progress bar groove at y=58 under the slot
-    DrawInset $g 61 57 54 6
+    DrawSlot $g 44 35
+    DrawSlot $g 116 35
+    DrawInset $g 61 39 54 6
 }
