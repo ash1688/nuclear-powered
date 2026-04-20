@@ -1,0 +1,128 @@
+{
+	default_hide_dependency_lines: false
+	default_quest_shape: ""
+	filename: "tier1"
+	group: "7F3A1C2D4E5F6A7B"
+	icon: "nuclearpowered:raw_uranium"
+	id: "1A1B1C1D1E1F2000"
+	images: [ ]
+	order_index: 0
+	quest_links: [ ]
+	quests: [
+		{
+			description: ["Mine your first chunk of uranium ore.", "", "Uranium ore spawns in all dimensions \u2014 Overworld, Deepslate, Nether, and the End."]
+			id: "1A1B1C1D1E1F2001"
+			rewards: [{ id: "1A1B1C1D1E1F3001" count: 3 item: "nuclearpowered:raw_uranium" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F4001" item: "nuclearpowered:raw_uranium" type: "item" }]
+			title: "Nuclear Dawn"
+			x: 0.0d
+			y: 0.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2001"]
+			description: ["Crush raw uranium, wash it into yellowcake, and smelt it into an ingot."]
+			id: "1A1B1C1D1E1F2002"
+			tasks: [{ id: "1A1B1C1D1E1F4002" item: "nuclearpowered:uranium_ingot" type: "item" }]
+			title: "Refined"
+			x: 2.0d
+			y: 0.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2002"]
+			description: ["Fabricate your first uranium fuel rod from uranium ingots and iron cladding."]
+			id: "1A1B1C1D1E1F2003"
+			tasks: [{ id: "1A1B1C1D1E1F4003" item: "nuclearpowered:uranium_fuel_rod" type: "item" }]
+			title: "Fueled Up"
+			x: 4.0d
+			y: 0.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2001"]
+			description: ["Build a graphite pile and surround it with a 3x3x3 graphite casing shell."]
+			id: "1A1B1C1D1E1F2004"
+			tasks: [{ id: "1A1B1C1D1E1F4004" item: "nuclearpowered:graphite_pile" type: "item" }]
+			title: "Control Rods in Place"
+			x: 0.0d
+			y: 2.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2003", "1A1B1C1D1E1F2004"]
+			description: ["Run a fuel rod all the way through to depletion \u2014 your first reactor cycle."]
+			id: "1A1B1C1D1E1F2005"
+			shape: "hexagon"
+			size: 1.5d
+			tasks: [{ id: "1A1B1C1D1E1F4005" item: "nuclearpowered:depleted_uranium_fuel_rod" type: "item" }]
+			title: "Criticality"
+			x: 4.0d
+			y: 2.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2004"]
+			description: ["Attach a thermocouple to your pile to convert heat directly into FE."]
+			id: "1A1B1C1D1E1F2006"
+			tasks: [{ id: "1A1B1C1D1E1F4006" item: "nuclearpowered:thermocouple" type: "item" }]
+			title: "Thermocouple"
+			x: 0.0d
+			y: 4.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2001"]
+			description: ["Build the coal-age alternative: Coal Boiler + Steam Engine for steam-driven FE."]
+			id: "1A1B1C1D1E1F2007"
+			tasks: [{ id: "1A1B1C1D1E1F4007" item: "nuclearpowered:steam_engine" type: "item" }]
+			title: "Steam Age"
+			x: -2.0d
+			y: 2.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2005"]
+			description: ["Shear a depleted fuel rod into chopped fuel and cladding scrap \u2014 step 1 of PUREX reprocessing."]
+			id: "1A1B1C1D1E1F2008"
+			tasks: [{ id: "1A1B1C1D1E1F4008" item: "nuclearpowered:chopped_fuel" type: "item" }]
+			title: "PUREX Beginnings"
+			x: 6.0d
+			y: 2.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2008"]
+			description: ["Extract plutonium-239 from spent fuel. Stockpile it \u2014 Tier 2 reactors will need it."]
+			id: "1A1B1C1D1E1F2009"
+			shape: "hexagon"
+			tasks: [{ id: "1A1B1C1D1E1F4009" item: "nuclearpowered:plutonium_239" type: "item" }]
+			title: "Plutonium Stockpile"
+			x: 8.0d
+			y: 1.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2008"]
+			description: ["Separate cesium-137 from the fission product stream using an ion exchange resin."]
+			id: "1A1B1C1D1E1F200A"
+			tasks: [{ id: "1A1B1C1D1E1F400A" item: "nuclearpowered:cesium_137" type: "item" }]
+			title: "Cesium Stockpile"
+			x: 8.0d
+			y: 3.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2008"]
+			description: ["Compact 9 cladding scraps back into a reusable fuel rod cladding."]
+			id: "1A1B1C1D1E1F200B"
+			tasks: [{ id: "1A1B1C1D1E1F400B" item: "nuclearpowered:fuel_rod_cladding" type: "item" }]
+			title: "Scrap Shop"
+			x: 6.0d
+			y: 4.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2008"]
+			description: ["Recover uranium from spent fuel and smelt it back into an ingot. The fuel loop is now closed."]
+			id: "1A1B1C1D1E1F200C"
+			shape: "diamond"
+			size: 1.5d
+			tasks: [{ id: "1A1B1C1D1E1F400C" item: "nuclearpowered:reclaimed_uranium" type: "item" }]
+			title: "Self-Sustaining"
+			x: 8.0d
+			y: 5.0d
+		}
+	]
+	reward_tables: [ ]
+	title: "Tier 1 \u2014 Foundations"
+}
