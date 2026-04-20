@@ -51,7 +51,7 @@
 			id: "1A1B1C1D1E1F2005"
 			shape: "hexagon"
 			size: 1.5d
-			tasks: [{ id: "1A1B1C1D1E1F4005" item: "nuclearpowered:depleted_uranium_fuel_rod" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F4005" item: "nuclearpowered:hot_spent_fuel_rod" type: "item" }]
 			title: "Criticality"
 			x: 4.0d
 			y: 2.0d

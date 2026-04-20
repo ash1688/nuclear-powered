@@ -344,7 +344,7 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
         if (!itemHandler.getStackInSlot(SLOT_FUEL).is(ModItems.URANIUM_FUEL_ROD.get())) return false;
         ItemStack depleted = itemHandler.getStackInSlot(SLOT_DEPLETED);
         if (depleted.isEmpty()) return true;
-        if (!depleted.is(ModItems.DEPLETED_URANIUM_FUEL_ROD.get())) return false;
+        if (!depleted.is(ModItems.HOT_SPENT_FUEL_ROD.get())) return false;
         return depleted.getCount() + 1 <= depleted.getMaxStackSize();
     }
 
@@ -384,9 +384,11 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     private void produceDepletedRod() {
+        // Spent fuel emerges dangerously hot — feed it to a Cooling Pond before it
+        // can be reprocessed (or shear it from a hotbar slot and accept the burns).
         ItemStack depleted = itemHandler.getStackInSlot(SLOT_DEPLETED);
         if (depleted.isEmpty()) {
-            itemHandler.setStackInSlot(SLOT_DEPLETED, new ItemStack(ModItems.DEPLETED_URANIUM_FUEL_ROD.get()));
+            itemHandler.setStackInSlot(SLOT_DEPLETED, new ItemStack(ModItems.HOT_SPENT_FUEL_ROD.get()));
         } else {
             depleted.grow(1);
         }

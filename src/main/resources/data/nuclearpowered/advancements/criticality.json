@@ -11,7 +11,7 @@
   "criteria": {
     "got_depleted": {
       "trigger": "minecraft:inventory_changed",
-      "conditions": { "items": [ { "items": [ "nuclearpowered:depleted_uranium_fuel_rod" ] } ] }
+      "conditions": { "items": [ { "items": [ "nuclearpowered:hot_spent_fuel_rod", "nuclearpowered:depleted_uranium_fuel_rod" ] } ] }
     }
   },
   "requirements": [ [ "got_depleted" ] ]
