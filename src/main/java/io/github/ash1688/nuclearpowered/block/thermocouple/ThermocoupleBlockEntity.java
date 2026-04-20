@@ -33,12 +33,14 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
     // Conversion ratio: 10 heat = 1 FE/tick. An 0-casing pile at ~933 heat yields
     // ~93 FE/tick; a 26-casing pile around ~3360 heat yields ~336 FE/tick.
     private static final int HEAT_PER_FE = 10;
-    // Each thermo cools the connected pile once per second. "Idle" = thermo
-    // is attached and generating FE but nothing drew from it in the last
-    // second. "Active" = at least one extractEnergy call pulled FE out.
+    // Each thermo cools the connected pile once per second:
+    //   idle     -1 H/s (attached, nothing drew FE this second)
+    //   active   -2 H/s (someone pulled FE this second)
+    //   coolant  -5 H/s (player toggled coolant mode; no FE output)
     private static final int COOL_INTERVAL_TICKS = 20;
     private static final int COOL_IDLE_PER_INTERVAL = 1;
     private static final int COOL_ACTIVE_PER_INTERVAL = 2;
+    private static final int COOL_COOLANT_PER_INTERVAL = 5;
     private static final int SCAN_INTERVAL_TICKS = 20;
     private static final int SCAN_DISTANCE = 64;
 
@@ -46,6 +48,7 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
     private int storedFE = 0;
     private int coolTickCounter = 0;
     private boolean extractedThisInterval = false;
+    private boolean coolantMode = false;
 
     private final IEnergyStorage externalEnergy = new IEnergyStorage() {
         @Override
@@ -55,6 +58,8 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
 
         @Override
         public int extractEnergy(int maxExtract, boolean simulate) {
+            // Coolant mode dumps heat but refuses to push FE downstream.
+            if (coolantMode) return 0;
             int take = Math.min(storedFE, Math.min(maxExtract, MAX_OUTPUT_FE_PER_TICK));
             if (take <= 0) return 0;
             if (!simulate) {
@@ -67,7 +72,7 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
 
         @Override public int getEnergyStored() { return storedFE; }
         @Override public int getMaxEnergyStored() { return CAPACITY_FE; }
-        @Override public boolean canExtract() { return true; }
+        @Override public boolean canExtract() { return !coolantMode; }
         @Override public boolean canReceive() { return false; }
     };
 
@@ -135,12 +140,34 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putInt("fe", storedFE);
+        tag.putBoolean("coolantMode", coolantMode);
     }
 
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
         storedFE = tag.getInt("fe");
+        coolantMode = tag.getBoolean("coolantMode");
+    }
+
+    public boolean isCoolantMode() { return coolantMode; }
+
+    public void toggleCoolantMode() {
+        coolantMode = !coolantMode;
+        setChanged();
+    }
+
+    // FE produced per tick given current pile heat and zone efficiency.
+    // Multipliers: <3K = 0.5, 3K-5K = 1.0 (sweet spot), 5K-7K = 0.7, 7K+ = 0.3.
+    private int efficiencyScaledProduction(int heat) {
+        if (heat <= 0) return 0;
+        int baseFE = heat / HEAT_PER_FE;
+        int percent;
+        if (heat < 3000)       percent = 50;
+        else if (heat < 5000)  percent = 100;
+        else if (heat < 7000)  percent = 70;
+        else                   percent = 30;
+        return baseFE * percent / 100;
     }
 
     public void tick(Level level, BlockPos pos, BlockState state) {
@@ -157,15 +184,14 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
             scanCooldown = SCAN_INTERVAL_TICKS;
         }
 
-        // Generate FE from pile heat. Per-tick FE production is kept as-is;
-        // the pile's heat balance is handled separately by the casing model
-        // and the per-second cooling tick below.
+        // Generate FE from pile heat, scaled by a zone efficiency multiplier
+        // so players get the best yield in the 3K-5K sweet spot.
         lastGenerationFE = 0;
         if (cachedPilePos != null && storedFE < CAPACITY_FE) {
             BlockEntity be = level.getBlockEntity(cachedPilePos);
             if (be instanceof PileBlockEntity pile) {
                 int heat = pile.getHeat();
-                int produced = Math.max(0, heat / HEAT_PER_FE);
+                int produced = efficiencyScaledProduction(heat);
                 int canAccept = Math.min(produced, CAPACITY_FE - storedFE);
                 if (canAccept > 0) {
                     storedFE += canAccept;
@@ -174,15 +200,19 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
             }
         }
 
-        // Cool the pile once per second. Amount depends on whether anything
-        // pulled FE out of this thermo since the previous cooling tick.
+        // Cool the pile once per second. Rate depends on thermo state:
+        //   coolant mode -> -5/s (no FE pushed out)
+        //   active       -> -2/s (FE was extracted this window)
+        //   idle         -> -1/s
         coolTickCounter++;
         if (coolTickCounter >= COOL_INTERVAL_TICKS) {
             coolTickCounter = 0;
             if (cachedPilePos != null) {
                 BlockEntity be = level.getBlockEntity(cachedPilePos);
                 if (be instanceof PileBlockEntity pile) {
-                    pile.drainHeat(extractedThisInterval ? COOL_ACTIVE_PER_INTERVAL : COOL_IDLE_PER_INTERVAL);
+                    int drain = coolantMode ? COOL_COOLANT_PER_INTERVAL
+                            : (extractedThisInterval ? COOL_ACTIVE_PER_INTERVAL : COOL_IDLE_PER_INTERVAL);
+                    pile.drainHeat(drain);
                 }
             }
             extractedThisInterval = false;

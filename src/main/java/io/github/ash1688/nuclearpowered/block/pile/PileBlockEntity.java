@@ -59,6 +59,9 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     private static final int HEAT_BAND_START = 3000;
     private static final int HEAT_BAND_WIDTH = 1000;
     private static final int MAX_HEAT = 10_000;
+    // Runaway cutoff: above this heat, fuel stops contributing heat (rod still
+    // burns — time is just wasted).
+    private static final int FUEL_CUTOFF_HEAT = 8000;
 
     // Multiblock structure scan parameters.
     private static final int STRUCTURE_SCAN_INTERVAL_TICKS = 20;
@@ -182,7 +185,7 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     private int casingCoefficient(int currentHeat) {
         if (currentHeat < HEAT_BAND_START) return CASING_HEAT_BELOW_3K;
         int bandsAbove = 1 + (currentHeat - HEAT_BAND_START) / HEAT_BAND_WIDTH;
-        return -Math.min(5, bandsAbove);
+        return Math.max(0, CASING_HEAT_BELOW_3K - bandsAbove);
     }
 
     public int getLastHeatDelta() { return lastHeatDelta; }
@@ -284,8 +287,8 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
         heatTickCounter++;
         if (heatTickCounter >= HEAT_UPDATE_INTERVAL_TICKS) {
             heatTickCounter = 0;
-            int delta = (burnTime > 0 ? FUEL_HEAT_PER_SEC : 0)
-                    + cachedCasingCount * casingCoefficient(heat);
+            int fuelHeat = (burnTime > 0 && heat < FUEL_CUTOFF_HEAT) ? FUEL_HEAT_PER_SEC : 0;
+            int delta = fuelHeat + cachedCasingCount * casingCoefficient(heat);
             int oldHeat = heat;
             heat = Math.max(0, Math.min(MAX_HEAT, heat + delta));
             lastHeatDelta = heat - oldHeat; // reflects any clamping
