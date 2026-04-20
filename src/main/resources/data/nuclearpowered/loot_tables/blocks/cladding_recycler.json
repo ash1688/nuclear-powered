@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    { "rolls": 1, "entries": [ { "type": "minecraft:item", "name": "nuclearpowered:cladding_recycler" } ],
+      "conditions": [ { "condition": "minecraft:survives_explosion" } ] }
+  ]
+}

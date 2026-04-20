@@ -2,6 +2,7 @@ package io.github.ash1688.nuclearpowered.init;
 
 import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.menu.BatteryMenu;
+import io.github.ash1688.nuclearpowered.menu.CladdingRecyclerMenu;
 import io.github.ash1688.nuclearpowered.menu.CoalBoilerMenu;
 import io.github.ash1688.nuclearpowered.menu.CrusherMenu;
 import io.github.ash1688.nuclearpowered.menu.CsColumnMenu;
@@ -67,6 +68,9 @@ public final class ModMenuTypes {
 
     public static final RegistryObject<MenuType<VitrifierMenu>> VITRIFIER =
             MENU_TYPES.register("vitrifier", () -> IForgeMenuType.create(VitrifierMenu::new));
+
+    public static final RegistryObject<MenuType<CladdingRecyclerMenu>> CLADDING_RECYCLER =
+            MENU_TYPES.register("cladding_recycler", () -> IForgeMenuType.create(CladdingRecyclerMenu::new));
 
     private ModMenuTypes() {}
 

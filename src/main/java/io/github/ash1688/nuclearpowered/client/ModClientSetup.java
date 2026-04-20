@@ -2,6 +2,7 @@ package io.github.ash1688.nuclearpowered.client;
 
 import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.client.screen.BatteryScreen;
+import io.github.ash1688.nuclearpowered.client.screen.CladdingRecyclerScreen;
 import io.github.ash1688.nuclearpowered.client.screen.CoalBoilerScreen;
 import io.github.ash1688.nuclearpowered.client.screen.CrusherScreen;
 import io.github.ash1688.nuclearpowered.client.screen.CsColumnScreen;
@@ -43,6 +44,7 @@ public final class ModClientSetup {
             MenuScreens.register(ModMenuTypes.EXTRACTION_COLUMN.get(), ExtractionColumnScreen::new);
             MenuScreens.register(ModMenuTypes.CS_COLUMN.get(), CsColumnScreen::new);
             MenuScreens.register(ModMenuTypes.VITRIFIER.get(), VitrifierScreen::new);
+            MenuScreens.register(ModMenuTypes.CLADDING_RECYCLER.get(), CladdingRecyclerScreen::new);
         });
     }
 }

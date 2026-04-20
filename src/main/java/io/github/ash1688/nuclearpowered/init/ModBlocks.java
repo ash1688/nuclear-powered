@@ -14,6 +14,7 @@ import io.github.ash1688.nuclearpowered.block.fabricator.FuelFabricatorBlock;
 import io.github.ash1688.nuclearpowered.block.heater.HeaterBlock;
 import io.github.ash1688.nuclearpowered.block.pile.PileBlock;
 import io.github.ash1688.nuclearpowered.block.pipe.SteamPipeBlock;
+import io.github.ash1688.nuclearpowered.block.recycler.CladdingRecyclerBlock;
 import io.github.ash1688.nuclearpowered.block.shearer.ShearerBlock;
 import io.github.ash1688.nuclearpowered.block.thermocouple.ThermocoupleBlock;
 import io.github.ash1688.nuclearpowered.block.vitrifier.VitrifierBlock;
@@ -191,6 +192,12 @@ public final class ModBlocks {
     public static final RegistryObject<VitrifierBlock> VITRIFIER = registerBlock("vitrifier",
             () -> new VitrifierBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_GREEN)
+                    .strength(3.5f, 4.0f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<CladdingRecyclerBlock> CLADDING_RECYCLER = registerBlock("cladding_recycler",
+            () -> new CladdingRecyclerBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
                     .strength(3.5f, 4.0f)
                     .sound(SoundType.METAL)));
 

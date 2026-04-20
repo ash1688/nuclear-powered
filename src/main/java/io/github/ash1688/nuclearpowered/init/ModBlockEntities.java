@@ -14,6 +14,7 @@ import io.github.ash1688.nuclearpowered.block.fabricator.FuelFabricatorBlockEnti
 import io.github.ash1688.nuclearpowered.block.heater.HeaterBlockEntity;
 import io.github.ash1688.nuclearpowered.block.pile.PileBlockEntity;
 import io.github.ash1688.nuclearpowered.block.pipe.SteamPipeBlockEntity;
+import io.github.ash1688.nuclearpowered.block.recycler.CladdingRecyclerBlockEntity;
 import io.github.ash1688.nuclearpowered.block.shearer.ShearerBlockEntity;
 import io.github.ash1688.nuclearpowered.block.thermocouple.ThermocoupleBlockEntity;
 import io.github.ash1688.nuclearpowered.block.vitrifier.VitrifierBlockEntity;
@@ -91,6 +92,10 @@ public final class ModBlockEntities {
     public static final RegistryObject<BlockEntityType<VitrifierBlockEntity>> VITRIFIER =
             BLOCK_ENTITIES.register("vitrifier", () ->
                     BlockEntityType.Builder.of(VitrifierBlockEntity::new, ModBlocks.VITRIFIER.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<CladdingRecyclerBlockEntity>> CLADDING_RECYCLER =
+            BLOCK_ENTITIES.register("cladding_recycler", () ->
+                    BlockEntityType.Builder.of(CladdingRecyclerBlockEntity::new, ModBlocks.CLADDING_RECYCLER.get()).build(null));
 
     public static final RegistryObject<BlockEntityType<HeaterBlockEntity>> HEATER =
             BLOCK_ENTITIES.register("heater", () ->

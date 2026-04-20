@@ -81,6 +81,11 @@ public final class ModItems {
     public static final RegistryObject<Item> ION_EXCHANGE_RESIN = ITEMS.register("ion_exchange_resin",
             () -> new Item(new Item.Properties()));
 
+    // Recycled fuel rod cladding (9 scrap compacted back into a reusable shell).
+    // Accepted by the fuel fabricator as a drop-in for the 4 iron ingots.
+    public static final RegistryObject<Item> FUEL_ROD_CLADDING = ITEMS.register("fuel_rod_cladding",
+            () -> new Item(new Item.Properties()));
+
     // Filled buckets for the reprocessing reagents. Registered here rather than
     // inside ModFluids so we can reference the Items registry cleanly; the
     // ForgeFlowingFluid.Properties in ModFluids then points back at these via

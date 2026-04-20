@@ -26,6 +26,8 @@
   "block.nuclearpowered.extraction_column": "Extraction Column",
   "block.nuclearpowered.cs_column": "Cesium Column",
   "block.nuclearpowered.vitrifier": "Vitrifier",
+  "block.nuclearpowered.cladding_recycler": "Cladding Recycler",
+  "item.nuclearpowered.fuel_rod_cladding": "Fuel Rod Cladding",
   "item.nuclearpowered.nitric_acid_bucket": "Nitric Acid Bucket",
   "item.nuclearpowered.extraction_solvent_bucket": "Extraction Solvent Bucket",
   "fluid_type.nuclearpowered.nitric_acid": "Nitric Acid",
