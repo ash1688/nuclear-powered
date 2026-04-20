@@ -11,11 +11,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 public class ShearerScreen extends AbstractContainerScreen<ShearerMenu> {
-    // Reuse the electric furnace GUI as the background so this ships without
-    // needing new artwork. Slot coordinates on the menu side match the blank
-    // panel area of that texture.
     private static final ResourceLocation TEXTURE =
-            new ResourceLocation(NuclearPowered.MODID, "textures/gui/container/electric_furnace.png");
+            new ResourceLocation(NuclearPowered.MODID, "textures/gui/container/shearer.png");
 
     private static final int FE_X = 152;
     private static final int FE_Y = 17;

@@ -12,7 +12,7 @@ import net.minecraft.world.entity.player.Inventory;
 
 public class CladdingRecyclerScreen extends AbstractContainerScreen<CladdingRecyclerMenu> {
     private static final ResourceLocation TEXTURE =
-            new ResourceLocation(NuclearPowered.MODID, "textures/gui/container/electric_furnace.png");
+            new ResourceLocation(NuclearPowered.MODID, "textures/gui/container/cladding_recycler.png");
 
     private static final int FE_X = 152;
     private static final int FE_Y = 17;

@@ -11,10 +11,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 public class DissolverScreen extends AbstractContainerScreen<DissolverMenu> {
-    // Reuse the washer GUI texture — same slot geometry (input + output row +
-    // bucket slot) plus a tank panel on the left works for dissolution too.
     private static final ResourceLocation TEXTURE =
-            new ResourceLocation(NuclearPowered.MODID, "textures/gui/container/washer.png");
+            new ResourceLocation(NuclearPowered.MODID, "textures/gui/container/dissolver.png");
 
     private static final int TANK_X = 8;
     private static final int TANK_Y = 17;

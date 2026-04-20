@@ -12,7 +12,7 @@ import net.minecraft.world.entity.player.Inventory;
 
 public class ExtractionColumnScreen extends AbstractContainerScreen<ExtractionColumnMenu> {
     private static final ResourceLocation TEXTURE =
-            new ResourceLocation(NuclearPowered.MODID, "textures/gui/container/washer.png");
+            new ResourceLocation(NuclearPowered.MODID, "textures/gui/container/extraction_column.png");
 
     private static final int TANK_X = 8;
     private static final int TANK_Y = 17;
