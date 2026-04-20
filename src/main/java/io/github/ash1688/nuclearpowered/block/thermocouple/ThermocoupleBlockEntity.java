@@ -29,9 +29,11 @@ import java.util.Set;
 
 public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider {
     public static final int CAPACITY_FE = 10_000;
-    public static final int MAX_OUTPUT_FE_PER_TICK = 256;
-    // Conversion ratio: 10 heat = 1 FE/tick. An 0-casing pile at ~933 heat yields
-    // ~93 FE/tick; a 26-casing pile around ~3360 heat yields ~336 FE/tick.
+    // Cap raised above the 5K sweet-spot raw output (500 FE/tick) so the
+    // efficiency curve below can actually swing values up and down without
+    // the cap silently flattening them.
+    public static final int MAX_OUTPUT_FE_PER_TICK = 600;
+    // Conversion ratio: 10 heat = 1 FE/tick base, before efficiency multiplier.
     private static final int HEAT_PER_FE = 10;
     // Each thermo cools the connected pile once per second:
     //   idle     -1 H/s (attached, nothing drew FE this second)
@@ -158,7 +160,9 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
     }
 
     // FE produced per tick given current pile heat and zone efficiency.
-    // Multipliers: <3K = 0.5, 3K-5K = 1.0 (sweet spot), 5K-7K = 0.7, 7K+ = 0.3.
+    // Multipliers: <3K = 0.5, 3K-5K = 1.0 (sweet spot), 5K-7K = 0.7, 7K+ = 0.1.
+    // The 7K+ floor is steep so overheated piles tank output — gives the
+    // player real incentive to keep the reactor in the sweet spot.
     private int efficiencyScaledProduction(int heat) {
         if (heat <= 0) return 0;
         int baseFE = heat / HEAT_PER_FE;
@@ -166,7 +170,7 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
         if (heat < 3000)       percent = 50;
         else if (heat < 5000)  percent = 100;
         else if (heat < 7000)  percent = 70;
-        else                   percent = 30;
+        else                   percent = 10;
         return baseFE * percent / 100;
     }
 
