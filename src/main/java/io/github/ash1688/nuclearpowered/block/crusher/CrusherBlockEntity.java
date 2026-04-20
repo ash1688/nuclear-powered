@@ -287,6 +287,7 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
         @Override
         public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
             if (!autoInput || slot != SLOT_INPUT) return stack;
+            if (!hasCrushingRecipe(stack)) return stack;
             return itemHandler.insertItem(slot, stack, simulate);
         }
 
@@ -300,7 +301,17 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
 
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
+            if (slot == SLOT_INPUT && !hasCrushingRecipe(stack)) return false;
             return itemHandler.isItemValid(slot, stack);
+        }
+
+        private boolean hasCrushingRecipe(ItemStack stack) {
+            if (level == null || stack.isEmpty()) return false;
+            SimpleContainer probe = new SimpleContainer(1);
+            probe.setItem(0, stack);
+            return level.getRecipeManager()
+                    .getRecipeFor(ModRecipes.CRUSHING_TYPE.get(), probe, level)
+                    .isPresent();
         }
     }
 }

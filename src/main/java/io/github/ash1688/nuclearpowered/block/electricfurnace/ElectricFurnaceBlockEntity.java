@@ -271,6 +271,7 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
         @Override
         public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
             if (!autoInput || slot != SLOT_INPUT) return stack;
+            if (!hasSmeltingRecipe(stack)) return stack;
             return itemHandler.insertItem(slot, stack, simulate);
         }
 
@@ -284,7 +285,17 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
 
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
+            if (slot == SLOT_INPUT && !hasSmeltingRecipe(stack)) return false;
             return itemHandler.isItemValid(slot, stack);
+        }
+
+        private boolean hasSmeltingRecipe(ItemStack stack) {
+            if (level == null || stack.isEmpty()) return false;
+            SimpleContainer probe = new SimpleContainer(1);
+            probe.setItem(0, stack);
+            return level.getRecipeManager()
+                    .getRecipeFor(RecipeType.SMELTING, probe, level)
+                    .isPresent();
         }
     }
 }

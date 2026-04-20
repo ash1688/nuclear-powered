@@ -2,7 +2,9 @@ package io.github.ash1688.nuclearpowered.client.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.ash1688.nuclearpowered.NuclearPowered;
+import io.github.ash1688.nuclearpowered.init.ModItems;
 import io.github.ash1688.nuclearpowered.menu.ShearerMenu;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -61,6 +63,8 @@ public class ShearerScreen extends AbstractContainerScreen<ShearerMenu> {
         int y = (height - imageHeight) / 2;
         g.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
 
+        drawGhost(g, 36, ModItems.DEPLETED_URANIUM_FUEL_ROD.get().getDefaultInstance(), x + 44, y + 35);
+
         g.fill(x + FE_X - 1, y + FE_Y - 1, x + FE_X + FE_WIDTH + 1, y + FE_Y + FE_HEIGHT + 1, 0xFF555555);
         g.fill(x + FE_X, y + FE_Y, x + FE_X + FE_WIDTH, y + FE_Y + FE_HEIGHT, 0xFF222222);
         int bar = menu.getScaledFE(FE_HEIGHT);
@@ -81,6 +85,15 @@ public class ShearerScreen extends AbstractContainerScreen<ShearerMenu> {
         super.render(g, mouseX, mouseY, partialTick);
         renderFETooltip(g, mouseX, mouseY);
         renderTooltip(g, mouseX, mouseY);
+    }
+
+    // Draw a 35% alpha preview of the expected item in an empty input slot so
+    // players can see what it accepts without hovering the tooltip.
+    private void drawGhost(GuiGraphics g, int slotIndex, ItemStack preview, int x, int y) {
+        if (!menu.slots.get(slotIndex).getItem().isEmpty()) return;
+        g.setColor(1.0F, 1.0F, 1.0F, 0.35F);
+        g.renderFakeItem(preview, x, y);
+        g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     private void renderFETooltip(GuiGraphics g, int mouseX, int mouseY) {

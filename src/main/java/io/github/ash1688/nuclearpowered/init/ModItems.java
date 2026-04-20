@@ -36,15 +36,15 @@ public final class ModItems {
             () -> new Item(new Item.Properties()));
 
     public static final RegistryObject<Item> URANIUM_FUEL_ROD = ITEMS.register("uranium_fuel_rod",
-            () -> new Item(new Item.Properties().stacksTo(16)));
+            () -> new Item(new Item.Properties()));
 
     public static final RegistryObject<Item> DEPLETED_URANIUM_FUEL_ROD = ITEMS.register("depleted_uranium_fuel_rod",
-            () -> new Item(new Item.Properties().stacksTo(16)));
+            () -> new Item(new Item.Properties()));
 
     // Fresh pile output — too hot to handle. Must pass through a Cooling Pond
     // before it can be shered for reprocessing.
     public static final RegistryObject<Item> HOT_SPENT_FUEL_ROD = ITEMS.register("hot_spent_fuel_rod",
-            () -> new HotSpentFuelRodItem(new Item.Properties().stacksTo(16)));
+            () -> new HotSpentFuelRodItem(new Item.Properties()));
 
     // --- Tier 1 PUREX reprocessing chain ---
     // Intermediates produced along the chain. Kept as items (not fluids) except

@@ -144,3 +144,11 @@ MakePanel 'cladding_recycler' {
     DrawArrow $g 78 33
     StdFe $g
 }
+
+# --- Cooling Pond: single centered slot + horizontal cool-progress bar
+MakePanel 'cooling_pond' {
+    param($g)
+    DrawSlot $g 80 35
+    # Horizontal progress bar groove at y=58 under the slot
+    DrawInset $g 61 57 54 6
+}

@@ -2,6 +2,7 @@ package io.github.ash1688.nuclearpowered.client.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.ash1688.nuclearpowered.NuclearPowered;
+import io.github.ash1688.nuclearpowered.init.ModItems;
 import io.github.ash1688.nuclearpowered.menu.CladdingRecyclerMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -9,6 +10,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 
 public class CladdingRecyclerScreen extends AbstractContainerScreen<CladdingRecyclerMenu> {
     private static final ResourceLocation TEXTURE =
@@ -61,6 +63,8 @@ public class CladdingRecyclerScreen extends AbstractContainerScreen<CladdingRecy
         int y = (height - imageHeight) / 2;
         g.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
 
+        drawGhost(g, 36, ModItems.CLADDING_SCRAP.get().getDefaultInstance(), x + 56, y + 35);
+
         g.fill(x + FE_X - 1, y + FE_Y - 1, x + FE_X + FE_WIDTH + 1, y + FE_Y + FE_HEIGHT + 1, 0xFF555555);
         g.fill(x + FE_X, y + FE_Y, x + FE_X + FE_WIDTH, y + FE_Y + FE_HEIGHT, 0xFF222222);
         int bar = menu.getScaledFE(FE_HEIGHT);
@@ -81,6 +85,13 @@ public class CladdingRecyclerScreen extends AbstractContainerScreen<CladdingRecy
         super.render(g, mouseX, mouseY, partialTick);
         renderFETooltip(g, mouseX, mouseY);
         renderTooltip(g, mouseX, mouseY);
+    }
+
+    private void drawGhost(GuiGraphics g, int slotIndex, ItemStack preview, int x, int y) {
+        if (!menu.slots.get(slotIndex).getItem().isEmpty()) return;
+        g.setColor(1.0F, 1.0F, 1.0F, 0.35F);
+        g.renderFakeItem(preview, x, y);
+        g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     private void renderFETooltip(GuiGraphics g, int mouseX, int mouseY) {

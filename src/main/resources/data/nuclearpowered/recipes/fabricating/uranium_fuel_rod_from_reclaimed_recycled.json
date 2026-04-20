@@ -1,0 +1,9 @@
+{
+  "type": "nuclearpowered:fabricating",
+  "fuel_ingredient": { "item": "nuclearpowered:reclaimed_uranium" },
+  "fuel_count": 3,
+  "cladding_ingredient": { "item": "nuclearpowered:fuel_rod_cladding" },
+  "cladding_count": 1,
+  "result": { "item": "nuclearpowered:uranium_fuel_rod", "count": 1 },
+  "processing_time": 200
+}

@@ -2,11 +2,18 @@ package io.github.ash1688.nuclearpowered.block.coolingpond;
 
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModItems;
+import io.github.ash1688.nuclearpowered.menu.CoolingPondMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.Containers;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -24,7 +31,7 @@ import javax.annotation.Nullable;
 // any face, cools it for 60 s, then pushes the resulting
 // depleted_uranium_fuel_rod out via auto-output. No GUI; line up as many pond
 // blocks in a row as you want capacity.
-public class CoolingPondBlockEntity extends BlockEntity {
+public class CoolingPondBlockEntity extends BlockEntity implements MenuProvider {
     public static final int SLOT = 0;
     public static final int COOL_TICKS = 1200; // 60 seconds @ 20 TPS
 
@@ -42,6 +49,30 @@ public class CoolingPondBlockEntity extends BlockEntity {
     private LazyOptional<IItemHandler> lazyExternalHandler = LazyOptional.empty();
 
     private int coolProgress = 0;
+
+    private final ContainerData data = new ContainerData() {
+        @Override
+        public int get(int index) {
+            return switch (index) {
+                case 0 -> coolProgress;
+                case 1 -> COOL_TICKS;
+                default -> 0;
+            };
+        }
+        @Override public void set(int index, int value) { if (index == 0) coolProgress = value; }
+        @Override public int getCount() { return 2; }
+    };
+
+    public IItemHandler getItemHandlerForMenu() { return itemHandler; }
+
+    @Override
+    public Component getDisplayName() { return Component.translatable("block.nuclearpowered.cooling_pond"); }
+
+    @Nullable
+    @Override
+    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+        return new CoolingPondMenu(id, inv, this, data);
+    }
 
     public CoolingPondBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.COOLING_POND.get(), pos, state);

@@ -4,6 +4,7 @@ import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.client.screen.BatteryScreen;
 import io.github.ash1688.nuclearpowered.client.screen.CladdingRecyclerScreen;
 import io.github.ash1688.nuclearpowered.client.screen.CoalBoilerScreen;
+import io.github.ash1688.nuclearpowered.client.screen.CoolingPondScreen;
 import io.github.ash1688.nuclearpowered.client.screen.CrusherScreen;
 import io.github.ash1688.nuclearpowered.client.screen.CsColumnScreen;
 import io.github.ash1688.nuclearpowered.client.screen.DissolverScreen;
@@ -45,6 +46,7 @@ public final class ModClientSetup {
             MenuScreens.register(ModMenuTypes.CS_COLUMN.get(), CsColumnScreen::new);
             MenuScreens.register(ModMenuTypes.VITRIFIER.get(), VitrifierScreen::new);
             MenuScreens.register(ModMenuTypes.CLADDING_RECYCLER.get(), CladdingRecyclerScreen::new);
+            MenuScreens.register(ModMenuTypes.COOLING_POND.get(), CoolingPondScreen::new);
         });
     }
 }

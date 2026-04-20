@@ -317,6 +317,7 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
         public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
             if (!autoInput) return stack;
             if (slot != SLOT_INPUT && slot != SLOT_BUCKET) return stack;
+            if (slot == SLOT_INPUT && !hasWashingRecipe(stack)) return stack;
             return itemHandler.insertItem(slot, stack, simulate);
         }
 
@@ -331,7 +332,17 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
 
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
+            if (slot == SLOT_INPUT && !hasWashingRecipe(stack)) return false;
             return itemHandler.isItemValid(slot, stack);
+        }
+
+        private boolean hasWashingRecipe(ItemStack stack) {
+            if (level == null || stack.isEmpty()) return false;
+            SimpleContainer probe = new SimpleContainer(1);
+            probe.setItem(0, stack);
+            return level.getRecipeManager()
+                    .getRecipeFor(ModRecipes.WASHING_TYPE.get(), probe, level)
+                    .isPresent();
         }
     }
 }
