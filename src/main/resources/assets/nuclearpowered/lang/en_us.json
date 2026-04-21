@@ -28,6 +28,8 @@
   "block.nuclearpowered.vitrifier": "Vitrifier",
   "block.nuclearpowered.cladding_recycler": "Cladding Recycler",
   "block.nuclearpowered.infinite_water_source": "Infinite Water Source (Creative)",
+  "block.nuclearpowered.infinite_nitric_acid_source": "Infinite Nitric Acid Source (Creative)",
+  "block.nuclearpowered.infinite_solvent_source": "Infinite Extraction Solvent Source (Creative)",
   "block.nuclearpowered.cooling_pond": "Cooling Pond",
   "item.nuclearpowered.hot_spent_fuel_rod": "Hot Spent Fuel Rod",
   "item.nuclearpowered.fuel_rod_cladding": "Fuel Rod Cladding",
