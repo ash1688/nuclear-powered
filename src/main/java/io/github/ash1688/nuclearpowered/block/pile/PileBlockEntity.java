@@ -99,6 +99,16 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     // Strict 3x3x3 shell validity. Updated every tick (cheap — 26 block reads).
     private boolean structureValid = false;
 
+    // Fermi-III Exchange permanent upgrades. One-shot right-click on the pile
+    // consumes the module and flips the flag; flags are persisted in NBT so the
+    // upgrade survives chunk reloads and world saves.
+    //
+    //   extendedBurn    — rod burn time 4000 -> 6000 ticks (+50 %).
+    //   thermalDampener — softens the thermocouple 7K+ efficiency penalty from
+    //                     x0.1 to x0.25 (read by the thermo's FE curve).
+    private boolean extendedBurn = false;
+    private boolean thermalDampener = false;
+
     private final ContainerData data = new ContainerData() {
         @Override
         public int get(int index) {
@@ -179,6 +189,27 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
 
     public void toggleAutoOutput() { autoOutput = !autoOutput; setChanged(); }
 
+    public boolean hasExtendedBurn() { return extendedBurn; }
+
+    public boolean hasThermalDampener() { return thermalDampener; }
+
+    // Returns true if the upgrade was newly applied; false if this pile already
+    // had the upgrade. Right-click handler uses the return value to decide
+    // whether to consume the item from the player's hand.
+    public boolean applyExtendedBurn() {
+        if (extendedBurn) return false;
+        extendedBurn = true;
+        setChanged();
+        return true;
+    }
+
+    public boolean applyThermalDampener() {
+        if (thermalDampener) return false;
+        thermalDampener = true;
+        setChanged();
+        return true;
+    }
+
     // Per-second heat coefficient each casing contributes at the current heat
     // level. Below 3K each casing heats (+5). At 3K and above each casing
     // cools, stacking an extra -1 for every 1K band crossed.
@@ -228,6 +259,8 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
         tag.putInt("heatTickCounter", heatTickCounter);
         tag.putBoolean("autoInput", autoInput);
         tag.putBoolean("autoOutput", autoOutput);
+        tag.putBoolean("extendedBurn", extendedBurn);
+        tag.putBoolean("thermalDampener", thermalDampener);
     }
 
     @Override
@@ -239,6 +272,8 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
         heatTickCounter = tag.getInt("heatTickCounter");
         autoInput = !tag.contains("autoInput") || tag.getBoolean("autoInput");
         autoOutput = !tag.contains("autoOutput") || tag.getBoolean("autoOutput");
+        extendedBurn = tag.getBoolean("extendedBurn");
+        thermalDampener = tag.getBoolean("thermalDampener");
     }
 
     public void drops() {
@@ -277,7 +312,8 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
             changed = true;
         } else if (canStartBurn()) {
             itemHandler.getStackInSlot(SLOT_FUEL).shrink(1);
-            burnTime = BURN_TICKS_PER_ROD;
+            // Extended Burn Module stretches a rod's lifetime by 50 % (200 s -> 300 s).
+            burnTime = extendedBurn ? (BURN_TICKS_PER_ROD * 3 / 2) : BURN_TICKS_PER_ROD;
             changed = true;
         }
 

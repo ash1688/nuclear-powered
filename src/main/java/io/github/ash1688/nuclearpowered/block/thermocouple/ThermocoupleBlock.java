@@ -1,12 +1,16 @@
 package io.github.ash1688.nuclearpowered.block.thermocouple;
 
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
+import io.github.ash1688.nuclearpowered.init.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
@@ -50,6 +54,23 @@ public class ThermocoupleBlock extends BaseEntityBlock {
         if (!level.isClientSide) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof ThermocoupleBlockEntity tc) {
+                ItemStack held = player.getItemInHand(hand);
+                // Heat Capture Efficiency Core upgrade — consumed on first apply,
+                // noop thereafter. Checked before the coolant-mode sneak toggle so
+                // the upgrade lands regardless of the player's crouch state.
+                if (held.is(ModItems.HEAT_CAPTURE_EFFICIENCY_CORE.get())) {
+                    boolean fresh = tc.applyHeatCaptureEfficiency();
+                    player.displayClientMessage(
+                            Component.literal(fresh
+                                    ? "Heat Capture Efficiency Core installed"
+                                    : "Thermocouple already has Heat Capture Efficiency Core"),
+                            true);
+                    if (fresh) {
+                        if (!player.getAbilities().instabuild) held.shrink(1);
+                        level.playSound(null, pos, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.6F, 1.4F);
+                    }
+                    return InteractionResult.CONSUME;
+                }
                 // Sneak + right-click toggles coolant mode (heat dumped to pile,
                 // no FE pushed out). Regular right-click opens the GUI.
                 if (player.isShiftKeyDown()) {

@@ -51,6 +51,9 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
     private int coolTickCounter = 0;
     private boolean extractedThisInterval = false;
     private boolean coolantMode = false;
+    // Fermi-III Exchange: Heat Capture Efficiency Core. Permanent +10 % on the
+    // FE this thermo produces at every heat zone. Persisted in NBT.
+    private boolean heatCaptureEfficiency = false;
 
     private final IEnergyStorage externalEnergy = new IEnergyStorage() {
         @Override
@@ -143,6 +146,7 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
         super.saveAdditional(tag);
         tag.putInt("fe", storedFE);
         tag.putBoolean("coolantMode", coolantMode);
+        tag.putBoolean("heatCaptureEfficiency", heatCaptureEfficiency);
     }
 
     @Override
@@ -150,6 +154,16 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
         super.load(tag);
         storedFE = tag.getInt("fe");
         coolantMode = tag.getBoolean("coolantMode");
+        heatCaptureEfficiency = tag.getBoolean("heatCaptureEfficiency");
+    }
+
+    public boolean hasHeatCaptureEfficiency() { return heatCaptureEfficiency; }
+
+    public boolean applyHeatCaptureEfficiency() {
+        if (heatCaptureEfficiency) return false;
+        heatCaptureEfficiency = true;
+        setChanged();
+        return true;
     }
 
     public boolean isCoolantMode() { return coolantMode; }
@@ -160,18 +174,23 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
     }
 
     // FE produced per tick given current pile heat and zone efficiency.
-    // Multipliers: <3K = 0.5, 3K-5K = 1.0 (sweet spot), 5K-7K = 0.7, 7K+ = 0.1.
+    // Multipliers: <3K = 0.5, 3K-5K = 1.0 (sweet spot), 5K-7K = 0.7, 7K+ = 0.1
+    // (softened to 0.25 if the pile has a Thermal Dampener installed).
     // The 7K+ floor is steep so overheated piles tank output — gives the
     // player real incentive to keep the reactor in the sweet spot.
-    private int efficiencyScaledProduction(int heat) {
+    // Heat Capture Efficiency Core on this thermo multiplies the final output
+    // by 1.10 at every zone.
+    private int efficiencyScaledProduction(int heat, boolean pileHasThermalDampener) {
         if (heat <= 0) return 0;
         int baseFE = heat / HEAT_PER_FE;
         int percent;
         if (heat < 3000)       percent = 50;
         else if (heat < 5000)  percent = 100;
         else if (heat < 7000)  percent = 70;
-        else                   percent = 10;
-        return baseFE * percent / 100;
+        else                   percent = pileHasThermalDampener ? 25 : 10;
+        int produced = baseFE * percent / 100;
+        if (heatCaptureEfficiency) produced = produced * 110 / 100;
+        return produced;
     }
 
     public void tick(Level level, BlockPos pos, BlockState state) {
@@ -195,7 +214,7 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
             BlockEntity be = level.getBlockEntity(cachedPilePos);
             if (be instanceof PileBlockEntity pile) {
                 int heat = pile.getHeat();
-                int produced = efficiencyScaledProduction(heat);
+                int produced = efficiencyScaledProduction(heat, pile.hasThermalDampener());
                 int canAccept = Math.min(produced, CAPACITY_FE - storedFE);
                 if (canAccept > 0) {
                     storedFE += canAccept;
