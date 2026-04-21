@@ -103,7 +103,7 @@ Drop the JAR in your Minecraft instance's `mods/` folder. JEI (optional) is auto
 
 ## Design Document
 
-The full design lives in [NuclearPowered_DesignDoc_v3.md](NuclearPowered_DesignDoc_v3.md) — reactor mechanics, PUREX processing line, power conversion chain, research system, blueprint/deployer system, R1 success criteria, and more. The original `.docx` source is also in the repo.
+The full design lives in [NuclearPowered_DesignDoc_v4.md](NuclearPowered_DesignDoc_v4.md) — reactor mechanics, PUREX processing line, power conversion chain, research system, blueprint/deployer system, R1 success criteria, and more. v3 remains in the repo for reference.
 
 ## License
 
