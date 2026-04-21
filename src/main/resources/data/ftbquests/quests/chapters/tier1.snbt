@@ -10,9 +10,16 @@
 	quest_links: [ ]
 	quests: [
 		{
-			description: ["Mine your first chunk of uranium ore.", "", "Uranium ore spawns in all dimensions \u2014 Overworld, Deepslate, Nether, and the End."]
+			description: [
+				"Every nuclear programme starts with an ore body. Go find a uranium deposit \u2014 you'll see the veins in stone, deepslate, netherrack, and end stone.",
+				"",
+				"Drop one piece in your inventory to clear this quest. The Crusher comes next."
+			]
 			id: "1A1B1C1D1E1F2001"
-			rewards: [{ id: "1A1B1C1D1E1F3001" count: 3 item: "nuclearpowered:raw_uranium" type: "item" }]
+			rewards: [
+				{ id: "1A1B1C1D1E1F3001" count: 2 item: "nuclearpowered:fermi_iii_coin" type: "item" }
+				{ id: "1A1B1C1D1E1F3101" count: 3 item: "nuclearpowered:raw_uranium" type: "item" }
+			]
 			tasks: [{ id: "1A1B1C1D1E1F4001" item: "nuclearpowered:raw_uranium" type: "item" }]
 			title: "Nuclear Dawn"
 			x: 0.0d
@@ -20,109 +27,305 @@
 		}
 		{
 			dependencies: ["1A1B1C1D1E1F2001"]
-			description: ["Crush raw uranium, wash it into yellowcake, and smelt it into an ingot."]
-			id: "1A1B1C1D1E1F2002"
-			tasks: [{ id: "1A1B1C1D1E1F4002" item: "nuclearpowered:uranium_ingot" type: "item" }]
-			title: "Refined"
+			description: [
+				"Craft a Crusher. It breaks raw uranium into crushed powder \u2014 the first mechanical step of ore dressing.",
+				"",
+				"Runs on FE. You can feed it from a Coal Boiler + Steam Engine if you're not up to pile power yet."
+			]
+			id: "1A1B1C1D1E1F200D"
+			rewards: [{ id: "1A1B1C1D1E1F3002" count: 2 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F4002" item: "nuclearpowered:crusher" type: "item" }]
+			title: "First Crusher"
 			x: 2.0d
+			y: -1.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F200D"]
+			description: [
+				"Craft a Washer. It dissolves crushed ore in water to wash the heavy metals free, producing yellowcake powder (U\u2083O\u2088).",
+				"",
+				"The Washer drinks water from any adjacent fluid handler \u2014 vanilla water source, an Infinite Water Source block, or a pipe loop."
+			]
+			id: "1A1B1C1D1E1F200E"
+			rewards: [{ id: "1A1B1C1D1E1F3003" count: 2 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F4003" item: "nuclearpowered:washer" type: "item" }]
+			title: "Liquid Purification"
+			x: 2.0d
+			y: 1.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F200E"]
+			description: [
+				"Yellowcake is the canonical milestone of uranium ore dressing. Named for the colour of the powdered U\u2083O\u2088 that leaves the mill.",
+				"",
+				"Your next step is smelting it down to metallic uranium."
+			]
+			id: "1A1B1C1D1E1F200F"
+			rewards: [{ id: "1A1B1C1D1E1F3004" count: 2 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F4004" item: "nuclearpowered:yellowcake" type: "item" }]
+			title: "Yellow as the Sun"
+			x: 4.0d
+			y: 0.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F200F"]
+			description: [
+				"Smelt yellowcake in a furnace (or electric furnace) to produce a pure uranium ingot.",
+				"",
+				"Three ingots and four iron plates make one fuel rod."
+			]
+			id: "1A1B1C1D1E1F2002"
+			rewards: [{ id: "1A1B1C1D1E1F3005" count: 3 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F4005" item: "nuclearpowered:uranium_ingot" type: "item" }]
+			title: "Refined"
+			x: 6.0d
 			y: 0.0d
 		}
 		{
 			dependencies: ["1A1B1C1D1E1F2002"]
-			description: ["Fabricate your first uranium fuel rod from uranium ingots and iron cladding."]
+			description: [
+				"Fabricate your first uranium fuel rod. Recipe: 3 uranium ingots + 4 iron ingots (or 1 recycled fuel rod cladding if you've closed the loop).",
+				"",
+				"Drop a rod into a pile and watch it burn. A rod lasts 200 seconds at base rate."
+			]
 			id: "1A1B1C1D1E1F2003"
-			tasks: [{ id: "1A1B1C1D1E1F4003" item: "nuclearpowered:uranium_fuel_rod" type: "item" }]
+			rewards: [{ id: "1A1B1C1D1E1F3006" count: 3 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F4006" item: "nuclearpowered:uranium_fuel_rod" type: "item" }]
 			title: "Fueled Up"
-			x: 4.0d
+			x: 8.0d
 			y: 0.0d
 		}
 		{
 			dependencies: ["1A1B1C1D1E1F2001"]
-			description: ["Build a graphite pile and surround it with a 3x3x3 graphite casing shell."]
-			id: "1A1B1C1D1E1F2004"
-			tasks: [{ id: "1A1B1C1D1E1F4004" item: "nuclearpowered:graphite_pile" type: "item" }]
-			title: "Control Rods in Place"
+			description: [
+				"The steam-age power path: a Coal Boiler burns coal to boil water into steam, which drives a Steam Engine to generate FE.",
+				"",
+				"Useful for bootstrapping your processing chain before the pile comes online."
+			]
+			id: "1A1B1C1D1E1F2007"
+			rewards: [{ id: "1A1B1C1D1E1F3007" count: 3 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F4007" item: "nuclearpowered:steam_engine" type: "item" }]
+			title: "Steam Age"
 			x: 0.0d
+			y: 3.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2007"]
+			description: [
+				"Craft an Energy Cable. Cables form conduit networks \u2014 when a thermocouple or battery pushes FE into the network, the cable auto-distributes it to every connected sink.",
+				"",
+				"No per-cable buffer. No oscillation. Just plumbing."
+			]
+			id: "1A1B1C1D1E1F2010"
+			rewards: [{ id: "1A1B1C1D1E1F3008" count: 2 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F4008" item: "nuclearpowered:energy_cable" type: "item" }]
+			title: "Wire It Up"
+			x: 2.0d
+			y: 3.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2010"]
+			description: [
+				"Craft a Battery. 5 million FE storage, 2048 FE/tick I/O \u2014 enough to solo-power the full reprocessing chain (which draws 1200 FE/tick).",
+				"",
+				"Drop one on your cable network and watch it fill up during idle."
+			]
+			id: "1A1B1C1D1E1F2011"
+			rewards: [{ id: "1A1B1C1D1E1F3009" count: 3 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F4009" item: "nuclearpowered:battery" type: "item" }]
+			title: "Buffer Up"
+			x: 4.0d
+			y: 3.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2003"]
+			description: [
+				"Craft Graphite Casing blocks. You'll need 26 to form the shell around your pile \u2014 a full 3\u00d73\u00d73 cube minus one face-centre position for the pile itself."
+			]
+			id: "1A1B1C1D1E1F2012"
+			rewards: [{ id: "1A1B1C1D1E1F300A" count: 2 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F400A" item: "nuclearpowered:graphite_casing" type: "item" }]
+			title: "Graphite Shell"
+			x: 8.0d
 			y: 2.0d
 		}
 		{
-			dependencies: ["1A1B1C1D1E1F2003", "1A1B1C1D1E1F2004"]
-			description: ["Run a fuel rod all the way through to depletion \u2014 your first reactor cycle."]
-			id: "1A1B1C1D1E1F2005"
-			shape: "hexagon"
-			size: 1.5d
-			tasks: [{ id: "1A1B1C1D1E1F4005" item: "nuclearpowered:hot_spent_fuel_rod" type: "item" }]
-			title: "Criticality"
-			x: 4.0d
+			dependencies: ["1A1B1C1D1E1F2012"]
+			description: [
+				"Craft the Graphite Pile block and drop it into the centre of a 3\u00d73\u00d73 Graphite Casing shell. Leave one side-face-centre position open for the pile itself so you can interact with it.",
+				"",
+				"A valid structure is auto-detected every tick. Break a casing and the burn dies instantly."
+			]
+			id: "1A1B1C1D1E1F2004"
+			rewards: [{ id: "1A1B1C1D1E1F300B" count: 3 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F400B" item: "nuclearpowered:graphite_pile" type: "item" }]
+			title: "Control Rods in Place"
+			x: 10.0d
 			y: 2.0d
 		}
 		{
 			dependencies: ["1A1B1C1D1E1F2004"]
-			description: ["Attach a thermocouple to your pile to convert heat directly into FE."]
-			id: "1A1B1C1D1E1F2006"
-			tasks: [{ id: "1A1B1C1D1E1F4006" item: "nuclearpowered:thermocouple" type: "item" }]
-			title: "Thermocouple"
-			x: 0.0d
-			y: 4.0d
+			description: [
+				"Optional but useful. The Heater pumps +20 heat per tick into an adjacent pile up to 1500 heat, tapers off to 0 by 2500.",
+				"",
+				"Right-click to toggle on/off. Great for starting a cold pile without wasting fuel on the warm-up."
+			]
+			id: "1A1B1C1D1E1F2013"
+			rewards: [{ id: "1A1B1C1D1E1F300C" count: 2 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F400C" item: "nuclearpowered:heater" type: "item" }]
+			title: "Preheat"
+			x: 12.0d
+			y: 1.0d
 		}
 		{
-			dependencies: ["1A1B1C1D1E1F2001"]
-			description: ["Build the coal-age alternative: Coal Boiler + Steam Engine for steam-driven FE."]
-			id: "1A1B1C1D1E1F2007"
-			tasks: [{ id: "1A1B1C1D1E1F4007" item: "nuclearpowered:steam_engine" type: "item" }]
-			title: "Steam Age"
-			x: -2.0d
+			dependencies: ["1A1B1C1D1E1F2004"]
+			description: [
+				"Burn a fuel rod all the way through to depletion \u2014 your first reactor cycle.",
+				"",
+				"The rod comes out as HOT spent fuel. Handling it in your active hotbar slot will burn you until it cools in a Cooling Pond."
+			]
+			id: "1A1B1C1D1E1F2005"
+			rewards: [{ id: "1A1B1C1D1E1F300D" count: 5 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			shape: "hexagon"
+			size: 1.5d
+			tasks: [{ id: "1A1B1C1D1E1F400D" item: "nuclearpowered:hot_spent_fuel_rod" type: "item" }]
+			title: "Criticality"
+			x: 12.0d
+			y: 3.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2004"]
+			description: [
+				"Craft and attach Thermocouples to your pile. Each one converts pile heat into FE \u2014 production peaks in the 3K\u20135K sweet spot (up to 500 FE/tick per thermo at 5K).",
+				"",
+				"Sneak + right-click to toggle coolant mode (\u22125 H/s drain, no FE output) \u2014 useful for dialling heat back into the sweet spot when your pile runs hot."
+			]
+			id: "1A1B1C1D1E1F2006"
+			rewards: [{ id: "1A1B1C1D1E1F300E" count: 3 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F400E" item: "nuclearpowered:thermocouple" type: "item" }]
+			title: "Thermocouple"
+			x: 14.0d
 			y: 2.0d
 		}
 		{
 			dependencies: ["1A1B1C1D1E1F2005"]
-			description: ["Shear a depleted fuel rod into chopped fuel and cladding scrap \u2014 step 1 of PUREX reprocessing."]
+			description: [
+				"Craft a Cooling Pond. Hot spent fuel rods queue in the input slot and cool over 60 seconds into standard depleted rods \u2014 safe to shear.",
+				"",
+				"Line up multiple ponds behind the reactor for parallel capacity."
+			]
+			id: "1A1B1C1D1E1F2014"
+			rewards: [{ id: "1A1B1C1D1E1F300F" count: 2 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F400F" item: "nuclearpowered:cooling_pond" type: "item" }]
+			title: "Cool Your Rods"
+			x: 14.0d
+			y: 4.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2014"]
+			description: [
+				"Feed a cooled spent rod into the Shearer. Mechanical decladding \u2014 outputs chopped fuel pellets plus separated cladding scrap.",
+				"",
+				"Step 1 of the five-stage PUREX chain."
+			]
 			id: "1A1B1C1D1E1F2008"
-			tasks: [{ id: "1A1B1C1D1E1F4008" item: "nuclearpowered:chopped_fuel" type: "item" }]
+			rewards: [{ id: "1A1B1C1D1E1F3010" count: 3 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F4010" item: "nuclearpowered:chopped_fuel" type: "item" }]
 			title: "PUREX Beginnings"
-			x: 6.0d
-			y: 2.0d
-		}
-		{
-			dependencies: ["1A1B1C1D1E1F2008"]
-			description: ["Extract plutonium-239 from spent fuel. Stockpile it \u2014 Tier 2 reactors will need it."]
-			id: "1A1B1C1D1E1F2009"
-			shape: "hexagon"
-			tasks: [{ id: "1A1B1C1D1E1F4009" item: "nuclearpowered:plutonium_239" type: "item" }]
-			title: "Plutonium Stockpile"
-			x: 8.0d
-			y: 1.0d
-		}
-		{
-			dependencies: ["1A1B1C1D1E1F2008"]
-			description: ["Separate cesium-137 from the fission product stream using an ion exchange resin."]
-			id: "1A1B1C1D1E1F200A"
-			tasks: [{ id: "1A1B1C1D1E1F400A" item: "nuclearpowered:cesium_137" type: "item" }]
-			title: "Cesium Stockpile"
-			x: 8.0d
-			y: 3.0d
-		}
-		{
-			dependencies: ["1A1B1C1D1E1F2008"]
-			description: ["Compact 9 cladding scraps back into a reusable fuel rod cladding."]
-			id: "1A1B1C1D1E1F200B"
-			tasks: [{ id: "1A1B1C1D1E1F400B" item: "nuclearpowered:fuel_rod_cladding" type: "item" }]
-			title: "Scrap Shop"
-			x: 6.0d
+			x: 16.0d
 			y: 4.0d
 		}
 		{
 			dependencies: ["1A1B1C1D1E1F2008"]
-			description: ["Recover uranium from spent fuel and smelt it back into an ingot. The fuel loop is now closed."]
+			description: [
+				"Dissolve chopped fuel in concentrated nitric acid. The Dissolver outputs dissolved fuel solution (and a small amount of insoluble reactor sludge).",
+				"",
+				"Craft the nitric acid bucket from a water bucket + gunpowder + glowstone."
+			]
+			id: "1A1B1C1D1E1F2015"
+			rewards: [{ id: "1A1B1C1D1E1F3011" count: 3 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F4011" item: "nuclearpowered:dissolved_fuel" type: "item" }]
+			title: "Dissolution"
+			x: 18.0d
+			y: 4.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2015"]
+			description: [
+				"The Extraction Column (PUREX core) separates uranium and plutonium from fission products using an organic solvent (TBP in kerosene). For R1 it outputs the plutonium solid directly.",
+				"",
+				"Stockpile Pu-239 \u2014 both Tier 2 reactors (Magnox and RBMK) need it for construction."
+			]
+			id: "1A1B1C1D1E1F2009"
+			rewards: [{ id: "1A1B1C1D1E1F3012" count: 5 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			shape: "hexagon"
+			size: 1.2d
+			tasks: [{ id: "1A1B1C1D1E1F4012" item: "nuclearpowered:plutonium_239" type: "item" }]
+			title: "Plutonium Stockpile"
+			x: 20.0d
+			y: 3.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2015"]
+			description: [
+				"The aqueous fission product stream from extraction runs through a cesium ion exchange column, pulling Cs-137 out as a solid.",
+				"",
+				"Like plutonium, Cs-137 is a Tier 2 gating material \u2014 both Magnox and RBMK construction require it."
+			]
+			id: "1A1B1C1D1E1F200A"
+			rewards: [{ id: "1A1B1C1D1E1F3013" count: 5 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			shape: "hexagon"
+			size: 1.2d
+			tasks: [{ id: "1A1B1C1D1E1F4013" item: "nuclearpowered:cesium_137" type: "item" }]
+			title: "Cesium Stockpile"
+			x: 20.0d
+			y: 5.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F200A"]
+			description: [
+				"Mix the residual waste with borosilicate glass frit and melt it down. The result is a stable glass-logged block suitable for long-term storage.",
+				"",
+				"This is the disposal end of the PUREX chain \u2014 inert, heavy, permanent."
+			]
+			id: "1A1B1C1D1E1F2016"
+			rewards: [{ id: "1A1B1C1D1E1F3014" count: 4 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F4014" item: "nuclearpowered:vitrified_waste" type: "item" }]
+			title: "Vitrification"
+			x: 22.0d
+			y: 4.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2008"]
+			description: [
+				"The Shearer's second output is cladding scrap. Feed 9 scraps into a Cladding Recycler and it compacts them into a reusable Fuel Rod Cladding.",
+				"",
+				"The Fuel Fabricator accepts the recycled cladding as a drop-in for 4 iron ingots."
+			]
+			id: "1A1B1C1D1E1F200B"
+			rewards: [{ id: "1A1B1C1D1E1F3015" count: 3 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F4015" item: "nuclearpowered:fuel_rod_cladding" type: "item" }]
+			title: "Scrap Shop"
+			x: 18.0d
+			y: 6.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F2009", "1A1B1C1D1E1F200A"]
+			description: [
+				"The Extraction Column also recovers uranium from the organic stream. Smelt reclaimed uranium in a furnace to turn it back into a uranium ingot.",
+				"",
+				"Combined with recycled cladding, you can now fabricate new fuel rods entirely from reprocessed material. The fuel loop is closed."
+			]
 			id: "1A1B1C1D1E1F200C"
+			rewards: [{ id: "1A1B1C1D1E1F3016" count: 10 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
 			shape: "diamond"
 			size: 1.5d
-			tasks: [{ id: "1A1B1C1D1E1F400C" item: "nuclearpowered:reclaimed_uranium" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F4016" item: "nuclearpowered:reclaimed_uranium" type: "item" }]
 			title: "Self-Sustaining"
-			x: 8.0d
-			y: 5.0d
+			x: 22.0d
+			y: 6.0d
 		}
 	]
 	reward_tables: [ ]
-	title: "Tier 1 \u2014 Foundations"
+	title: "Fermi-III"
 }

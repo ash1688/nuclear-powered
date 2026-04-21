@@ -92,6 +92,11 @@ public final class ModItems {
     public static final RegistryObject<Item> FUEL_ROD_CLADDING = ITEMS.register("fuel_rod_cladding",
             () -> new Item(new Item.Properties()));
 
+    // Fermi-III quest-book currency. Awarded by the bundled FTB Quests chapter;
+    // may later serve as an R2 trade-in resource for starter kits.
+    public static final RegistryObject<Item> FERMI_III_COIN = ITEMS.register("fermi_iii_coin",
+            () -> new Item(new Item.Properties()));
+
     // Filled buckets for the reprocessing reagents. Registered here rather than
     // inside ModFluids so we can reference the Items registry cleanly; the
     // ForgeFlowingFluid.Properties in ModFluids then points back at these via

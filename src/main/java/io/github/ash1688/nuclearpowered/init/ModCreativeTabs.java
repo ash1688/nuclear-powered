@@ -74,6 +74,7 @@ public final class ModCreativeTabs {
                         out.accept(ModItems.VITRIFIED_WASTE.get());
                         out.accept(ModItems.GLASS_FRIT.get());
                         out.accept(ModItems.ION_EXCHANGE_RESIN.get());
+                        out.accept(ModItems.FERMI_III_COIN.get());
                     })
                     .build());
 

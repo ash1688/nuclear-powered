@@ -33,6 +33,7 @@
   "block.nuclearpowered.cooling_pond": "Cooling Pond",
   "item.nuclearpowered.hot_spent_fuel_rod": "Hot Spent Fuel Rod",
   "item.nuclearpowered.fuel_rod_cladding": "Fuel Rod Cladding",
+  "item.nuclearpowered.fermi_iii_coin": "Fermi-III Coin",
   "advancement.nuclearpowered.root.title": "Nuclear Dawn",
   "advancement.nuclearpowered.root.description": "Mine your first chunk of uranium ore.",
   "advancement.nuclearpowered.uranium_ingot.title": "Refined",
