@@ -93,9 +93,69 @@ public final class ModItems {
             () -> new Item(new Item.Properties()));
 
     // Fermi-III quest-book currency. Awarded by the bundled FTB Quests chapter;
-    // may later serve as an R2 trade-in resource for starter kits.
+    // spent in the Fermi-III Exchange shop chapter. Tier-specific — later
+    // releases add T2/T3/T4 coins; unlocking the Tier 5 SMR controller will
+    // eventually require 1 of each tier coin.
     public static final RegistryObject<Item> FERMI_III_COIN = ITEMS.register("fermi_iii_coin",
             () -> new Item(new Item.Properties()));
+
+    // --- Fermi-III Exchange shop catalog (Phase 1: items are inert; effects
+    // wired in Phases 2/3 as laid out in the exchange plan). ---
+
+    // T2 reactor controller blueprints — owning one unlocks that T2 reactor's
+    // crafting recipe when T2 scaffolding lands.
+    public static final RegistryObject<Item> MAGNOX_BLUEPRINT = ITEMS.register("magnox_blueprint",
+            () -> new Item(new Item.Properties().stacksTo(1)));
+
+    public static final RegistryObject<Item> RBMK_BLUEPRINT = ITEMS.register("rbmk_blueprint",
+            () -> new Item(new Item.Properties().stacksTo(1)));
+
+    // Machine upgrade cards — slotted into the target machine's upgrade bay.
+    public static final RegistryObject<Item> CRUSHER_SPEED_CARD = ITEMS.register("crusher_speed_card",
+            () -> new Item(new Item.Properties().stacksTo(16)));
+
+    public static final RegistryObject<Item> WASHER_SPEED_CARD = ITEMS.register("washer_speed_card",
+            () -> new Item(new Item.Properties().stacksTo(16)));
+
+    public static final RegistryObject<Item> FURNACE_SPEED_CARD = ITEMS.register("furnace_speed_card",
+            () -> new Item(new Item.Properties().stacksTo(16)));
+
+    public static final RegistryObject<Item> FABRICATOR_SPEED_CARD = ITEMS.register("fabricator_speed_card",
+            () -> new Item(new Item.Properties().stacksTo(16)));
+
+    public static final RegistryObject<Item> SHEARER_SPEED_CARD = ITEMS.register("shearer_speed_card",
+            () -> new Item(new Item.Properties().stacksTo(16)));
+
+    public static final RegistryObject<Item> DISSOLVER_REAGENT_SAVER = ITEMS.register("dissolver_reagent_saver",
+            () -> new Item(new Item.Properties().stacksTo(16)));
+
+    public static final RegistryObject<Item> EXTRACTION_SOLVENT_SAVER = ITEMS.register("extraction_solvent_saver",
+            () -> new Item(new Item.Properties().stacksTo(16)));
+
+    public static final RegistryObject<Item> CS_RESIN_SAVER = ITEMS.register("cs_resin_saver",
+            () -> new Item(new Item.Properties().stacksTo(16)));
+
+    public static final RegistryObject<Item> CLADDING_COMPACTOR = ITEMS.register("cladding_compactor",
+            () -> new Item(new Item.Properties().stacksTo(16)));
+
+    // Permanent pile / thermo upgrades — consumed on right-click, stamp a
+    // boolean flag into the target BE's NBT.
+    public static final RegistryObject<Item> EXTENDED_BURN_MODULE = ITEMS.register("extended_burn_module",
+            () -> new Item(new Item.Properties().stacksTo(16)));
+
+    public static final RegistryObject<Item> HEAT_CAPTURE_EFFICIENCY_CORE = ITEMS.register("heat_capture_efficiency_core",
+            () -> new Item(new Item.Properties().stacksTo(16)));
+
+    public static final RegistryObject<Item> THERMAL_DAMPENER = ITEMS.register("thermal_dampener",
+            () -> new Item(new Item.Properties().stacksTo(16)));
+
+    // Utility kits — right-click eventually drops their bundled contents;
+    // currently inert placeholders until Phase 2 lands.
+    public static final RegistryObject<Item> URANIUM_STARTER_CACHE = ITEMS.register("uranium_starter_cache",
+            () -> new Item(new Item.Properties().stacksTo(16)));
+
+    public static final RegistryObject<Item> REAGENT_BUNDLE = ITEMS.register("reagent_bundle",
+            () -> new Item(new Item.Properties().stacksTo(16)));
 
     // Filled buckets for the reprocessing reagents. Registered here rather than
     // inside ModFluids so we can reference the Items registry cleanly; the

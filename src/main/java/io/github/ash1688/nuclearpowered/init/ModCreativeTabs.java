@@ -75,6 +75,23 @@ public final class ModCreativeTabs {
                         out.accept(ModItems.GLASS_FRIT.get());
                         out.accept(ModItems.ION_EXCHANGE_RESIN.get());
                         out.accept(ModItems.FERMI_III_COIN.get());
+                        // Fermi-III Exchange shop catalog
+                        out.accept(ModItems.MAGNOX_BLUEPRINT.get());
+                        out.accept(ModItems.RBMK_BLUEPRINT.get());
+                        out.accept(ModItems.CRUSHER_SPEED_CARD.get());
+                        out.accept(ModItems.WASHER_SPEED_CARD.get());
+                        out.accept(ModItems.FURNACE_SPEED_CARD.get());
+                        out.accept(ModItems.FABRICATOR_SPEED_CARD.get());
+                        out.accept(ModItems.SHEARER_SPEED_CARD.get());
+                        out.accept(ModItems.DISSOLVER_REAGENT_SAVER.get());
+                        out.accept(ModItems.EXTRACTION_SOLVENT_SAVER.get());
+                        out.accept(ModItems.CS_RESIN_SAVER.get());
+                        out.accept(ModItems.CLADDING_COMPACTOR.get());
+                        out.accept(ModItems.EXTENDED_BURN_MODULE.get());
+                        out.accept(ModItems.HEAT_CAPTURE_EFFICIENCY_CORE.get());
+                        out.accept(ModItems.THERMAL_DAMPENER.get());
+                        out.accept(ModItems.URANIUM_STARTER_CACHE.get());
+                        out.accept(ModItems.REAGENT_BUNDLE.get());
                     })
                     .build());
 

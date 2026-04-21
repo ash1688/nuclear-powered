@@ -1,0 +1,244 @@
+{
+	default_hide_dependency_lines: false
+	default_quest_shape: ""
+	filename: "fermi_exchange"
+	group: "7F3A1C2D4E5F6A7B"
+	icon: "nuclearpowered:fermi_iii_coin"
+	id: "1A1B1C1D1E1F5000"
+	images: [ ]
+	order_index: 1
+	quest_links: [ ]
+	quests: [
+		{
+			description: [
+				"Welcome to the Fermi-III Exchange.",
+				"",
+				"Every quest in this chapter is a purchase. Complete a quest and the listed number of Fermi-III Coins is consumed from your inventory; in return you receive the item.",
+				"",
+				"Cards and utility kits can be bought as many times as you have coins for. Blueprints are one-shot \u2014 buy at most one of each per save.",
+				"",
+				"Coin hierarchy: Fermi-III Coin (T1) unlocks one T2 reactor controller. Each future tier mints its own coin, and the Tier 5 SMR Controller will require 1 of each tier coin to build. Spend wisely."
+			]
+			id: "1A1B1C1D1E1F5001"
+			optional: true
+			tasks: [{ id: "1A1B1C1D1E1F6001" title: "Read the intro" type: "checkmark" }]
+			title: "Welcome to the Exchange"
+			x: 0.0d
+			y: 0.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F5001"]
+			description: [
+				"Unlocks the Magnox reactor controller recipe. Magnox reactors are CO\u2082-cooled, graphite-moderated, natural-uranium-fed \u2014 the historical UK first-generation design.",
+				"",
+				"One-shot purchase. Buying this locks the other T2 reactor behind T2 coins earned in R2+."
+			]
+			id: "1A1B1C1D1E1F5002"
+			tasks: [{
+				id: "1A1B1C1D1E1F6002"
+				consume_items: true
+				count: 50L
+				item: "nuclearpowered:fermi_iii_coin"
+				type: "item"
+			}]
+			rewards: [{ id: "1A1B1C1D1E1F7002" item: "nuclearpowered:magnox_blueprint" type: "item" }]
+			title: "Magnox Blueprint"
+			x: -2.0d
+			y: 2.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F5001"]
+			description: [
+				"Unlocks the RBMK reactor controller recipe. RBMKs are graphite-moderated, water-cooled, boiling-water pressure-tube reactors \u2014 the Soviet first-generation design with positive void coefficient.",
+				"",
+				"One-shot purchase. Buying this locks the other T2 reactor behind T2 coins earned in R2+."
+			]
+			id: "1A1B1C1D1E1F5003"
+			tasks: [{
+				id: "1A1B1C1D1E1F6003"
+				consume_items: true
+				count: 50L
+				item: "nuclearpowered:fermi_iii_coin"
+				type: "item"
+			}]
+			rewards: [{ id: "1A1B1C1D1E1F7003" item: "nuclearpowered:rbmk_blueprint" type: "item" }]
+			title: "RBMK Blueprint"
+			x: 2.0d
+			y: 2.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F5001"]
+			description: ["Halves Crusher processing time when slotted in a Crusher's upgrade bay."]
+			id: "1A1B1C1D1E1F5004"
+			repeatable_quest: true
+			tasks: [{ id: "1A1B1C1D1E1F6004" consume_items: true count: 8L item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			rewards: [{ id: "1A1B1C1D1E1F7004" item: "nuclearpowered:crusher_speed_card" type: "item" }]
+			title: "Crusher Speed Card"
+			x: -4.0d
+			y: 5.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F5001"]
+			description: ["Halves Washer processing time when slotted."]
+			id: "1A1B1C1D1E1F5005"
+			repeatable_quest: true
+			tasks: [{ id: "1A1B1C1D1E1F6005" consume_items: true count: 8L item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			rewards: [{ id: "1A1B1C1D1E1F7005" item: "nuclearpowered:washer_speed_card" type: "item" }]
+			title: "Washer Speed Card"
+			x: -2.0d
+			y: 5.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F5001"]
+			description: ["Halves Electric Furnace processing time when slotted."]
+			id: "1A1B1C1D1E1F5006"
+			repeatable_quest: true
+			tasks: [{ id: "1A1B1C1D1E1F6006" consume_items: true count: 8L item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			rewards: [{ id: "1A1B1C1D1E1F7006" item: "nuclearpowered:furnace_speed_card" type: "item" }]
+			title: "Furnace Speed Card"
+			x: 0.0d
+			y: 5.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F5001"]
+			description: ["Halves Fuel Fabricator processing time when slotted."]
+			id: "1A1B1C1D1E1F5007"
+			repeatable_quest: true
+			tasks: [{ id: "1A1B1C1D1E1F6007" consume_items: true count: 8L item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			rewards: [{ id: "1A1B1C1D1E1F7007" item: "nuclearpowered:fabricator_speed_card" type: "item" }]
+			title: "Fabricator Speed Card"
+			x: 2.0d
+			y: 5.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F5001"]
+			description: ["Halves Shearer processing time when slotted."]
+			id: "1A1B1C1D1E1F5008"
+			repeatable_quest: true
+			tasks: [{ id: "1A1B1C1D1E1F6008" consume_items: true count: 8L item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			rewards: [{ id: "1A1B1C1D1E1F7008" item: "nuclearpowered:shearer_speed_card" type: "item" }]
+			title: "Shearer Speed Card"
+			x: 4.0d
+			y: 5.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F5001"]
+			description: ["Halves nitric acid consumption per Dissolver batch (250 mB \u2192 125 mB)."]
+			id: "1A1B1C1D1E1F5009"
+			repeatable_quest: true
+			tasks: [{ id: "1A1B1C1D1E1F6009" consume_items: true count: 10L item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			rewards: [{ id: "1A1B1C1D1E1F7009" item: "nuclearpowered:dissolver_reagent_saver" type: "item" }]
+			title: "Dissolver Reagent Saver"
+			x: -3.0d
+			y: 7.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F5001"]
+			description: ["Halves extraction solvent consumption per Extraction Column batch."]
+			id: "1A1B1C1D1E1F500A"
+			repeatable_quest: true
+			tasks: [{ id: "1A1B1C1D1E1F600A" consume_items: true count: 10L item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			rewards: [{ id: "1A1B1C1D1E1F700A" item: "nuclearpowered:extraction_solvent_saver" type: "item" }]
+			title: "Extraction Solvent Saver"
+			x: -1.0d
+			y: 7.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F5001"]
+			description: ["50% chance per Cs Column batch to not consume the ion exchange resin."]
+			id: "1A1B1C1D1E1F500B"
+			repeatable_quest: true
+			tasks: [{ id: "1A1B1C1D1E1F600B" consume_items: true count: 12L item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			rewards: [{ id: "1A1B1C1D1E1F700B" item: "nuclearpowered:cs_resin_saver" type: "item" }]
+			title: "Cs Resin Saver"
+			x: 1.0d
+			y: 7.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F5001"]
+			description: ["Cladding Recycler accepts 6 scraps per fuel_rod_cladding instead of 9."]
+			id: "1A1B1C1D1E1F500C"
+			repeatable_quest: true
+			tasks: [{ id: "1A1B1C1D1E1F600C" consume_items: true count: 15L item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			rewards: [{ id: "1A1B1C1D1E1F700C" item: "nuclearpowered:cladding_compactor" type: "item" }]
+			title: "Cladding Compactor"
+			x: 3.0d
+			y: 7.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F5001"]
+			description: [
+				"Right-click a Graphite Pile to consume this module and extend fuel rod burn time from 200s to 300s per rod (permanent).",
+				"",
+				"Applies per pile \u2014 buy one per pile you want to upgrade."
+			]
+			id: "1A1B1C1D1E1F500D"
+			repeatable_quest: true
+			tasks: [{ id: "1A1B1C1D1E1F600D" consume_items: true count: 15L item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			rewards: [{ id: "1A1B1C1D1E1F700D" item: "nuclearpowered:extended_burn_module" type: "item" }]
+			title: "Extended Burn Module"
+			x: -2.0d
+			y: 9.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F5001"]
+			description: [
+				"Right-click a Thermocouple to consume this core and boost its FE output by 10% at every heat zone (permanent).",
+				"",
+				"Applies per thermocouple."
+			]
+			id: "1A1B1C1D1E1F500E"
+			repeatable_quest: true
+			tasks: [{ id: "1A1B1C1D1E1F600E" consume_items: true count: 15L item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			rewards: [{ id: "1A1B1C1D1E1F700E" item: "nuclearpowered:heat_capture_efficiency_core" type: "item" }]
+			title: "Heat Capture Efficiency Core"
+			x: 0.0d
+			y: 9.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F5001"]
+			description: [
+				"Right-click a Graphite Pile to consume this dampener and soften the 7K+ efficiency penalty from \u00d70.1 to \u00d70.25 (permanent).",
+				"",
+				"Lets an overheated pile still produce meaningful FE while you bring the heat back into the sweet spot."
+			]
+			id: "1A1B1C1D1E1F500F"
+			repeatable_quest: true
+			tasks: [{ id: "1A1B1C1D1E1F600F" consume_items: true count: 20L item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			rewards: [{ id: "1A1B1C1D1E1F700F" item: "nuclearpowered:thermal_dampener" type: "item" }]
+			title: "Thermal Dampener"
+			x: 2.0d
+			y: 9.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F5001"]
+			description: [
+				"Right-click to unpack 16 yellowcake. Handy for bootstrapping new bases or replacing lost ore during testing."
+			]
+			id: "1A1B1C1D1E1F5010"
+			repeatable_quest: true
+			tasks: [{ id: "1A1B1C1D1E1F6010" consume_items: true count: 6L item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			rewards: [{ id: "1A1B1C1D1E1F7010" item: "nuclearpowered:uranium_starter_cache" type: "item" }]
+			title: "Uranium Starter Cache"
+			x: -1.0d
+			y: 11.0d
+		}
+		{
+			dependencies: ["1A1B1C1D1E1F5001"]
+			description: [
+				"Right-click to unpack 32 glass frit + 32 ion exchange resin + 4 nitric acid buckets + 4 extraction solvent buckets.",
+				"",
+				"Enough reagent for several full reprocessing cycles."
+			]
+			id: "1A1B1C1D1E1F5011"
+			repeatable_quest: true
+			tasks: [{ id: "1A1B1C1D1E1F6011" consume_items: true count: 10L item: "nuclearpowered:fermi_iii_coin" type: "item" }]
+			rewards: [{ id: "1A1B1C1D1E1F7011" item: "nuclearpowered:reagent_bundle" type: "item" }]
+			title: "Reagent Bundle"
+			x: 1.0d
+			y: 11.0d
+		}
+	]
+	reward_tables: [ ]
+	title: "Fermi-III Exchange"
+}
