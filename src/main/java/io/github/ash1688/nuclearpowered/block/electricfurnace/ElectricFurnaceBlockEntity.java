@@ -47,6 +47,16 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
         protected void onContentsChanged(int slot) { setChanged(); }
     };
 
+    // Single-slot upgrade bay. Accepts only the Furnace Speed Card.
+    private final ItemStackHandler upgradeHandler = new ItemStackHandler(1) {
+        @Override protected void onContentsChanged(int slot) { setChanged(); }
+        @Override public int getSlotLimit(int slot) { return 1; }
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return stack.is(io.github.ash1688.nuclearpowered.init.ModItems.FURNACE_SPEED_CARD.get());
+        }
+    };
+
     private final IItemHandler externalHandler = new SidedItemHandler();
 
     private LazyOptional<IItemHandler> lazyExternalHandler = LazyOptional.empty();
@@ -120,6 +130,13 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
 
     public IItemHandler getItemHandlerForMenu() { return itemHandler; }
 
+    public IItemHandler getUpgradeHandlerForMenu() { return upgradeHandler; }
+
+    private boolean hasSpeedUpgrade() {
+        return upgradeHandler.getStackInSlot(0)
+                .is(io.github.ash1688.nuclearpowered.init.ModItems.FURNACE_SPEED_CARD.get());
+    }
+
     public boolean isAutoInput() { return autoInput; }
 
     public boolean isAutoOutput() { return autoOutput; }
@@ -164,6 +181,7 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.put("inventory", itemHandler.serializeNBT());
+        tag.put("upgrade", upgradeHandler.serializeNBT());
         tag.putInt("progress", progress);
         tag.putInt("fe", storedFE);
         tag.putBoolean("autoInput", autoInput);
@@ -174,6 +192,7 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
     public void load(CompoundTag tag) {
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        if (tag.contains("upgrade")) upgradeHandler.deserializeNBT(tag.getCompound("upgrade"));
         progress = tag.getInt("progress");
         storedFE = tag.getInt("fe");
         autoInput = !tag.contains("autoInput") || tag.getBoolean("autoInput");
@@ -182,10 +201,11 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
 
     public void drops() {
         if (level == null) return;
-        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots());
+        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots() + upgradeHandler.getSlots());
         for (int i = 0; i < itemHandler.getSlots(); i++) {
             inv.setItem(i, itemHandler.getStackInSlot(i));
         }
+        inv.setItem(itemHandler.getSlots(), upgradeHandler.getStackInSlot(0));
         Containers.dropContents(level, worldPosition, inv);
     }
 
@@ -195,7 +215,8 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
         if (recipe.isPresent()) {
             ItemStack result = recipe.get().getResultItem(level.registryAccess());
             if (canFit(result)) {
-                maxProgress = Math.max(1, recipe.get().getCookingTime() / SPEED_DIVISOR);
+                int base = Math.max(1, recipe.get().getCookingTime() / SPEED_DIVISOR);
+                maxProgress = hasSpeedUpgrade() ? Math.max(1, base / 2) : base;
                 // Only advance progress when power is available. Consume power per tick
                 // of actual progress, not per tick of real time — so a starved furnace
                 // simply pauses until power returns.

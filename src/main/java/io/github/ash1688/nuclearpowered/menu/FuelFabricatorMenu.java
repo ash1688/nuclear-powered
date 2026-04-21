@@ -46,6 +46,8 @@ public class FuelFabricatorMenu extends AbstractContainerMenu {
                 FuelFabricatorBlockEntity.SLOT_CLADDING, 38, 44));
         addSlot(new SlotItemHandler(blockEntity.getItemHandlerForMenu(),
                 FuelFabricatorBlockEntity.SLOT_OUTPUT, 116, 35));
+        // Upgrade bay — accepts only the Fabricator Speed Card.
+        addSlot(new SlotItemHandler(blockEntity.getUpgradeHandlerForMenu(), 0, 134, 35));
 
         addDataSlots(data);
     }
@@ -104,10 +106,15 @@ public class FuelFabricatorMenu extends AbstractContainerMenu {
         ItemStack copy = source.copy();
 
         int machineFirst = PLAYER_INV_SLOT_COUNT;
-        int machineLastExclusive = PLAYER_INV_SLOT_COUNT + 3;
+        int machineUpgrade = PLAYER_INV_SLOT_COUNT + 3;
+        int machineLastExclusive = PLAYER_INV_SLOT_COUNT + 4;
 
         if (slotIndex < PLAYER_INV_SLOT_COUNT) {
-            if (!moveItemStackTo(source, machineFirst, machineLastExclusive, false)) return ItemStack.EMPTY;
+            // Try upgrade bay first (Fabricator Speed Card), then fuel/cladding/output.
+            if (!moveItemStackTo(source, machineUpgrade, machineUpgrade + 1, false)
+                    && !moveItemStackTo(source, machineFirst, machineUpgrade, false)) {
+                return ItemStack.EMPTY;
+            }
         } else if (slotIndex < machineLastExclusive) {
             if (!moveItemStackTo(source, 0, PLAYER_INV_SLOT_COUNT, false)) return ItemStack.EMPTY;
         } else {

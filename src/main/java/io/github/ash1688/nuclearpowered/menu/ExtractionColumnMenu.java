@@ -50,6 +50,8 @@ public class ExtractionColumnMenu extends AbstractContainerMenu {
                 ExtractionColumnBlockEntity.SLOT_OUTPUT_FISSION, 104, 53));
         addSlot(new SlotItemHandler(blockEntity.getItemHandlerForMenu(),
                 ExtractionColumnBlockEntity.SLOT_BUCKET, 134, 35));
+        // Upgrade bay — accepts only the Extraction Solvent Saver.
+        addSlot(new SlotItemHandler(blockEntity.getUpgradeHandlerForMenu(), 0, 134, 17));
 
         addDataSlots(data);
     }
@@ -106,10 +108,15 @@ public class ExtractionColumnMenu extends AbstractContainerMenu {
         ItemStack source = slot.getItem();
         ItemStack copy = source.copy();
         int machineFirst = PLAYER_INV_SLOT_COUNT;
-        int machineLastExclusive = PLAYER_INV_SLOT_COUNT + 5;
+        int machineUpgrade = PLAYER_INV_SLOT_COUNT + 5;
+        int machineLastExclusive = PLAYER_INV_SLOT_COUNT + 6;
 
         if (slotIndex < PLAYER_INV_SLOT_COUNT) {
-            if (!moveItemStackTo(source, machineFirst, machineLastExclusive, false)) return ItemStack.EMPTY;
+            // Try upgrade bay first (Extraction Solvent Saver), then the rest.
+            if (!moveItemStackTo(source, machineUpgrade, machineUpgrade + 1, false)
+                    && !moveItemStackTo(source, machineFirst, machineUpgrade, false)) {
+                return ItemStack.EMPTY;
+            }
         } else if (slotIndex < machineLastExclusive) {
             if (!moveItemStackTo(source, 0, PLAYER_INV_SLOT_COUNT, false)) return ItemStack.EMPTY;
         } else {

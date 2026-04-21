@@ -47,6 +47,8 @@ public class CsColumnMenu extends AbstractContainerMenu {
                 CsColumnBlockEntity.SLOT_OUTPUT_CS, 116, 26));
         addSlot(new SlotItemHandler(blockEntity.getItemHandlerForMenu(),
                 CsColumnBlockEntity.SLOT_OUTPUT_WASTE, 116, 44));
+        // Upgrade bay — accepts only the Cs Resin Saver.
+        addSlot(new SlotItemHandler(blockEntity.getUpgradeHandlerForMenu(), 0, 134, 35));
 
         addDataSlots(data);
     }
@@ -95,10 +97,15 @@ public class CsColumnMenu extends AbstractContainerMenu {
         ItemStack source = slot.getItem();
         ItemStack copy = source.copy();
         int machineFirst = PLAYER_INV_SLOT_COUNT;
-        int machineLastExclusive = PLAYER_INV_SLOT_COUNT + 4;
+        int machineUpgrade = PLAYER_INV_SLOT_COUNT + 4;
+        int machineLastExclusive = PLAYER_INV_SLOT_COUNT + 5;
 
         if (slotIndex < PLAYER_INV_SLOT_COUNT) {
-            if (!moveItemStackTo(source, machineFirst, machineLastExclusive, false)) return ItemStack.EMPTY;
+            // Try upgrade bay first (Cs Resin Saver), then the rest.
+            if (!moveItemStackTo(source, machineUpgrade, machineUpgrade + 1, false)
+                    && !moveItemStackTo(source, machineFirst, machineUpgrade, false)) {
+                return ItemStack.EMPTY;
+            }
         } else if (slotIndex < machineLastExclusive) {
             if (!moveItemStackTo(source, 0, PLAYER_INV_SLOT_COUNT, false)) return ItemStack.EMPTY;
         } else {

@@ -2,6 +2,7 @@ package io.github.ash1688.nuclearpowered.client.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.ash1688.nuclearpowered.NuclearPowered;
+import io.github.ash1688.nuclearpowered.init.ModItems;
 import io.github.ash1688.nuclearpowered.menu.CrusherMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -9,6 +10,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 
 public class CrusherScreen extends AbstractContainerScreen<CrusherMenu> {
     private static final ResourceLocation TEXTURE =
@@ -82,6 +84,18 @@ public class CrusherScreen extends AbstractContainerScreen<CrusherMenu> {
             int filled = menu.getScaledProgress();
             g.fill(x + 78, y + 41, x + 78 + filled, y + 45, 0xFFE56B2B);
         }
+
+        // Ghost preview for the empty upgrade slot — shows which card it accepts.
+        drawGhost(g, 38, ModItems.CRUSHER_SPEED_CARD.get().getDefaultInstance(), x + 134, y + 35);
+    }
+
+    // Draw a 35% alpha preview of the expected item in an empty slot so
+    // players can see what it accepts without hovering the tooltip.
+    private void drawGhost(GuiGraphics g, int slotIndex, ItemStack preview, int x, int y) {
+        if (!menu.slots.get(slotIndex).getItem().isEmpty()) return;
+        g.setColor(1.0F, 1.0F, 1.0F, 0.35F);
+        g.renderFakeItem(preview, x, y);
+        g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     @Override

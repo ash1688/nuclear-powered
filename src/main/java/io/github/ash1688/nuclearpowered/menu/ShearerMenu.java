@@ -45,6 +45,8 @@ public class ShearerMenu extends AbstractContainerMenu {
                 ShearerBlockEntity.SLOT_OUTPUT_FUEL, 104, 26));
         addSlot(new SlotItemHandler(blockEntity.getItemHandlerForMenu(),
                 ShearerBlockEntity.SLOT_OUTPUT_SCRAP, 104, 44));
+        // Upgrade bay — accepts only the Shearer Speed Card.
+        addSlot(new SlotItemHandler(blockEntity.getUpgradeHandlerForMenu(), 0, 134, 35));
 
         addDataSlots(data);
     }
@@ -93,10 +95,15 @@ public class ShearerMenu extends AbstractContainerMenu {
         ItemStack source = slot.getItem();
         ItemStack copy = source.copy();
         int machineFirst = PLAYER_INV_SLOT_COUNT;
-        int machineLastExclusive = PLAYER_INV_SLOT_COUNT + 3;
+        int machineUpgrade = PLAYER_INV_SLOT_COUNT + 3;
+        int machineLastExclusive = PLAYER_INV_SLOT_COUNT + 4;
 
         if (slotIndex < PLAYER_INV_SLOT_COUNT) {
-            if (!moveItemStackTo(source, machineFirst, machineFirst + 1, false)) return ItemStack.EMPTY;
+            // Try upgrade bay first (Shearer Speed Card), then input slot.
+            if (!moveItemStackTo(source, machineUpgrade, machineUpgrade + 1, false)
+                    && !moveItemStackTo(source, machineFirst, machineFirst + 1, false)) {
+                return ItemStack.EMPTY;
+            }
         } else if (slotIndex < machineLastExclusive) {
             if (!moveItemStackTo(source, 0, PLAYER_INV_SLOT_COUNT, false)) return ItemStack.EMPTY;
         } else {

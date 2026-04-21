@@ -47,6 +47,17 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
         }
     };
 
+    // Single-slot upgrade bay. Accepts only the Crusher Speed Card. Exposed to
+    // the menu (not to pipes/hoppers) so players swap cards manually.
+    private final ItemStackHandler upgradeHandler = new ItemStackHandler(1) {
+        @Override protected void onContentsChanged(int slot) { setChanged(); }
+        @Override public int getSlotLimit(int slot) { return 1; }
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return stack.is(io.github.ash1688.nuclearpowered.init.ModItems.CRUSHER_SPEED_CARD.get());
+        }
+    };
+
     // Wraps the raw handler for external (hopper/pipe) access only — obeys the auto in/out
     // toggles and restricts inserts to the input slot and extracts to the output slot.
     // The menu uses the raw handler directly so the player can always click items in/out.
@@ -120,6 +131,15 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
         return itemHandler;
     }
 
+    public IItemHandler getUpgradeHandlerForMenu() {
+        return upgradeHandler;
+    }
+
+    private boolean hasSpeedUpgrade() {
+        return upgradeHandler.getStackInSlot(0)
+                .is(io.github.ash1688.nuclearpowered.init.ModItems.CRUSHER_SPEED_CARD.get());
+    }
+
     public boolean isAutoInput() {
         return autoInput;
     }
@@ -174,6 +194,7 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.put("inventory", itemHandler.serializeNBT());
+        tag.put("upgrade", upgradeHandler.serializeNBT());
         tag.putInt("progress", progress);
         tag.putInt("fe", storedFE);
         tag.putBoolean("autoInput", autoInput);
@@ -184,6 +205,7 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
     public void load(CompoundTag tag) {
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        if (tag.contains("upgrade")) upgradeHandler.deserializeNBT(tag.getCompound("upgrade"));
         progress = tag.getInt("progress");
         storedFE = tag.getInt("fe");
         // Default to true for worlds created before the toggles existed.
@@ -193,10 +215,11 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
 
     public void drops() {
         if (level == null) return;
-        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots());
+        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots() + upgradeHandler.getSlots());
         for (int i = 0; i < itemHandler.getSlots(); i++) {
             inv.setItem(i, itemHandler.getStackInSlot(i));
         }
+        inv.setItem(itemHandler.getSlots(), upgradeHandler.getStackInSlot(0));
         Containers.dropContents(level, worldPosition, inv);
     }
 
@@ -204,7 +227,8 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
         Optional<CrusherRecipe> recipe = findMatchingRecipe(level);
         boolean crushingThisTick = false;
         if (recipe.isPresent() && canFit(recipe.get().getResult())) {
-            maxProgress = recipe.get().getProcessingTime();
+            int base = recipe.get().getProcessingTime();
+            maxProgress = hasSpeedUpgrade() ? Math.max(1, base / 2) : base;
             // Progress pauses (doesn't reset) when power runs dry, matching the
             // electric furnace so a starved crusher resumes where it left off.
             if (storedFE >= FE_PER_TICK) {

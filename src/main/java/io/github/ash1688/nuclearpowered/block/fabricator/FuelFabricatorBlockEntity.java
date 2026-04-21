@@ -44,6 +44,16 @@ public class FuelFabricatorBlockEntity extends BlockEntity implements MenuProvid
         protected void onContentsChanged(int slot) { setChanged(); }
     };
 
+    // Single-slot upgrade bay. Accepts only the Fabricator Speed Card.
+    private final ItemStackHandler upgradeHandler = new ItemStackHandler(1) {
+        @Override protected void onContentsChanged(int slot) { setChanged(); }
+        @Override public int getSlotLimit(int slot) { return 1; }
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return stack.is(io.github.ash1688.nuclearpowered.init.ModItems.FABRICATOR_SPEED_CARD.get());
+        }
+    };
+
     private final IItemHandler externalHandler = new SidedItemHandler();
 
     private LazyOptional<IItemHandler> lazyExternalHandler = LazyOptional.empty();
@@ -111,6 +121,13 @@ public class FuelFabricatorBlockEntity extends BlockEntity implements MenuProvid
 
     public IItemHandler getItemHandlerForMenu() { return itemHandler; }
 
+    public IItemHandler getUpgradeHandlerForMenu() { return upgradeHandler; }
+
+    private boolean hasSpeedUpgrade() {
+        return upgradeHandler.getStackInSlot(0)
+                .is(io.github.ash1688.nuclearpowered.init.ModItems.FABRICATOR_SPEED_CARD.get());
+    }
+
     public boolean isAutoInput() { return autoInput; }
     public boolean isAutoOutput() { return autoOutput; }
     public void toggleAutoInput() { autoInput = !autoInput; setChanged(); }
@@ -152,6 +169,7 @@ public class FuelFabricatorBlockEntity extends BlockEntity implements MenuProvid
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.put("inventory", itemHandler.serializeNBT());
+        tag.put("upgrade", upgradeHandler.serializeNBT());
         tag.putInt("progress", progress);
         tag.putInt("fe", storedFE);
         tag.putBoolean("autoInput", autoInput);
@@ -162,6 +180,7 @@ public class FuelFabricatorBlockEntity extends BlockEntity implements MenuProvid
     public void load(CompoundTag tag) {
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        if (tag.contains("upgrade")) upgradeHandler.deserializeNBT(tag.getCompound("upgrade"));
         progress = tag.getInt("progress");
         storedFE = tag.getInt("fe");
         autoInput = !tag.contains("autoInput") || tag.getBoolean("autoInput");
@@ -170,10 +189,11 @@ public class FuelFabricatorBlockEntity extends BlockEntity implements MenuProvid
 
     public void drops() {
         if (level == null) return;
-        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots());
+        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots() + upgradeHandler.getSlots());
         for (int i = 0; i < itemHandler.getSlots(); i++) {
             inv.setItem(i, itemHandler.getStackInSlot(i));
         }
+        inv.setItem(itemHandler.getSlots(), upgradeHandler.getStackInSlot(0));
         Containers.dropContents(level, worldPosition, inv);
     }
 
@@ -181,7 +201,8 @@ public class FuelFabricatorBlockEntity extends BlockEntity implements MenuProvid
         Optional<RecipeMatch> match = findMatchingRecipe(level);
         boolean fabricatingThisTick = false;
         if (match.isPresent() && canFit(match.get().recipe.getResult())) {
-            maxProgress = match.get().recipe.getProcessingTime();
+            int base = match.get().recipe.getProcessingTime();
+            maxProgress = hasSpeedUpgrade() ? Math.max(1, base / 2) : base;
             if (storedFE >= FE_PER_TICK) {
                 storedFE -= FE_PER_TICK;
                 progress++;

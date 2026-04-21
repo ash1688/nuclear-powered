@@ -51,6 +51,16 @@ public class CladdingRecyclerBlockEntity extends BlockEntity implements MenuProv
         }
     };
 
+    // Single-slot upgrade bay. Accepts only the Cladding Compactor.
+    private final ItemStackHandler upgradeHandler = new ItemStackHandler(1) {
+        @Override protected void onContentsChanged(int slot) { setChanged(); }
+        @Override public int getSlotLimit(int slot) { return 1; }
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return stack.is(ModItems.CLADDING_COMPACTOR.get());
+        }
+    };
+
     private final IItemHandler externalHandler = new SidedItemHandler();
     private LazyOptional<IItemHandler> lazyExternalHandler = LazyOptional.empty();
 
@@ -105,6 +115,13 @@ public class CladdingRecyclerBlockEntity extends BlockEntity implements MenuProv
     }
 
     public IItemHandler getItemHandlerForMenu() { return itemHandler; }
+    public IItemHandler getUpgradeHandlerForMenu() { return upgradeHandler; }
+    private boolean hasCompactor() {
+        return upgradeHandler.getStackInSlot(0).is(ModItems.CLADDING_COMPACTOR.get());
+    }
+    private int effectiveScrapPerCladding() {
+        return hasCompactor() ? 6 : SCRAP_PER_CLADDING;
+    }
     public boolean isAutoInput() { return autoInput; }
     public boolean isAutoOutput() { return autoOutput; }
     public void toggleAutoInput() { autoInput = !autoInput; setChanged(); }
@@ -143,6 +160,7 @@ public class CladdingRecyclerBlockEntity extends BlockEntity implements MenuProv
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.put("inventory", itemHandler.serializeNBT());
+        tag.put("upgrade", upgradeHandler.serializeNBT());
         tag.putInt("progress", progress);
         tag.putInt("fe", storedFE);
         tag.putBoolean("autoInput", autoInput);
@@ -153,6 +171,7 @@ public class CladdingRecyclerBlockEntity extends BlockEntity implements MenuProv
     public void load(CompoundTag tag) {
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        if (tag.contains("upgrade")) upgradeHandler.deserializeNBT(tag.getCompound("upgrade"));
         progress = tag.getInt("progress");
         storedFE = tag.getInt("fe");
         autoInput = !tag.contains("autoInput") || tag.getBoolean("autoInput");
@@ -161,8 +180,9 @@ public class CladdingRecyclerBlockEntity extends BlockEntity implements MenuProv
 
     public void drops() {
         if (level == null) return;
-        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots());
+        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots() + upgradeHandler.getSlots());
         for (int i = 0; i < itemHandler.getSlots(); i++) inv.setItem(i, itemHandler.getStackInSlot(i));
+        inv.setItem(itemHandler.getSlots(), upgradeHandler.getStackInSlot(0));
         Containers.dropContents(level, worldPosition, inv);
     }
 
@@ -188,7 +208,7 @@ public class CladdingRecyclerBlockEntity extends BlockEntity implements MenuProv
 
     private boolean canRecycle() {
         ItemStack in = itemHandler.getStackInSlot(SLOT_INPUT);
-        if (!in.is(ModItems.CLADDING_SCRAP.get()) || in.getCount() < SCRAP_PER_CLADDING) return false;
+        if (!in.is(ModItems.CLADDING_SCRAP.get()) || in.getCount() < effectiveScrapPerCladding()) return false;
         return canFit(SLOT_OUTPUT, new ItemStack(ModItems.FUEL_ROD_CLADDING.get()));
     }
 
@@ -200,7 +220,7 @@ public class CladdingRecyclerBlockEntity extends BlockEntity implements MenuProv
     }
 
     private void doRecycle() {
-        itemHandler.getStackInSlot(SLOT_INPUT).shrink(SCRAP_PER_CLADDING);
+        itemHandler.getStackInSlot(SLOT_INPUT).shrink(effectiveScrapPerCladding());
         ItemStack current = itemHandler.getStackInSlot(SLOT_OUTPUT);
         ItemStack result = new ItemStack(ModItems.FUEL_ROD_CLADDING.get());
         if (current.isEmpty()) itemHandler.setStackInSlot(SLOT_OUTPUT, result);

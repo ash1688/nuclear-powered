@@ -65,6 +65,7 @@ public class CsColumnScreen extends AbstractContainerScreen<CsColumnMenu> {
 
         drawGhost(g, 36, ModItems.FISSION_PRODUCT_STREAM.get().getDefaultInstance(), x + 44, y + 26);
         drawGhost(g, 37, ModItems.ION_EXCHANGE_RESIN.get().getDefaultInstance(), x + 44, y + 44);
+        drawGhost(g, 40, ModItems.CS_RESIN_SAVER.get().getDefaultInstance(), x + 134, y + 35);
 
         g.fill(x + FE_X - 1, y + FE_Y - 1, x + FE_X + FE_WIDTH + 1, y + FE_Y + FE_HEIGHT + 1, 0xFF555555);
         g.fill(x + FE_X, y + FE_Y, x + FE_X + FE_WIDTH, y + FE_Y + FE_HEIGHT, 0xFF222222);

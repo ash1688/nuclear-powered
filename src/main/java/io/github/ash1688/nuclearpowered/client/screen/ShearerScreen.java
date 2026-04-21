@@ -64,6 +64,7 @@ public class ShearerScreen extends AbstractContainerScreen<ShearerMenu> {
         g.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
 
         drawGhost(g, 36, ModItems.DEPLETED_URANIUM_FUEL_ROD.get().getDefaultInstance(), x + 44, y + 35);
+        drawGhost(g, 39, ModItems.SHEARER_SPEED_CARD.get().getDefaultInstance(), x + 134, y + 35);
 
         g.fill(x + FE_X - 1, y + FE_Y - 1, x + FE_X + FE_WIDTH + 1, y + FE_Y + FE_HEIGHT + 1, 0xFF555555);
         g.fill(x + FE_X, y + FE_Y, x + FE_X + FE_WIDTH, y + FE_Y + FE_HEIGHT, 0xFF222222);

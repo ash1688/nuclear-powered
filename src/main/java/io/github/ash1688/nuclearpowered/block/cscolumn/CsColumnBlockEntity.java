@@ -27,6 +27,7 @@ import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
+import java.util.Random;
 
 // Tier 1 reprocessing — Step 4. Cesium column: fission product stream runs
 // through a consumable ion exchange resin, pulling out Cs-137 and leaving a
@@ -51,6 +52,20 @@ public class CsColumnBlockEntity extends BlockEntity implements MenuProvider {
             return false;
         }
     };
+
+    // Single-slot upgrade bay. Accepts only the Cs Resin Saver.
+    private final ItemStackHandler upgradeHandler = new ItemStackHandler(1) {
+        @Override protected void onContentsChanged(int slot) { setChanged(); }
+        @Override public int getSlotLimit(int slot) { return 1; }
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return stack.is(ModItems.CS_RESIN_SAVER.get());
+        }
+    };
+
+    // Random source for the 50% resin-save coin flip. Reuses a shared instance
+    // — resin conservation doesn't need cryptographic entropy.
+    private static final Random RESIN_RNG = new Random();
 
     private final IItemHandler externalHandler = new SidedItemHandler();
     private LazyOptional<IItemHandler> lazyExternalHandler = LazyOptional.empty();
@@ -106,6 +121,10 @@ public class CsColumnBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public IItemHandler getItemHandlerForMenu() { return itemHandler; }
+    public IItemHandler getUpgradeHandlerForMenu() { return upgradeHandler; }
+    private boolean hasResinSaver() {
+        return upgradeHandler.getStackInSlot(0).is(ModItems.CS_RESIN_SAVER.get());
+    }
     public boolean isAutoInput() { return autoInput; }
     public boolean isAutoOutput() { return autoOutput; }
     public void toggleAutoInput() { autoInput = !autoInput; setChanged(); }
@@ -144,6 +163,7 @@ public class CsColumnBlockEntity extends BlockEntity implements MenuProvider {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.put("inventory", itemHandler.serializeNBT());
+        tag.put("upgrade", upgradeHandler.serializeNBT());
         tag.putInt("progress", progress);
         tag.putInt("fe", storedFE);
         tag.putBoolean("autoInput", autoInput);
@@ -154,6 +174,7 @@ public class CsColumnBlockEntity extends BlockEntity implements MenuProvider {
     public void load(CompoundTag tag) {
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        if (tag.contains("upgrade")) upgradeHandler.deserializeNBT(tag.getCompound("upgrade"));
         progress = tag.getInt("progress");
         storedFE = tag.getInt("fe");
         autoInput = !tag.contains("autoInput") || tag.getBoolean("autoInput");
@@ -162,8 +183,9 @@ public class CsColumnBlockEntity extends BlockEntity implements MenuProvider {
 
     public void drops() {
         if (level == null) return;
-        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots());
+        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots() + upgradeHandler.getSlots());
         for (int i = 0; i < itemHandler.getSlots(); i++) inv.setItem(i, itemHandler.getStackInSlot(i));
+        inv.setItem(itemHandler.getSlots(), upgradeHandler.getStackInSlot(0));
         Containers.dropContents(level, worldPosition, inv);
     }
 
@@ -205,7 +227,10 @@ public class CsColumnBlockEntity extends BlockEntity implements MenuProvider {
 
     private void doRun() {
         itemHandler.getStackInSlot(SLOT_INPUT_STREAM).shrink(1);
-        itemHandler.getStackInSlot(SLOT_INPUT_RESIN).shrink(1);
+        // Cs Resin Saver: 50 % of batches don't consume the resin.
+        if (!hasResinSaver() || RESIN_RNG.nextBoolean()) {
+            itemHandler.getStackInSlot(SLOT_INPUT_RESIN).shrink(1);
+        }
         addTo(SLOT_OUTPUT_CS, new ItemStack(ModItems.CESIUM_137.get()));
         addTo(SLOT_OUTPUT_WASTE, new ItemStack(ModItems.RESIDUAL_WASTE.get()));
     }

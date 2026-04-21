@@ -46,6 +46,8 @@ public class WasherMenu extends AbstractContainerMenu {
                 WasherBlockEntity.SLOT_OUTPUT, 116, 35));
         addSlot(new SlotItemHandler(blockEntity.getItemHandlerForMenu(),
                 WasherBlockEntity.SLOT_BUCKET, 152, 35));
+        // Upgrade bay — accepts only the Washer Speed Card.
+        addSlot(new SlotItemHandler(blockEntity.getUpgradeHandlerForMenu(), 0, 134, 35));
 
         addDataSlots(data);
     }
@@ -124,11 +126,13 @@ public class WasherMenu extends AbstractContainerMenu {
         ItemStack copy = source.copy();
 
         int machineFirst = PLAYER_INV_SLOT_COUNT;
-        int machineLastExclusive = PLAYER_INV_SLOT_COUNT + 3;
+        int machineUpgrade = PLAYER_INV_SLOT_COUNT + 3;
+        int machineLastExclusive = PLAYER_INV_SLOT_COUNT + 4;
 
         if (slotIndex < PLAYER_INV_SLOT_COUNT) {
-            // From player inventory → try each machine slot (respecting per-slot isItemValid)
-            if (!moveItemStackTo(source, machineFirst, machineLastExclusive, false)) {
+            // Try upgrade bay first (for a Washer Speed Card), then the other machine slots.
+            if (!moveItemStackTo(source, machineUpgrade, machineUpgrade + 1, false)
+                    && !moveItemStackTo(source, machineFirst, machineUpgrade, false)) {
                 return ItemStack.EMPTY;
             }
         } else if (slotIndex < machineLastExclusive) {

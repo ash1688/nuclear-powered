@@ -70,6 +70,7 @@ public class ExtractionColumnScreen extends AbstractContainerScreen<ExtractionCo
 
         drawGhost(g, 36, ModItems.DISSOLVED_FUEL.get().getDefaultInstance(), x + 44, y + 35);
         drawGhost(g, 40, ModItems.EXTRACTION_SOLVENT_BUCKET.get().getDefaultInstance(), x + 134, y + 35);
+        drawGhost(g, 41, ModItems.EXTRACTION_SOLVENT_SAVER.get().getDefaultInstance(), x + 134, y + 17);
 
         int fluidHeight = menu.getScaledFluid(TANK_HEIGHT);
         if (fluidHeight > 0) {

@@ -45,6 +45,8 @@ public class CrusherMenu extends AbstractContainerMenu {
                 CrusherBlockEntity.SLOT_INPUT, 56, 35));
         addSlot(new SlotItemHandler(blockEntity.getItemHandlerForMenu(),
                 CrusherBlockEntity.SLOT_OUTPUT, 116, 35));
+        // Upgrade bay — accepts only the Crusher Speed Card.
+        addSlot(new SlotItemHandler(blockEntity.getUpgradeHandlerForMenu(), 0, 134, 35));
 
         addDataSlots(data);
     }
@@ -111,13 +113,15 @@ public class CrusherMenu extends AbstractContainerMenu {
         ItemStack copy = source.copy();
 
         int crusherInput = PLAYER_INV_SLOT_COUNT;
-        int crusherOutput = PLAYER_INV_SLOT_COUNT + 1;
+        int crusherUpgrade = PLAYER_INV_SLOT_COUNT + 2;
 
         if (slotIndex < PLAYER_INV_SLOT_COUNT) {
-            if (!moveItemStackTo(source, crusherInput, crusherInput + 1, false)) {
+            // Try upgrade bay first (for a Crusher Speed Card), then input slot.
+            if (!moveItemStackTo(source, crusherUpgrade, crusherUpgrade + 1, false)
+                    && !moveItemStackTo(source, crusherInput, crusherInput + 1, false)) {
                 return ItemStack.EMPTY;
             }
-        } else if (slotIndex <= crusherOutput) {
+        } else if (slotIndex <= crusherUpgrade) {
             if (!moveItemStackTo(source, 0, PLAYER_INV_SLOT_COUNT, false)) {
                 return ItemStack.EMPTY;
             }

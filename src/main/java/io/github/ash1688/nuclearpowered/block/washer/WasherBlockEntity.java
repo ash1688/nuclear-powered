@@ -58,6 +58,16 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
         }
     };
 
+    // Single-slot upgrade bay. Accepts only the Washer Speed Card.
+    private final ItemStackHandler upgradeHandler = new ItemStackHandler(1) {
+        @Override protected void onContentsChanged(int slot) { setChanged(); }
+        @Override public int getSlotLimit(int slot) { return 1; }
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return stack.is(io.github.ash1688.nuclearpowered.init.ModItems.WASHER_SPEED_CARD.get());
+        }
+    };
+
     // External wrapper gating item handler access by auto I/O toggles and slot direction.
     private final IItemHandler externalHandler = new SidedItemHandler();
 
@@ -134,6 +144,13 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
 
     public IItemHandler getItemHandlerForMenu() { return itemHandler; }
 
+    public IItemHandler getUpgradeHandlerForMenu() { return upgradeHandler; }
+
+    private boolean hasSpeedUpgrade() {
+        return upgradeHandler.getStackInSlot(0)
+                .is(io.github.ash1688.nuclearpowered.init.ModItems.WASHER_SPEED_CARD.get());
+    }
+
     public FluidTank getWaterTank() { return waterTank; }
 
     public boolean isAutoInput() { return autoInput; }
@@ -183,6 +200,7 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.put("inventory", itemHandler.serializeNBT());
+        tag.put("upgrade", upgradeHandler.serializeNBT());
         CompoundTag tankTag = new CompoundTag();
         waterTank.writeToNBT(tankTag);
         tag.put("water", tankTag);
@@ -196,6 +214,7 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
     public void load(CompoundTag tag) {
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        if (tag.contains("upgrade")) upgradeHandler.deserializeNBT(tag.getCompound("upgrade"));
         waterTank.readFromNBT(tag.getCompound("water"));
         progress = tag.getInt("progress");
         storedFE = tag.getInt("fe");
@@ -205,10 +224,11 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
 
     public void drops() {
         if (level == null) return;
-        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots());
+        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots() + upgradeHandler.getSlots());
         for (int i = 0; i < itemHandler.getSlots(); i++) {
             inv.setItem(i, itemHandler.getStackInSlot(i));
         }
+        inv.setItem(itemHandler.getSlots(), upgradeHandler.getStackInSlot(0));
         Containers.dropContents(level, worldPosition, inv);
     }
 
@@ -224,7 +244,8 @@ public class WasherBlockEntity extends BlockEntity implements MenuProvider {
         Optional<WasherRecipe> recipe = findMatchingRecipe(level);
         boolean washingThisTick = false;
         if (recipe.isPresent() && canFit(recipe.get().getResult()) && hasEnoughFluid(recipe.get().getFluid())) {
-            maxProgress = recipe.get().getProcessingTime();
+            int base = recipe.get().getProcessingTime();
+            maxProgress = hasSpeedUpgrade() ? Math.max(1, base / 2) : base;
             if (storedFE >= FE_PER_TICK) {
                 storedFE -= FE_PER_TICK;
                 progress++;

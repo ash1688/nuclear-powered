@@ -56,6 +56,16 @@ public class ShearerBlockEntity extends BlockEntity implements MenuProvider {
         }
     };
 
+    // Single-slot upgrade bay. Accepts only the Shearer Speed Card.
+    private final ItemStackHandler upgradeHandler = new ItemStackHandler(1) {
+        @Override protected void onContentsChanged(int slot) { setChanged(); }
+        @Override public int getSlotLimit(int slot) { return 1; }
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return stack.is(ModItems.SHEARER_SPEED_CARD.get());
+        }
+    };
+
     private final IItemHandler externalHandler = new SidedItemHandler();
     private LazyOptional<IItemHandler> lazyExternalHandler = LazyOptional.empty();
 
@@ -85,7 +95,7 @@ public class ShearerBlockEntity extends BlockEntity implements MenuProvider {
         public int get(int index) {
             return switch (index) {
                 case 0 -> progress;
-                case 1 -> PROCESS_TICKS;
+                case 1 -> effectiveProcessTicks();
                 case 2 -> autoInput ? 1 : 0;
                 case 3 -> autoOutput ? 1 : 0;
                 case 4 -> storedFE;
@@ -110,6 +120,13 @@ public class ShearerBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public IItemHandler getItemHandlerForMenu() { return itemHandler; }
+    public IItemHandler getUpgradeHandlerForMenu() { return upgradeHandler; }
+    private boolean hasSpeedUpgrade() {
+        return upgradeHandler.getStackInSlot(0).is(ModItems.SHEARER_SPEED_CARD.get());
+    }
+    private int effectiveProcessTicks() {
+        return hasSpeedUpgrade() ? Math.max(1, PROCESS_TICKS / 2) : PROCESS_TICKS;
+    }
     public boolean isAutoInput() { return autoInput; }
     public boolean isAutoOutput() { return autoOutput; }
     public void toggleAutoInput() { autoInput = !autoInput; setChanged(); }
@@ -148,6 +165,7 @@ public class ShearerBlockEntity extends BlockEntity implements MenuProvider {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.put("inventory", itemHandler.serializeNBT());
+        tag.put("upgrade", upgradeHandler.serializeNBT());
         tag.putInt("progress", progress);
         tag.putInt("fe", storedFE);
         tag.putBoolean("autoInput", autoInput);
@@ -158,6 +176,7 @@ public class ShearerBlockEntity extends BlockEntity implements MenuProvider {
     public void load(CompoundTag tag) {
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        if (tag.contains("upgrade")) upgradeHandler.deserializeNBT(tag.getCompound("upgrade"));
         progress = tag.getInt("progress");
         storedFE = tag.getInt("fe");
         autoInput = !tag.contains("autoInput") || tag.getBoolean("autoInput");
@@ -166,8 +185,9 @@ public class ShearerBlockEntity extends BlockEntity implements MenuProvider {
 
     public void drops() {
         if (level == null) return;
-        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots());
+        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots() + upgradeHandler.getSlots());
         for (int i = 0; i < itemHandler.getSlots(); i++) inv.setItem(i, itemHandler.getStackInSlot(i));
+        inv.setItem(itemHandler.getSlots(), upgradeHandler.getStackInSlot(0));
         Containers.dropContents(level, worldPosition, inv);
     }
 
@@ -178,7 +198,7 @@ public class ShearerBlockEntity extends BlockEntity implements MenuProvider {
                 storedFE -= FE_PER_TICK;
                 progress++;
                 setChanged(level, pos, state);
-                if (progress >= PROCESS_TICKS) {
+                if (progress >= effectiveProcessTicks()) {
                     doShear();
                     progress = 0;
                 }

@@ -47,6 +47,9 @@ public class DissolverMenu extends AbstractContainerMenu {
                 DissolverBlockEntity.SLOT_OUTPUT_SLUDGE, 104, 44));
         addSlot(new SlotItemHandler(blockEntity.getItemHandlerForMenu(),
                 DissolverBlockEntity.SLOT_BUCKET, 134, 35));
+        // Upgrade bay — accepts only the Dissolver Reagent Saver. Placed above
+        // the bucket slot to keep the reagent controls grouped together.
+        addSlot(new SlotItemHandler(blockEntity.getUpgradeHandlerForMenu(), 0, 134, 17));
 
         addDataSlots(data);
     }
@@ -103,10 +106,15 @@ public class DissolverMenu extends AbstractContainerMenu {
         ItemStack source = slot.getItem();
         ItemStack copy = source.copy();
         int machineFirst = PLAYER_INV_SLOT_COUNT;
-        int machineLastExclusive = PLAYER_INV_SLOT_COUNT + 4;
+        int machineUpgrade = PLAYER_INV_SLOT_COUNT + 4;
+        int machineLastExclusive = PLAYER_INV_SLOT_COUNT + 5;
 
         if (slotIndex < PLAYER_INV_SLOT_COUNT) {
-            if (!moveItemStackTo(source, machineFirst, machineLastExclusive, false)) return ItemStack.EMPTY;
+            // Try upgrade bay first (Dissolver Reagent Saver), then the rest.
+            if (!moveItemStackTo(source, machineUpgrade, machineUpgrade + 1, false)
+                    && !moveItemStackTo(source, machineFirst, machineUpgrade, false)) {
+                return ItemStack.EMPTY;
+            }
         } else if (slotIndex < machineLastExclusive) {
             if (!moveItemStackTo(source, 0, PLAYER_INV_SLOT_COUNT, false)) return ItemStack.EMPTY;
         } else {

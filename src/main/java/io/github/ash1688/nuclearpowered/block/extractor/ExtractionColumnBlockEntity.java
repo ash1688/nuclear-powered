@@ -64,6 +64,16 @@ public class ExtractionColumnBlockEntity extends BlockEntity implements MenuProv
         }
     };
 
+    // Single-slot upgrade bay. Accepts only the Extraction Solvent Saver.
+    private final ItemStackHandler upgradeHandler = new ItemStackHandler(1) {
+        @Override protected void onContentsChanged(int slot) { setChanged(); }
+        @Override public int getSlotLimit(int slot) { return 1; }
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return stack.is(ModItems.EXTRACTION_SOLVENT_SAVER.get());
+        }
+    };
+
     private final IItemHandler externalHandler = new SidedItemHandler();
 
     private final FluidTank solventTank = new FluidTank(TANK_CAPACITY_MB,
@@ -127,6 +137,13 @@ public class ExtractionColumnBlockEntity extends BlockEntity implements MenuProv
     }
 
     public IItemHandler getItemHandlerForMenu() { return itemHandler; }
+    public IItemHandler getUpgradeHandlerForMenu() { return upgradeHandler; }
+    private boolean hasSolventSaver() {
+        return upgradeHandler.getStackInSlot(0).is(ModItems.EXTRACTION_SOLVENT_SAVER.get());
+    }
+    private int effectiveSolventPerBatch() {
+        return hasSolventSaver() ? SOLVENT_PER_BATCH / 2 : SOLVENT_PER_BATCH;
+    }
     public boolean isAutoInput() { return autoInput; }
     public boolean isAutoOutput() { return autoOutput; }
     public void toggleAutoInput() { autoInput = !autoInput; setChanged(); }
@@ -168,6 +185,7 @@ public class ExtractionColumnBlockEntity extends BlockEntity implements MenuProv
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.put("inventory", itemHandler.serializeNBT());
+        tag.put("upgrade", upgradeHandler.serializeNBT());
         CompoundTag tankTag = new CompoundTag();
         solventTank.writeToNBT(tankTag);
         tag.put("solvent", tankTag);
@@ -181,6 +199,7 @@ public class ExtractionColumnBlockEntity extends BlockEntity implements MenuProv
     public void load(CompoundTag tag) {
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        if (tag.contains("upgrade")) upgradeHandler.deserializeNBT(tag.getCompound("upgrade"));
         solventTank.readFromNBT(tag.getCompound("solvent"));
         progress = tag.getInt("progress");
         storedFE = tag.getInt("fe");
@@ -190,8 +209,9 @@ public class ExtractionColumnBlockEntity extends BlockEntity implements MenuProv
 
     public void drops() {
         if (level == null) return;
-        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots());
+        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots() + upgradeHandler.getSlots());
         for (int i = 0; i < itemHandler.getSlots(); i++) inv.setItem(i, itemHandler.getStackInSlot(i));
+        inv.setItem(itemHandler.getSlots(), upgradeHandler.getStackInSlot(0));
         Containers.dropContents(level, worldPosition, inv);
     }
 
@@ -230,7 +250,7 @@ public class ExtractionColumnBlockEntity extends BlockEntity implements MenuProv
 
     private boolean canExtract() {
         if (!itemHandler.getStackInSlot(SLOT_INPUT).is(ModItems.DISSOLVED_FUEL.get())) return false;
-        if (solventTank.getFluidAmount() < SOLVENT_PER_BATCH) return false;
+        if (solventTank.getFluidAmount() < effectiveSolventPerBatch()) return false;
         return canFit(SLOT_OUTPUT_PU, new ItemStack(ModItems.PLUTONIUM_239.get()))
                 && canFit(SLOT_OUTPUT_U, new ItemStack(ModItems.RECLAIMED_URANIUM.get()))
                 && canFit(SLOT_OUTPUT_FISSION, new ItemStack(ModItems.FISSION_PRODUCT_STREAM.get()));
@@ -245,7 +265,7 @@ public class ExtractionColumnBlockEntity extends BlockEntity implements MenuProv
 
     private void doExtract() {
         itemHandler.getStackInSlot(SLOT_INPUT).shrink(1);
-        solventTank.drain(SOLVENT_PER_BATCH, IFluidHandler.FluidAction.EXECUTE);
+        solventTank.drain(effectiveSolventPerBatch(), IFluidHandler.FluidAction.EXECUTE);
         addTo(SLOT_OUTPUT_PU, new ItemStack(ModItems.PLUTONIUM_239.get()));
         addTo(SLOT_OUTPUT_U, new ItemStack(ModItems.RECLAIMED_URANIUM.get()));
         addTo(SLOT_OUTPUT_FISSION, new ItemStack(ModItems.FISSION_PRODUCT_STREAM.get()));

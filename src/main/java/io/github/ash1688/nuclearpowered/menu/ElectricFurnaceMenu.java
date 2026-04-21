@@ -44,6 +44,8 @@ public class ElectricFurnaceMenu extends AbstractContainerMenu {
                 ElectricFurnaceBlockEntity.SLOT_INPUT, 56, 35));
         addSlot(new SlotItemHandler(blockEntity.getItemHandlerForMenu(),
                 ElectricFurnaceBlockEntity.SLOT_OUTPUT, 116, 35));
+        // Upgrade bay — accepts only the Furnace Speed Card.
+        addSlot(new SlotItemHandler(blockEntity.getUpgradeHandlerForMenu(), 0, 134, 35));
 
         addDataSlots(data);
     }
@@ -104,11 +106,15 @@ public class ElectricFurnaceMenu extends AbstractContainerMenu {
         ItemStack copy = source.copy();
 
         int machineInput = PLAYER_INV_SLOT_COUNT;
-        int machineOutput = PLAYER_INV_SLOT_COUNT + 1;
+        int machineUpgrade = PLAYER_INV_SLOT_COUNT + 2;
 
         if (slotIndex < PLAYER_INV_SLOT_COUNT) {
-            if (!moveItemStackTo(source, machineInput, machineInput + 1, false)) return ItemStack.EMPTY;
-        } else if (slotIndex <= machineOutput) {
+            // Try upgrade bay first (Furnace Speed Card), then input slot.
+            if (!moveItemStackTo(source, machineUpgrade, machineUpgrade + 1, false)
+                    && !moveItemStackTo(source, machineInput, machineInput + 1, false)) {
+                return ItemStack.EMPTY;
+            }
+        } else if (slotIndex <= machineUpgrade) {
             if (!moveItemStackTo(source, 0, PLAYER_INV_SLOT_COUNT, false)) return ItemStack.EMPTY;
         } else {
             return ItemStack.EMPTY;

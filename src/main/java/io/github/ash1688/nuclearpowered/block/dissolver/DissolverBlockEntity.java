@@ -62,6 +62,16 @@ public class DissolverBlockEntity extends BlockEntity implements MenuProvider {
         }
     };
 
+    // Single-slot upgrade bay. Accepts only the Dissolver Reagent Saver.
+    private final ItemStackHandler upgradeHandler = new ItemStackHandler(1) {
+        @Override protected void onContentsChanged(int slot) { setChanged(); }
+        @Override public int getSlotLimit(int slot) { return 1; }
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return stack.is(ModItems.DISSOLVER_REAGENT_SAVER.get());
+        }
+    };
+
     private final IItemHandler externalHandler = new SidedItemHandler();
 
     private final FluidTank acidTank = new FluidTank(TANK_CAPACITY_MB,
@@ -125,6 +135,13 @@ public class DissolverBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public IItemHandler getItemHandlerForMenu() { return itemHandler; }
+    public IItemHandler getUpgradeHandlerForMenu() { return upgradeHandler; }
+    private boolean hasReagentSaver() {
+        return upgradeHandler.getStackInSlot(0).is(ModItems.DISSOLVER_REAGENT_SAVER.get());
+    }
+    private int effectiveAcidPerBatch() {
+        return hasReagentSaver() ? ACID_PER_BATCH / 2 : ACID_PER_BATCH;
+    }
     public FluidTank getAcidTank() { return acidTank; }
     public boolean isAutoInput() { return autoInput; }
     public boolean isAutoOutput() { return autoOutput; }
@@ -167,6 +184,7 @@ public class DissolverBlockEntity extends BlockEntity implements MenuProvider {
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.put("inventory", itemHandler.serializeNBT());
+        tag.put("upgrade", upgradeHandler.serializeNBT());
         CompoundTag tankTag = new CompoundTag();
         acidTank.writeToNBT(tankTag);
         tag.put("acid", tankTag);
@@ -180,6 +198,7 @@ public class DissolverBlockEntity extends BlockEntity implements MenuProvider {
     public void load(CompoundTag tag) {
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        if (tag.contains("upgrade")) upgradeHandler.deserializeNBT(tag.getCompound("upgrade"));
         acidTank.readFromNBT(tag.getCompound("acid"));
         progress = tag.getInt("progress");
         storedFE = tag.getInt("fe");
@@ -189,8 +208,9 @@ public class DissolverBlockEntity extends BlockEntity implements MenuProvider {
 
     public void drops() {
         if (level == null) return;
-        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots());
+        SimpleContainer inv = new SimpleContainer(itemHandler.getSlots() + upgradeHandler.getSlots());
         for (int i = 0; i < itemHandler.getSlots(); i++) inv.setItem(i, itemHandler.getStackInSlot(i));
+        inv.setItem(itemHandler.getSlots(), upgradeHandler.getStackInSlot(0));
         Containers.dropContents(level, worldPosition, inv);
     }
 
@@ -233,7 +253,7 @@ public class DissolverBlockEntity extends BlockEntity implements MenuProvider {
 
     private boolean canDissolve() {
         if (!itemHandler.getStackInSlot(SLOT_INPUT).is(ModItems.CHOPPED_FUEL.get())) return false;
-        if (acidTank.getFluidAmount() < ACID_PER_BATCH) return false;
+        if (acidTank.getFluidAmount() < effectiveAcidPerBatch()) return false;
         return canFit(SLOT_OUTPUT_FUEL, new ItemStack(ModItems.DISSOLVED_FUEL.get()))
                 && canFit(SLOT_OUTPUT_SLUDGE, new ItemStack(ModItems.REACTOR_SLUDGE.get()));
     }
@@ -247,7 +267,7 @@ public class DissolverBlockEntity extends BlockEntity implements MenuProvider {
 
     private void doDissolve() {
         itemHandler.getStackInSlot(SLOT_INPUT).shrink(1);
-        acidTank.drain(ACID_PER_BATCH, IFluidHandler.FluidAction.EXECUTE);
+        acidTank.drain(effectiveAcidPerBatch(), IFluidHandler.FluidAction.EXECUTE);
         addTo(SLOT_OUTPUT_FUEL, new ItemStack(ModItems.DISSOLVED_FUEL.get()));
         addTo(SLOT_OUTPUT_SLUDGE, new ItemStack(ModItems.REACTOR_SLUDGE.get()));
     }

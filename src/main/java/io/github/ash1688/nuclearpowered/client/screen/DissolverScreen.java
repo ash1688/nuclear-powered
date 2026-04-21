@@ -70,6 +70,7 @@ public class DissolverScreen extends AbstractContainerScreen<DissolverMenu> {
 
         drawGhost(g, 36, ModItems.CHOPPED_FUEL.get().getDefaultInstance(), x + 44, y + 35);
         drawGhost(g, 39, ModItems.NITRIC_ACID_BUCKET.get().getDefaultInstance(), x + 134, y + 35);
+        drawGhost(g, 40, ModItems.DISSOLVER_REAGENT_SAVER.get().getDefaultInstance(), x + 134, y + 17);
 
         int fluidHeight = menu.getScaledFluid(TANK_HEIGHT);
         if (fluidHeight > 0) {
