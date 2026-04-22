@@ -16,6 +16,7 @@
   "block.nuclearpowered.thermocouple": "Thermocouple",
   "block.nuclearpowered.energy_cable": "Energy Cable",
   "block.nuclearpowered.battery": "Battery",
+  "block.nuclearpowered.energy_converter": "FE \u2194 EU Converter",
   "block.nuclearpowered.fuel_fabricator": "Fuel Fabricator",
   "block.nuclearpowered.coal_boiler": "Coal Boiler",
   "block.nuclearpowered.steam_engine": "Steam Engine",

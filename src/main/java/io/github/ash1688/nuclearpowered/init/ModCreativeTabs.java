@@ -43,6 +43,7 @@ public final class ModCreativeTabs {
                         out.accept(ModBlocks.THERMOCOUPLE.get());
                         out.accept(ModBlocks.ENERGY_CABLE.get());
                         out.accept(ModBlocks.BATTERY.get());
+                        out.accept(ModBlocks.ENERGY_CONVERTER.get());
                         out.accept(ModBlocks.COAL_BOILER.get());
                         out.accept(ModBlocks.STEAM_ENGINE.get());
                         out.accept(ModBlocks.STEAM_PIPE.get());

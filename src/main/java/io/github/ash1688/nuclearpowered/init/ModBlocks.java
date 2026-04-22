@@ -4,6 +4,7 @@ import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.block.battery.BatteryBlock;
 import io.github.ash1688.nuclearpowered.block.boiler.CoalBoilerBlock;
 import io.github.ash1688.nuclearpowered.block.cable.EnergyCableBlock;
+import io.github.ash1688.nuclearpowered.block.converter.EnergyConverterBlock;
 import io.github.ash1688.nuclearpowered.block.coolingpond.CoolingPondBlock;
 import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlock;
 import io.github.ash1688.nuclearpowered.block.cscolumn.CsColumnBlock;
@@ -241,6 +242,12 @@ public final class ModBlocks {
             () -> new SteamPipeBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_LIGHT_GRAY)
                     .strength(1.5f, 2.0f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<EnergyConverterBlock> ENERGY_CONVERTER = registerBlock("energy_converter",
+            () -> new EnergyConverterBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_BLUE)
+                    .strength(3.0f, 4.0f)
                     .sound(SoundType.METAL)));
 
     private ModBlocks() {}
