@@ -114,6 +114,23 @@ public class CoolingPondBlockEntity extends BlockEntity implements MenuProvider 
     public void load(CompoundTag tag) {
         super.load(tag);
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        // Save-format migration: the earliest Cooling Pond shipped as a single-
+        // slot handler. deserializeNBT resizes to whatever Size is in the tag,
+        // so old saves come back here with 1 slot and immediately crash in
+        // tick() on the SLOT_COOLING (=1) read. Restore the current 2-slot
+        // shape, preserving whatever was in the old slot 0.
+        if (itemHandler.getSlots() < 2) {
+            ItemStack migrated = itemHandler.getSlots() > 0
+                    ? itemHandler.getStackInSlot(0)
+                    : ItemStack.EMPTY;
+            itemHandler.setSize(2);
+            if (!migrated.isEmpty()) {
+                // Old single-slot BEs held the rod that was actively cooling,
+                // not a queued one — promote it to SLOT_COOLING so the cooling
+                // cycle picks up where it left off.
+                itemHandler.setStackInSlot(SLOT_COOLING, migrated);
+            }
+        }
         coolProgress = tag.getInt("cool");
     }
 
