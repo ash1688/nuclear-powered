@@ -31,3 +31,24 @@ description='''${mod_description}'''
     versionRange="[15.0.0,)"
     ordering="AFTER"
     side="CLIENT"
+
+# LDLib — mandatory. Provides the MetaMachine UI framework NP uses for its
+# machine GUIs, widgets, and cover-aware energy handling. Shared with GT CEu
+# but stands alone, so standalone-pack users get it too.
+[[dependencies.${mod_id}]]
+    modId="ldlib"
+    mandatory=true
+    versionRange="[1.0.50,)"
+    ordering="AFTER"
+    side="BOTH"
+
+# GregTech CEu Modern — soft dep. When present, NP's compat layer registers
+# recipes into GT machines (Macerator, Centrifuge, Chemical Reactor, Assembler)
+# and enables the FE<->EU converter block. NP loads and works fully without
+# GT — tier-gated crafting falls back to vanilla-iron recipes.
+[[dependencies.${mod_id}]]
+    modId="gtceu"
+    mandatory=false
+    versionRange="[1.20.1-7.5.3,)"
+    ordering="AFTER"
+    side="BOTH"
