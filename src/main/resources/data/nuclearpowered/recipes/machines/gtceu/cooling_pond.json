@@ -1,0 +1,13 @@
+{
+  "conditions": [
+    { "type": "forge:mod_loaded", "modid": "gtceu" }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "pattern": [ "PWP", "WEW", "PWP" ],
+  "key": {
+    "P": { "tag": "forge:plates/steel" },
+    "W": { "item": "minecraft:water_bucket" },
+    "E": { "item": "minecraft:blue_ice" }
+  },
+  "result": { "item": "nuclearpowered:cooling_pond" }
+}

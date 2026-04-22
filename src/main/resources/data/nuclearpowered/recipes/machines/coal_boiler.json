@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [ "IBI", "ICI", "IFI" ],
+  "key": {
+    "I": { "item": "minecraft:iron_ingot" },
+    "B": { "item": "minecraft:bucket" },
+    "C": { "item": "minecraft:cauldron" },
+    "F": { "item": "minecraft:furnace" }
+  },
+  "result": { "item": "nuclearpowered:coal_boiler" }
+}

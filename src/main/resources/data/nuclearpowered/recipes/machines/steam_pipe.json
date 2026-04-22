@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [ "BBB" ],
+  "key": {
+    "B": { "item": "minecraft:iron_bars" }
+  },
+  "result": { "item": "nuclearpowered:steam_pipe", "count": 3 }
+}

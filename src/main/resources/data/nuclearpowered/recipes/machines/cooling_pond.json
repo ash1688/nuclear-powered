@@ -3,10 +3,11 @@
     { "type": "forge:not", "value": { "type": "forge:mod_loaded", "modid": "gtceu" } }
   ],
   "type": "minecraft:crafting_shaped",
-  "pattern": [ "III", "ILI", "III" ],
+  "pattern": [ "IWI", "WEW", "IWI" ],
   "key": {
     "I": { "item": "minecraft:iron_ingot" },
-    "L": { "item": "minecraft:lapis_lazuli" }
+    "W": { "item": "minecraft:water_bucket" },
+    "E": { "item": "minecraft:blue_ice" }
   },
-  "result": { "item": "nuclearpowered:cs_column" }
+  "result": { "item": "nuclearpowered:cooling_pond" }
 }

@@ -1,0 +1,14 @@
+{
+  "conditions": [
+    { "type": "forge:mod_loaded", "modid": "gtceu" }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "pattern": [ "PCP", "UBU", "PCP" ],
+  "key": {
+    "P": { "tag": "forge:plates/steel" },
+    "C": { "tag": "forge:circuits/lv" },
+    "U": { "tag": "forge:pipes/fluid/steel" },
+    "B": { "item": "minecraft:blaze_powder" }
+  },
+  "result": { "item": "nuclearpowered:vitrifier" }
+}

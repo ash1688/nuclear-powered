@@ -1,0 +1,14 @@
+{
+  "conditions": [
+    { "type": "forge:mod_loaded", "modid": "gtceu" }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "pattern": [ "PWP", "WCW", "PLP" ],
+  "key": {
+    "P": { "tag": "forge:plates/steel" },
+    "W": { "tag": "forge:wires/copper" },
+    "C": { "tag": "forge:circuits/lv" },
+    "L": { "item": "minecraft:lava_bucket" }
+  },
+  "result": { "item": "nuclearpowered:heater" }
+}

@@ -1,0 +1,14 @@
+{
+  "conditions": [
+    { "type": "forge:mod_loaded", "modid": "gtceu" }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "pattern": [ "PCP", "UWU", "PCP" ],
+  "key": {
+    "P": { "tag": "forge:plates/steel" },
+    "C": { "tag": "forge:circuits/lv" },
+    "U": { "tag": "forge:pipes/fluid/steel" },
+    "W": { "item": "minecraft:water_bucket" }
+  },
+  "result": { "item": "nuclearpowered:washer" }
+}

@@ -1,0 +1,14 @@
+{
+  "conditions": [
+    { "type": "forge:mod_loaded", "modid": "gtceu" }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "pattern": [ "PCP", "ISI", "PCP" ],
+  "key": {
+    "P": { "tag": "forge:plates/steel" },
+    "C": { "tag": "forge:circuits/lv" },
+    "I": { "tag": "forge:plates/iron" },
+    "S": { "item": "minecraft:shears" }
+  },
+  "result": { "item": "nuclearpowered:shearer" }
+}
