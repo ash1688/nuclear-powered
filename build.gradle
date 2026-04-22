@@ -33,6 +33,12 @@ repositories {
             includeGroup "maven.modrinth"
         }
     }
+    // Tterrag — hosts Registrate, which is jar-in-jar'd inside GT CEu but
+    // needs to be on the compile classpath for NP's GT addon class.
+    maven {
+        name = "Tterrag (Registrate)"
+        url = "https://maven.tterrag.com/"
+    }
 }
 
 base {
@@ -151,6 +157,12 @@ dependencies {
     // runs so we can exercise cross-mod recipes + the EU<->FE converter.
     modCompileOnly "maven.modrinth:gregtechceu-modern:${gtceu_version}"
     modLocalRuntime "maven.modrinth:gregtechceu-modern:${gtceu_version}"
+
+    // Registrate — compile-only because GT CEu bundles it via jar-in-jar at
+    // runtime (see META-INF/jarjar/ inside the GT jar). The compiler still
+    // needs AbstractRegistrate on its classpath to validate GTRegistrate's
+    // type hierarchy when NP's GT addon class references it.
+    compileOnly "com.tterrag.registrate:Registrate:${registrate_version}"
 
     // Example mod dependency using a mod jar from ./libs with a flat dir repository
     // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
