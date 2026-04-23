@@ -108,8 +108,11 @@ public class NuclearPoweredGTAddon implements IGTAddon {
         oreWash("crushed_thorium_to_concentrate", ModItems.CRUSHED_THORIUM.get(),
                 ModItems.THORIUM_CONCENTRATE.get(), 200, 8, c);
 
-        smelt("yellowcake_to_uranium_ingot", ModItems.YELLOWCAKE.get(),
-                ModItems.URANIUM_INGOT.get(), 200, 8, c);
+        // yellowcake -> uranium_ingot is already a vanilla smelting recipe
+        // (data/nuclearpowered/recipes/uranium_ingot.json). GT CEu's Electric
+        // Furnace auto-indexes vanilla smelting recipes into its recipe map,
+        // so a separate GT addon recipe here duplicates and gets rejected.
+        // Leaving the vanilla smelting recipe as the single source of truth.
     }
 
     // ------------------------------------------------------------------
@@ -161,11 +164,13 @@ public class NuclearPoweredGTAddon implements IGTAddon {
                 .outputItems(ModItems.REACTOR_SLUDGE.get())
                 .duration(400).EUt(128).save(c);
 
-        // Chemical Reactor — extraction step. Collapses NP's three-way
-        // extraction column output (Pu + U + fission-product stream) into
-        // a single HV-tier chemical recipe; GT recipes support multiple
-        // item outputs natively.
-        GTRecipeBuilder.of(id("chemical_reactor/extraction"), GTRecipeTypes.CHEMICAL_RECIPES)
+        // Large Chemical Reactor — extraction step. NP's extraction column
+        // outputs three items at once (Pu + reclaimed U + fission product
+        // stream); GT's single-block Chemical Reactor tops out at two item
+        // outputs and rejects this recipe, so we route it to the Large
+        // Chemical Reactor multiblock instead. Thematically a better fit
+        // anyway — extraction is the most chemistry-heavy reprocessing step.
+        GTRecipeBuilder.of(id("large_chemical_reactor/extraction"), GTRecipeTypes.LARGE_CHEMICAL_RECIPES)
                 .inputItems(ModItems.DISSOLVED_FUEL.get())
                 .inputFluids(new FluidStack(ModFluids.EXTRACTION_SOLVENT.get(), 250))
                 .outputItems(ModItems.PLUTONIUM_239.get())
