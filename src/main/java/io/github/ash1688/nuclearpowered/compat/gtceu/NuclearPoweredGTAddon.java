@@ -5,6 +5,7 @@ import com.gregtechceu.gtceu.api.addon.IGTAddon;
 import com.gregtechceu.gtceu.api.registry.registrate.GTRegistrate;
 import com.gregtechceu.gtceu.common.data.GTRecipeTypes;
 import com.gregtechceu.gtceu.data.recipe.builder.GTRecipeBuilder;
+import com.mojang.logging.LogUtils;
 import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.init.ModFluids;
 import io.github.ash1688.nuclearpowered.init.ModItems;
@@ -13,7 +14,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.fluids.FluidStack;
+import org.slf4j.Logger;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
@@ -38,7 +41,12 @@ import java.util.function.Consumer;
  */
 @GTAddon
 public class NuclearPoweredGTAddon implements IGTAddon {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final GTRegistrate REGISTRATE = GTRegistrate.create(NuclearPowered.MODID);
+
+    public NuclearPoweredGTAddon() {
+        LOGGER.info("[NP/GT] NuclearPoweredGTAddon instantiated — @GTAddon discovery is working.");
+    }
 
     @Override
     public GTRegistrate getRegistrate() {
@@ -52,14 +60,32 @@ public class NuclearPoweredGTAddon implements IGTAddon {
 
     @Override
     public void initializeAddon() {
-        // No init-time work — we only contribute recipes, no materials, items,
-        // covers, or machines of our own on the GT side.
+        LOGGER.info("[NP/GT] initializeAddon() called.");
     }
 
     @Override
     public void addRecipes(Consumer<FinishedRecipe> consumer) {
-        addOreProcessingRecipes(consumer);
-        addReprocessingRecipes(consumer);
+        LOGGER.info("[NP/GT] addRecipes() starting — registering NP cross-mod recipes into GT machines.");
+        AtomicInteger ok = new AtomicInteger();
+        AtomicInteger failed = new AtomicInteger();
+        // Wrap the caller's consumer so we can count successes and catch any
+        // per-recipe exception that GT might silently swallow.
+        Consumer<FinishedRecipe> counting = recipe -> {
+            try {
+                consumer.accept(recipe);
+                ok.incrementAndGet();
+            } catch (Throwable t) {
+                failed.incrementAndGet();
+                LOGGER.error("[NP/GT] consumer rejected recipe {}", recipe.getId(), t);
+            }
+        };
+        try {
+            addOreProcessingRecipes(counting);
+            addReprocessingRecipes(counting);
+        } catch (Throwable t) {
+            LOGGER.error("[NP/GT] addRecipes() threw — recipe registration aborted partway", t);
+        }
+        LOGGER.info("[NP/GT] addRecipes() done. registered={}, failed={}", ok.get(), failed.get());
     }
 
     // ------------------------------------------------------------------
