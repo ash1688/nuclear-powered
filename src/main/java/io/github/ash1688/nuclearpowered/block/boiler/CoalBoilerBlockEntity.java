@@ -67,7 +67,7 @@ public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
     };
 
     private final FluidTank steamTank = new FluidTank(TANK_CAPACITY_MB,
-            stack -> stack.getFluid() == ModFluids.STEAM.get()) {
+            stack -> io.github.ash1688.nuclearpowered.compat.gtceu.SteamCompat.isSteam(stack.getFluid())) {
         @Override
         protected void onContentsChanged() { setChanged(); }
 
@@ -106,7 +106,7 @@ public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
 
         @Override
         public FluidStack drain(FluidStack resource, FluidAction action) {
-            if (resource.getFluid() == ModFluids.STEAM.get()) {
+            if (io.github.ash1688.nuclearpowered.compat.gtceu.SteamCompat.isSteam(resource.getFluid())) {
                 return steamTankDrain(resource.getAmount(), action);
             }
             return FluidStack.EMPTY;
@@ -256,8 +256,12 @@ public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
         if (burnTime > 0 && canBoil) {
             burnTime--;
             waterTank.drain(WATER_PER_TICK, IFluidHandler.FluidAction.EXECUTE);
-            steamTank.fill(new FluidStack(ModFluids.STEAM.get(), STEAM_PER_TICK),
-                    IFluidHandler.FluidAction.EXECUTE);
+            // Emit GT's steam fluid when GT is loaded so the output can drive
+            // GT's own steam machines directly (Steam Macerator / Bender /
+            // Compressor etc.); otherwise stay on NP's own steam fluid.
+            steamTank.fill(new FluidStack(
+                    io.github.ash1688.nuclearpowered.compat.gtceu.SteamCompat.activeEmitFluid(),
+                    STEAM_PER_TICK), IFluidHandler.FluidAction.EXECUTE);
             changed = true;
         }
 
@@ -274,8 +278,12 @@ public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
             BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
             if (neighbour == null) continue;
             neighbour.getCapability(ForgeCapabilities.FLUID_HANDLER, dir.getOpposite()).ifPresent(sink -> {
-                FluidStack offer = new FluidStack(ModFluids.STEAM.get(),
-                        Math.min(steamTank.getFluidAmount(), 200));
+                // Offer whatever fluid the tank currently holds — respects both
+                // steam variants during a cross-version save transition.
+                FluidStack current = steamTank.getFluid();
+                if (current.isEmpty()) return;
+                FluidStack offer = new FluidStack(current.getFluid(),
+                        Math.min(current.getAmount(), 200));
                 int accepted = sink.fill(offer, IFluidHandler.FluidAction.EXECUTE);
                 if (accepted > 0) {
                     steamTank.drain(accepted, IFluidHandler.FluidAction.EXECUTE);

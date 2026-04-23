@@ -36,7 +36,7 @@ public class SteamEngineBlockEntity extends BlockEntity implements MenuProvider 
     private static final int FE_PER_STEAM_TICK = 25;
 
     private final FluidTank steamTank = new FluidTank(STEAM_CAPACITY_MB,
-            stack -> stack.getFluid() == ModFluids.STEAM.get()) {
+            stack -> io.github.ash1688.nuclearpowered.compat.gtceu.SteamCompat.isSteam(stack.getFluid())) {
         @Override
         protected void onContentsChanged() { setChanged(); }
     };
