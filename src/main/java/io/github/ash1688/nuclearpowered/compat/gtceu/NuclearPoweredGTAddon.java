@@ -164,19 +164,34 @@ public class NuclearPoweredGTAddon implements IGTAddon {
                 .outputItems(ModItems.REACTOR_SLUDGE.get())
                 .duration(400).EUt(128).save(c);
 
-        // Large Chemical Reactor — extraction step. NP's extraction column
-        // outputs three items at once (Pu + reclaimed U + fission product
-        // stream); GT's single-block Chemical Reactor tops out at two item
-        // outputs and rejects this recipe, so we route it to the Large
-        // Chemical Reactor multiblock instead. Thematically a better fit
-        // anyway — extraction is the most chemistry-heavy reprocessing step.
-        GTRecipeBuilder.of(id("large_chemical_reactor/extraction"), GTRecipeTypes.LARGE_CHEMICAL_RECIPES)
+        // Chemical Reactor — extraction step 1 of 2 (HV). NP's native
+        // Extraction Column outputs Pu + reclaimed U + fission-product
+        // stream in a single pass (3 outputs). GT's single-block Chemical
+        // Reactor caps at 2 item outputs, and the Large Chemical Reactor
+        // multiblock that could handle 3 is an HV+ build that's too far
+        // out to reach when you first get the NP fuel cycle running. So
+        // we split extraction into two sequential Chemical Reactor passes
+        // (mirrors real PUREX, which also splits extraction from
+        // partitioning as two stages).
+        GTRecipeBuilder.of(id("chemical_reactor/extraction"), GTRecipeTypes.CHEMICAL_RECIPES)
                 .inputItems(ModItems.DISSOLVED_FUEL.get())
+                .inputFluids(new FluidStack(ModFluids.EXTRACTION_SOLVENT.get(), 250))
+                .outputItems(ModItems.MIXED_ACTINIDES.get())
+                .outputItems(ModItems.FISSION_PRODUCT_STREAM.get())
+                .duration(600).EUt(256).save(c);
+
+        // Chemical Reactor — extraction step 2 of 2 (HV). Partitions the
+        // combined U + Pu block from step 1 into the two separate output
+        // items the NP reprocessing chain expects. Uses a second slug of
+        // extraction solvent so the GT route consumes 500 mB total vs the
+        // NP Extraction Column's 250 mB — reasonable cost for bypassing
+        // the NP hardware.
+        GTRecipeBuilder.of(id("chemical_reactor/partitioning"), GTRecipeTypes.CHEMICAL_RECIPES)
+                .inputItems(ModItems.MIXED_ACTINIDES.get())
                 .inputFluids(new FluidStack(ModFluids.EXTRACTION_SOLVENT.get(), 250))
                 .outputItems(ModItems.PLUTONIUM_239.get())
                 .outputItems(ModItems.RECLAIMED_URANIUM.get())
-                .outputItems(ModItems.FISSION_PRODUCT_STREAM.get())
-                .duration(600).EUt(256).save(c);
+                .duration(400).EUt(256).save(c);
 
         // Centrifuge — Cs separation. fission_product_stream + ion exchange
         // resin -> cesium_137 + residual_waste. Resin is a shop-sourced

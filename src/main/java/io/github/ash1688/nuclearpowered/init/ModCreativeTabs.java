@@ -69,6 +69,7 @@ public final class ModCreativeTabs {
                         out.accept(ModItems.REACTOR_SLUDGE.get());
                         out.accept(ModItems.FISSION_PRODUCT_STREAM.get());
                         out.accept(ModItems.RESIDUAL_WASTE.get());
+                        out.accept(ModItems.MIXED_ACTINIDES.get());
                         out.accept(ModItems.RECLAIMED_URANIUM.get());
                         out.accept(ModItems.PLUTONIUM_239.get());
                         out.accept(ModItems.CESIUM_137.get());
