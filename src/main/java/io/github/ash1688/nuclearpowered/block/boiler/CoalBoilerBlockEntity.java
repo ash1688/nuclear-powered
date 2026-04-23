@@ -277,6 +277,7 @@ public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
             if (steamTank.getFluidAmount() <= 0) break;
             BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
             if (neighbour == null) continue;
+            final Direction checkDir = dir;
             neighbour.getCapability(ForgeCapabilities.FLUID_HANDLER, dir.getOpposite()).ifPresent(sink -> {
                 // Offer whatever fluid the tank currently holds — respects both
                 // steam variants during a cross-version save transition.
@@ -285,12 +286,27 @@ public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
                 FluidStack offer = new FluidStack(current.getFluid(),
                         Math.min(current.getAmount(), 200));
                 int accepted = sink.fill(offer, IFluidHandler.FluidAction.EXECUTE);
+                boolean logged = BOILER_PUSH_LOGGED.getOrDefault(checkDir, false);
+                if (!logged) {
+                    BOILER_PUSH_LOGGED.put(checkDir, true);
+                    org.slf4j.Logger log = com.mojang.logging.LogUtils.getLogger();
+                    log.info("[NP/Steam] Boiler push attempt dir={} neighbourClass={} offered={}mB accepted={}",
+                            checkDir,
+                            neighbour.getClass().getName(),
+                            offer.getAmount(),
+                            accepted);
+                }
                 if (accepted > 0) {
                     steamTank.drain(accepted, IFluidHandler.FluidAction.EXECUTE);
                 }
             });
         }
     }
+
+    // Log each direction once per JVM session — enough to see which faces
+    // actually have a fluid sink and whether the offer is being accepted.
+    private static final java.util.concurrent.ConcurrentHashMap<Direction, Boolean> BOILER_PUSH_LOGGED =
+            new java.util.concurrent.ConcurrentHashMap<>();
 
     public FluidTank getWaterTank() { return waterTank; }
     public FluidTank getSteamTank() { return steamTank; }
