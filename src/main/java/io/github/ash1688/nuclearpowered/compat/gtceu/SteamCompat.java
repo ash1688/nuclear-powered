@@ -1,9 +1,13 @@
 package io.github.ash1688.nuclearpowered.compat.gtceu;
 
+import com.mojang.logging.LogUtils;
 import io.github.ash1688.nuclearpowered.init.ModFluids;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.slf4j.Logger;
+
+import java.util.stream.Collectors;
 
 /**
  * Bridge between NP's own {@code nuclearpowered:steam} fluid and GT CEu's
@@ -26,10 +30,12 @@ import net.minecraftforge.registries.ForgeRegistries;
  * {@code ForgeRegistries.FLUIDS.getValue} cost on every boiler tick.</p>
  */
 public final class SteamCompat {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final ResourceLocation GTCEU_STEAM_ID = new ResourceLocation("gtceu", "steam");
 
     private static volatile Fluid activeEmit;
     private static volatile Fluid cachedGtSteam;
+    private static volatile boolean gtLookupLogged;
 
     private SteamCompat() {}
 
@@ -44,6 +50,8 @@ public final class SteamCompat {
             if (activeEmit != null) return activeEmit;
             Fluid gt = gtSteamOrNull();
             activeEmit = (gt != null) ? gt : ModFluids.STEAM.get();
+            ResourceLocation id = ForgeRegistries.FLUIDS.getKey(activeEmit);
+            LOGGER.info("[NP/Steam] Coal Boiler will emit fluid: {}", id);
             return activeEmit;
         }
     }
@@ -66,6 +74,23 @@ public final class SteamCompat {
         if (g != null) return g;
         g = ForgeRegistries.FLUIDS.getValue(GTCEU_STEAM_ID);
         cachedGtSteam = g;
+        if (!gtLookupLogged) {
+            gtLookupLogged = true;
+            if (g == null) {
+                // Couldn't find gtceu:steam. Dump every fluid ID that contains
+                // "steam" so we can see what GT actually named it and patch
+                // the lookup without another rebuild cycle.
+                String steamFluids = ForgeRegistries.FLUIDS.getKeys().stream()
+                        .map(ResourceLocation::toString)
+                        .filter(s -> s.toLowerCase().contains("steam"))
+                        .sorted()
+                        .collect(Collectors.joining(", "));
+                LOGGER.warn("[NP/Steam] gtceu:steam lookup returned NULL. Steam-ish fluids in the registry: [{}]",
+                        steamFluids);
+            } else {
+                LOGGER.info("[NP/Steam] Resolved gtceu:steam fluid successfully.");
+            }
+        }
         return g;
     }
 }
