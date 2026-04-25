@@ -2,6 +2,7 @@ package io.github.ash1688.nuclearpowered.block.crusher;
 
 import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.texture.ColorRectTexture;
 import com.lowdragmc.lowdraglib.gui.texture.ProgressTexture;
 import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
 import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
@@ -148,7 +149,12 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
         IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
         IItemTransfer upgradeItems = ItemTransferHelperImpl.toItemTransfer(upgradeHandler);
 
-        // Background label (machine name shown at top — vanilla MenuProvider title equivalent).
+        // GUI panel background — vanilla container grey (0xC6C6C6). Without
+        // this LDLib draws nothing behind the widgets and the world bleeds
+        // through.
+        ui.mainGroup.setBackground(new ColorRectTexture(0xFFC6C6C6));
+
+        // Title label.
         ui.mainGroup.addWidget(new LabelWidget(8, 6,
                 "block.nuclearpowered.crusher").setTextColor(0x404040));
 
@@ -159,24 +165,36 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
         ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_OUTPUT, 116, 35, true, false));
         ui.mainGroup.addWidget(new SlotWidget(upgradeItems, 0, 134, 35, true, true));
 
-        // Crafting progress arrow.
+        // Crafting progress arrow — orange fill on dark grey background, left
+        // to right. ProgressWidget without an explicit texture renders nothing,
+        // so we build a ProgressTexture from two ColorRectTextures.
+        ProgressTexture progressTex = new ProgressTexture(
+                new ColorRectTexture(0xFF222222),
+                new ColorRectTexture(0xFFE56B2B))
+                .setFillDirection(ProgressTexture.FillDirection.LEFT_TO_RIGHT);
         ui.mainGroup.addWidget(new ProgressWidget(
                 () -> maxProgress == 0 ? 0 : (double) progress / maxProgress,
-                78, 35, 24, 18));
+                78, 41, 24, 4, progressTex));
 
-        // Vertical FE bar (152, 17, 12x52) — fills bottom-up as charge climbs.
+        // Vertical FE bar (152, 17, 12x52) — orange fill bottom-up.
+        ProgressTexture feTex = new ProgressTexture(
+                new ColorRectTexture(0xFF222222),
+                new ColorRectTexture(0xFFE05A20))
+                .setFillDirection(ProgressTexture.FillDirection.DOWN_TO_UP);
         ui.mainGroup.addWidget(new ProgressWidget(
                 () -> (double) storedFE / ENERGY_CAPACITY,
-                152, 17, 12, 52)
-                .setFillDirection(ProgressTexture.FillDirection.DOWN_TO_UP));
+                152, 17, 12, 52, feTex)
+                .setHoverTooltips(net.minecraft.network.chat.Component.literal(
+                        "Energy: " + storedFE + " / " + ENERGY_CAPACITY + " FE")));
 
-        // Auto in/out toggles. Click action toggles the BE flag server-side.
-        // No setButtonTexture() — LDLib's default button texture is fine for
-        // now; we'll polish styling once the wider port is functional.
+        // Auto in/out toggles. LDLib's default button texture renders a
+        // standard pressable button; click action toggles the BE flag.
         ui.mainGroup.addWidget(new ButtonWidget(8, 58, 76, 18,
-                cd -> toggleAutoInput()));
+                cd -> toggleAutoInput())
+                .setHoverTooltips("Toggle auto input"));
         ui.mainGroup.addWidget(new ButtonWidget(92, 58, 76, 18,
-                cd -> toggleAutoOutput()));
+                cd -> toggleAutoOutput())
+                .setHoverTooltips("Toggle auto output"));
 
         // Player inventory (3x9) and hotbar (1x9). LDLib doesn't auto-add
         // these; we lay them out at the standard vanilla positions so the
