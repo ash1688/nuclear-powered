@@ -198,21 +198,20 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
                 .setHoverTooltips(net.minecraft.network.chat.Component.literal(
                         "Energy: " + storedFE + " / " + ENERGY_CAPACITY + " FE")));
 
-        // Auto in/out toggle buttons. ButtonWidget without an explicit
-        // texture renders nothing visible (it intercepts clicks but draws
-        // no frame), so we compose a vanilla-style button texture from a
-        // bordered grey rectangle plus a text label, layered via
-        // GuiTextureGroup. Width 64 so two side-by-side buttons fit
-        // entirely to the left of the FE bar at x=152 and don't steal
-        // the bar's bottom-edge hover hit-box.
+        // Auto in/out toggle buttons. Labels are Supplier-driven so they
+        // re-render whenever the BE state flips ("Auto In: ON" / "OFF").
+        // ButtonWidget without an explicit texture draws nothing, so we
+        // compose a vanilla-style button (bordered grey + label) via
+        // GuiTextureGroup. Width 64 so two buttons fit to the left of
+        // the FE bar at x=152 without stealing its bottom-edge hover.
         ui.mainGroup.addWidget(new ButtonWidget(8, 58, 64, 18,
-                makeButtonTexture("Auto In"),
+                makeButtonTexture(() -> "Auto In: " + (autoInput ? "ON" : "OFF")),
                 cd -> toggleAutoInput())
-                .setHoverTooltips("Toggle auto input"));
+                .setHoverTooltips("Click to toggle auto-input"));
         ui.mainGroup.addWidget(new ButtonWidget(80, 58, 64, 18,
-                makeButtonTexture("Auto Out"),
+                makeButtonTexture(() -> "Auto Out: " + (autoOutput ? "ON" : "OFF")),
                 cd -> toggleAutoOutput())
-                .setHoverTooltips("Toggle auto output"));
+                .setHoverTooltips("Click to toggle auto-output"));
 
         // Player inventory (3x9) and hotbar (1x9). LDLib doesn't auto-add
         // these; we lay them out at the standard vanilla positions so the
@@ -234,10 +233,11 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
 
     /**
      * Build a layered button texture: bordered grey fill (vanilla-button look)
-     * with a centred text label on top. Used for the auto in/out toggle
-     * buttons until we have a proper button atlas.
+     * with a Supplier-driven text label on top. The supplier is re-evaluated
+     * each render so toggleable state ("ON" / "OFF") updates live without
+     * needing a separate label widget.
      */
-    private static IGuiTexture makeButtonTexture(String label) {
+    private static IGuiTexture makeButtonTexture(java.util.function.Supplier<String> label) {
         return new GuiTextureGroup(
                 new ColorRectAndBorderTexture(0xFF8B8B8B, 0xFF373737, 1f),
                 new TextTexture(label).setColor(0xFFFFFFFF).setDropShadow(true));
