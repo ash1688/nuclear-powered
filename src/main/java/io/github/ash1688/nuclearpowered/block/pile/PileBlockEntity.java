@@ -324,7 +324,13 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
         if (heatTickCounter >= HEAT_UPDATE_INTERVAL_TICKS) {
             heatTickCounter = 0;
             int fuelHeat = (burnTime > 0 && heat < FUEL_CUTOFF_HEAT) ? FUEL_HEAT_PER_SEC : 0;
-            int delta = fuelHeat + cachedCasingCount * casingCoefficient(heat);
+            // Casings only contribute heat (the +5/sec reflection) when fuel is
+            // actively burning — otherwise an idle, fuel-less pile would heat
+            // itself up from ambient. Cooling bands (3K+) always apply so
+            // residual heat decays naturally after the rod runs out.
+            int casingCoeff = casingCoefficient(heat);
+            if (burnTime <= 0 && casingCoeff > 0) casingCoeff = 0;
+            int delta = fuelHeat + cachedCasingCount * casingCoeff;
             int oldHeat = heat;
             heat = Math.max(0, Math.min(MAX_HEAT, heat + delta));
             lastHeatDelta = heat - oldHeat; // reflects any clamping
