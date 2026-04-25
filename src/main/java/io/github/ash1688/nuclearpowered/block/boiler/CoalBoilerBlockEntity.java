@@ -1,19 +1,19 @@
 package io.github.ash1688.nuclearpowered.block.boiler;
 
+import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
+import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
+import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
+import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
+import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModFluids;
-import io.github.ash1688.nuclearpowered.menu.CoalBoilerMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.Containers;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -32,7 +32,7 @@ import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
 
-public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
+public class CoalBoilerBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
     public static final int SLOT_FUEL = 0;
     public static final int SLOT_BUCKET = 1;
 
@@ -133,27 +133,6 @@ public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
     private int burnTime = 0;         // ticks remaining on the current fuel item
     private int maxBurnTime = 0;      // total ticks the current fuel item provides
 
-    private final ContainerData data = new ContainerData() {
-        @Override
-        public int get(int index) {
-            return switch (index) {
-                case 0 -> waterTank.getFluidAmount();
-                case 1 -> waterTank.getCapacity();
-                case 2 -> steamTank.getFluidAmount();
-                case 3 -> steamTank.getCapacity();
-                case 4 -> burnTime;
-                case 5 -> maxBurnTime;
-                default -> 0;
-            };
-        }
-
-        @Override
-        public void set(int index, int value) {}
-
-        @Override
-        public int getCount() { return 6; }
-    };
-
     public CoalBoilerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.COAL_BOILER.get(), pos, state);
     }
@@ -161,14 +140,28 @@ public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
     public IItemHandler getItemHandlerForMenu() { return itemHandler; }
 
     @Override
-    public Component getDisplayName() {
-        return Component.translatable("block.nuclearpowered.coal_boiler");
-    }
+    public BlockEntity self() { return this; }
 
-    @Nullable
     @Override
-    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new CoalBoilerMenu(id, inv, this, data);
+    public ModularUI createUI(Player player) {
+        ModularUI ui = new ModularUI(176, 166, this, player);
+        IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
+
+        NPMachineUI.addBackground(ui.mainGroup);
+        NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.coal_boiler");
+
+        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_FUEL, 56, 53, true, true));
+        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_BUCKET, 56, 17, true, true));
+
+        // Burn-time progress bar (vertical-ish, render as horizontal bar above fuel slot).
+        ui.mainGroup.addWidget(NPMachineUI.progressArrow(56, 41, 18,
+                () -> burnTime, () -> maxBurnTime == 0 ? 1 : maxBurnTime));
+
+        ui.mainGroup.addWidget(NPMachineUI.tankBar(96, 17, waterTank));
+        ui.mainGroup.addWidget(NPMachineUI.tankBar(132, 17, steamTank));
+
+        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+        return ui;
     }
 
     @Override

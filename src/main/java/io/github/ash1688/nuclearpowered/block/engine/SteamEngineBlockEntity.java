@@ -1,17 +1,14 @@
 package io.github.ash1688.nuclearpowered.block.engine;
 
+import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
+import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModFluids;
-import io.github.ash1688.nuclearpowered.menu.SteamEngineMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -24,7 +21,7 @@ import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 import javax.annotation.Nullable;
 
-public class SteamEngineBlockEntity extends BlockEntity implements MenuProvider {
+public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
     public static final int STEAM_CAPACITY_MB = 4000;
     public static final int ENERGY_CAPACITY = 20_000;
     public static final int MAX_OUTPUT_FE_PER_TICK = 512;
@@ -68,39 +65,25 @@ public class SteamEngineBlockEntity extends BlockEntity implements MenuProvider 
 
     private int lastFEGenerated = 0;
 
-    private final ContainerData data = new ContainerData() {
-        @Override
-        public int get(int index) {
-            return switch (index) {
-                case 0 -> steamTank.getFluidAmount();
-                case 1 -> steamTank.getCapacity();
-                case 2 -> storedFE;
-                case 3 -> ENERGY_CAPACITY;
-                case 4 -> lastFEGenerated;
-                default -> 0;
-            };
-        }
-
-        @Override
-        public void set(int index, int value) {}
-
-        @Override
-        public int getCount() { return 5; }
-    };
-
     public SteamEngineBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.STEAM_ENGINE.get(), pos, state);
     }
 
     @Override
-    public Component getDisplayName() {
-        return Component.translatable("block.nuclearpowered.steam_engine");
-    }
+    public BlockEntity self() { return this; }
 
-    @Nullable
     @Override
-    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new SteamEngineMenu(id, inv, this, data);
+    public ModularUI createUI(Player player) {
+        ModularUI ui = new ModularUI(176, 166, this, player);
+        NPMachineUI.addBackground(ui.mainGroup);
+        NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.steam_engine");
+
+        ui.mainGroup.addWidget(NPMachineUI.tankBar(60, 17, steamTank));
+        ui.mainGroup.addWidget(NPMachineUI.feBar(104, 17,
+                () -> storedFE, ENERGY_CAPACITY));
+
+        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+        return ui;
     }
 
     @Override
