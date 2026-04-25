@@ -14,7 +14,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.network.NetworkHooks;
+import com.lowdragmc.lowdraglib.gui.factory.BlockEntityUIFactory;
 
 import javax.annotation.Nullable;
 
@@ -44,7 +44,7 @@ public class ExtractionColumnBlock extends BaseEntityBlock {
         if (!level.isClientSide) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof ExtractionColumnBlockEntity col && player instanceof ServerPlayer sp) {
-                NetworkHooks.openScreen(sp, col, buf -> buf.writeBlockPos(pos));
+                BlockEntityUIFactory.INSTANCE.openUI(col, sp);
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
