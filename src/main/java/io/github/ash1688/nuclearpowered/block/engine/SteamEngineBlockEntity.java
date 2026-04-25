@@ -35,8 +35,7 @@ public class SteamEngineBlockEntity extends BlockEntity implements MenuProvider 
     private static final int STEAM_PER_TICK = 2;
     private static final int FE_PER_STEAM_TICK = 25;
 
-    private final FluidTank steamTank = new FluidTank(STEAM_CAPACITY_MB,
-            stack -> io.github.ash1688.nuclearpowered.compat.gtceu.SteamCompat.isSteam(stack.getFluid())) {
+    private final FluidTank steamTank = new io.github.ash1688.nuclearpowered.compat.gtceu.SteamTank(STEAM_CAPACITY_MB) {
         @Override
         protected void onContentsChanged() { setChanged(); }
     };

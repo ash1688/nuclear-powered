@@ -66,8 +66,7 @@ public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
         protected void onContentsChanged() { setChanged(); }
     };
 
-    private final FluidTank steamTank = new FluidTank(TANK_CAPACITY_MB,
-            stack -> io.github.ash1688.nuclearpowered.compat.gtceu.SteamCompat.isSteam(stack.getFluid())) {
+    private final FluidTank steamTank = new io.github.ash1688.nuclearpowered.compat.gtceu.SteamTank(TANK_CAPACITY_MB) {
         @Override
         protected void onContentsChanged() { setChanged(); }
 
