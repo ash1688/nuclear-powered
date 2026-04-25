@@ -80,6 +80,30 @@ public class EnergyConverterBlockEntity extends BlockEntity {
     private LazyOptional<IEnergyStorage> lazyFE = LazyOptional.empty();
 
     /**
+     * Per-face Forge ENERGY wrapper lazies. Each face gets its own
+     * IEnergyStorage that delegates to {@link #externalEnergy} but stamps
+     * {@link #lastReceiveTickFromFace} on accepted receives. Pass 2 reads
+     * the timestamp to skip pushing FE back into the same face that just
+     * fed us — handles the case where a buffered neighbour like a Battery
+     * is on one side and a real consumer is on the other, breaking the
+     * bidirectional oscillation that pure {@code canExtract}-skip would
+     * solve at the cost of never charging adjacent batteries at all.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private final LazyOptional<IEnergyStorage>[] perFaceLazies = new LazyOptional[6];
+
+    /**
+     * Game-time of the most recent accepted receive on each face. Compared
+     * against {@code level.getGameTime()} in Pass 2 with a 1-tick stale
+     * window, so an adjacent push-source (battery, generator) in continuous
+     * operation is always skipped on the next push pass regardless of BE
+     * tick order. Initial state of zeros means "never received"; after game
+     * tick 1 the difference is always larger than the window so untouched
+     * faces are eligible.
+     */
+    private final long[] lastReceiveTickFromFace = new long[6];
+
+    /**
      * GT-side energy adapter lazy. Typed as a wildcard so the BE compiles
      * cleanly without GT on the classpath — the only code that materialises
      * this field is {@link GTEnergyCompat#createLazy(EnergyConverterBlockEntity)},
@@ -121,11 +145,46 @@ public class EnergyConverterBlockEntity extends BlockEntity {
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-        if (cap == ForgeCapabilities.ENERGY) return lazyFE.cast();
+        if (cap == ForgeCapabilities.ENERGY) {
+            // Null-side queries (some Forge code asks without a face) get the
+            // generic lazy that doesn't track per-face receives.
+            return (side == null ? lazyFE : getOrCreateFaceLazy(side)).cast();
+        }
         if (GTCompat.isLoaded() && GTEnergyCompat.isEnergyContainerCap(cap)) {
             return getOrCreateEULazy().cast();
         }
         return super.getCapability(cap, side);
+    }
+
+    private LazyOptional<IEnergyStorage> getOrCreateFaceLazy(Direction side) {
+        int idx = side.ordinal();
+        LazyOptional<IEnergyStorage> existing = perFaceLazies[idx];
+        if (existing != null) return existing;
+
+        // Wrapper delegates everything to the shared externalEnergy, but
+        // stamps the face's lastReceiveTick on accepted receives so Pass 2
+        // can avoid pushing back to a neighbour that just fed us.
+        IEnergyStorage wrapper = new IEnergyStorage() {
+            @Override
+            public int receiveEnergy(int amount, boolean simulate) {
+                int accepted = externalEnergy.receiveEnergy(amount, simulate);
+                if (accepted > 0 && !simulate && level != null) {
+                    lastReceiveTickFromFace[idx] = level.getGameTime();
+                }
+                return accepted;
+            }
+            @Override
+            public int extractEnergy(int maxExtract, boolean simulate) {
+                return externalEnergy.extractEnergy(maxExtract, simulate);
+            }
+            @Override public int getEnergyStored() { return externalEnergy.getEnergyStored(); }
+            @Override public int getMaxEnergyStored() { return externalEnergy.getMaxEnergyStored(); }
+            @Override public boolean canExtract() { return externalEnergy.canExtract(); }
+            @Override public boolean canReceive() { return externalEnergy.canReceive(); }
+        };
+        LazyOptional<IEnergyStorage> created = LazyOptional.of(() -> wrapper);
+        perFaceLazies[idx] = created;
+        return created;
     }
 
     private LazyOptional<?> getOrCreateEULazy() {
@@ -144,6 +203,9 @@ public class EnergyConverterBlockEntity extends BlockEntity {
         super.invalidateCaps();
         lazyFE.invalidate();
         if (lazyEU != null) lazyEU.invalidate();
+        for (int i = 0; i < perFaceLazies.length; i++) {
+            if (perFaceLazies[i] != null) perFaceLazies[i].invalidate();
+        }
     }
 
     // --- NBT ---
@@ -202,21 +264,27 @@ public class EnergyConverterBlockEntity extends BlockEntity {
             }
         }
 
-        // Pass 2 — Forge FE pure sinks (canReceive && !canExtract). The
-        // !canExtract gate excludes buffers (batteries) and other dual-
-        // direction blocks: pushing FE into them would let the same FE
-        // bounce right back to us next tick via Forge ENERGY's
-        // bidirectional design, oscillating to zero net flow. Cables
-        // stay eligible because cable.passThrough.canExtract() is false
-        // (cables route, they don't store), so cable -> downstream
-        // buffer chains still work for indirect battery charging.
+        // Pass 2 — Forge FE sinks. Per-face received-tick check skips a
+        // neighbour that pushed FE into us within the last game tick,
+        // preventing the FE from bouncing straight back via Forge
+        // ENERGY's bidirectional design. Other batteries (not currently
+        // pushing) are still eligible, so the converter can charge a
+        // downstream buffer when an upstream source is on a different
+        // face.
+        long now = level.getGameTime();
         for (Direction dir : Direction.values()) {
             if (budget <= 0) break;
+            // Bidirectional Forge ENERGY would otherwise oscillate FE
+            // back to whatever just fed us. The 1-tick window absorbs
+            // BE iteration order: even if Converter ticks before its
+            // source within the same game tick, the next tick's pass 2
+            // will see the stale flag and skip the back-push.
+            if (now - lastReceiveTickFromFace[dir.ordinal()] <= 1) continue;
             BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
             if (neighbour == null) continue;
             Direction facing = dir.getOpposite();
             IEnergyStorage feSink = neighbour.getCapability(ForgeCapabilities.ENERGY, facing).orElse(null);
-            if (feSink == null || !feSink.canReceive() || feSink.canExtract()) continue;
+            if (feSink == null || !feSink.canReceive()) continue;
             int pushed = feSink.receiveEnergy(budget, false);
             if (pushed > 0) {
                 storedFE -= pushed;
