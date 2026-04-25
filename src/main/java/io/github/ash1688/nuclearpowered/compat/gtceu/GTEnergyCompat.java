@@ -44,6 +44,11 @@ public final class GTEnergyCompat {
         return LazyOptional.of(() -> new Adapter(be));
     }
 
+    /** Diagnostic helper: does {@code neighbour} expose the GT EU cap on the given face? */
+    public static boolean hasEnergyContainer(BlockEntity neighbour, Direction facing) {
+        return neighbour.getCapability(GTCapability.CAPABILITY_ENERGY_CONTAINER, facing).isPresent();
+    }
+
     /**
      * Tick-side push — called from the BE's tick loop after the Forge FE push
      * fails. Returns the FE amount consumed on a successful push (so the BE

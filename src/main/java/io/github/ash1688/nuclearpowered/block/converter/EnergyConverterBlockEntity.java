@@ -163,53 +163,75 @@ public class EnergyConverterBlockEntity extends BlockEntity {
     // --- Tick: push energy out to adjacent sinks ---
 
     public void tick(Level level, BlockPos pos, BlockState state) {
-        if (level.isClientSide || storedFE <= 0) return;
+        if (level.isClientSide) return;
 
-        // Per-face budget: each side independently gets up to the LV transfer
-        // ceiling per tick. With 6 fully-loaded faces this lets the converter
-        // act as a routing hub at 6 * 128 = 768 FE/tick aggregate. Earlier
-        // versions used a global budget that the first iterated face drained
-        // entirely, starving every other side and silently bypassing the
-        // GT-EU push branch.
+        // Diagnostic probe runs first and visits every face regardless of
+        // budget so a face that ends up empty-handed during the push pass
+        // still gets discovered and logged. Decoupled from the push so we
+        // can keep a single global FE budget without losing face visibility.
+        diagnosticProbe(level, pos);
+
+        if (storedFE <= 0) return;
+
+        // Global budget — the converter is rated at TRANSFER_RATE_FE_PER_TICK
+        // total. Per-face budgets caused net-negative flow because every
+        // adjacent FE-receiver (NP Battery / Cable that fed us, plus a
+        // downstream GT block) drained the buffer at up to 128 FE/tick each.
+        int budget = Math.min(storedFE, TRANSFER_RATE_FE_PER_TICK);
+        if (budget <= 0) return;
+
         for (Direction dir : Direction.values()) {
-            if (storedFE <= 0) break;
-            int budget = Math.min(storedFE, TRANSFER_RATE_FE_PER_TICK);
+            if (budget <= 0) break;
             BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
             if (neighbour == null) continue;
             Direction facing = dir.getOpposite();
-            boolean firstForDir = !Boolean.TRUE.equals(TICK_LOGGED.put(dir, Boolean.TRUE));
 
             // Forge FE sink — push FE directly, 1:1.
             IEnergyStorage feSink = neighbour.getCapability(ForgeCapabilities.ENERGY, facing).orElse(null);
             if (feSink != null && feSink.canReceive()) {
                 int pushed = feSink.receiveEnergy(budget, false);
-                if (firstForDir) {
-                    TICK_LOG.info("[NP/Converter] dir={} neighbourClass={} ForgeENERGY pushed={}/{}",
-                            dir, neighbour.getClass().getName(), pushed, budget);
-                }
                 if (pushed > 0) {
                     storedFE -= pushed;
+                    budget -= pushed;
                     setChanged();
                     continue;
                 }
-            } else if (firstForDir) {
-                TICK_LOG.info("[NP/Converter] dir={} neighbourClass={} no ForgeENERGY cap (or canReceive=false)",
-                        dir, neighbour.getClass().getName());
             }
 
             // GT EU sink — push via the compat shim, which handles the 4:1 math
             // and voltage/amperage accounting. Only reachable when GT is loaded.
             if (GTCompat.isLoaded()) {
                 int pushedFE = GTEnergyCompat.pushToNeighbour(this, neighbour, facing, budget);
-                if (firstForDir) {
-                    TICK_LOG.info("[NP/Converter] dir={} GT-EU push pushedFE={}/{}",
-                            dir, pushedFE, budget);
-                }
                 if (pushedFE > 0) {
                     storedFE -= pushedFE;
+                    budget -= pushedFE;
                     setChanged();
                 }
             }
+        }
+    }
+
+    // One-shot probe — each direction is logged at most once per JVM
+    // session with whatever capabilities the neighbour exposes. Tells us
+    // exactly what's on each face regardless of how the push pass
+    // distributes the budget.
+    private void diagnosticProbe(Level level, BlockPos pos) {
+        for (Direction dir : Direction.values()) {
+            if (TICK_LOGGED.putIfAbsent(dir, Boolean.TRUE) != null) continue;
+            BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
+            if (neighbour == null) {
+                TICK_LOG.info("[NP/Converter] dir={} no neighbour BE", dir);
+                continue;
+            }
+            Direction facing = dir.getOpposite();
+            IEnergyStorage feSink = neighbour.getCapability(ForgeCapabilities.ENERGY, facing).orElse(null);
+            boolean hasGtEnergy = GTCompat.isLoaded()
+                    && GTEnergyCompat.hasEnergyContainer(neighbour, facing);
+            TICK_LOG.info("[NP/Converter] dir={} neighbourClass={} forgeENERGY={} (canReceive={}) gtENERGY={}",
+                    dir, neighbour.getClass().getName(),
+                    feSink != null,
+                    feSink != null && feSink.canReceive(),
+                    hasGtEnergy);
         }
     }
 
