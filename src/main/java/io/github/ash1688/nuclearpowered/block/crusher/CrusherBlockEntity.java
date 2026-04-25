@@ -170,12 +170,13 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
                 152, 17, 12, 52)
                 .setFillDirection(ProgressTexture.FillDirection.DOWN_TO_UP));
 
-        // Auto in/out toggles. Cycle button or simple ButtonWidget — using the
-        // latter and rebuilding the click action server-side via the BE flag.
+        // Auto in/out toggles. Click action toggles the BE flag server-side.
+        // No setButtonTexture() — LDLib's default button texture is fine for
+        // now; we'll polish styling once the wider port is functional.
         ui.mainGroup.addWidget(new ButtonWidget(8, 58, 76, 18,
-                cd -> toggleAutoInput()).setButtonTexture(null));
+                cd -> toggleAutoInput()));
         ui.mainGroup.addWidget(new ButtonWidget(92, 58, 76, 18,
-                cd -> toggleAutoOutput()).setButtonTexture(null));
+                cd -> toggleAutoOutput()));
 
         // Player inventory (3x9) and hotbar (1x9). LDLib doesn't auto-add
         // these; we lay them out at the standard vanilla positions so the
