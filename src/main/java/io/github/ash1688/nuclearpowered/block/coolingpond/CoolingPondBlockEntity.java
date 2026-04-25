@@ -1,19 +1,19 @@
 package io.github.ash1688.nuclearpowered.block.coolingpond;
 
+import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
+import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
+import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
+import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
+import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModItems;
-import io.github.ash1688.nuclearpowered.menu.CoolingPondMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.Containers;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
 // any face, cools it for 60 s, then pushes the resulting
 // depleted_uranium_fuel_rod out via auto-output. No GUI; line up as many pond
 // blocks in a row as you want capacity.
-public class CoolingPondBlockEntity extends BlockEntity implements MenuProvider {
+public class CoolingPondBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
     public static final int SLOT_INPUT = 0;
     public static final int SLOT_COOLING = 1;
     public static final int COOL_TICKS = 1200; // 60 seconds @ 20 TPS
@@ -57,32 +57,30 @@ public class CoolingPondBlockEntity extends BlockEntity implements MenuProvider 
 
     private int coolProgress = 0;
 
-    private final ContainerData data = new ContainerData() {
-        @Override
-        public int get(int index) {
-            return switch (index) {
-                case 0 -> coolProgress;
-                case 1 -> COOL_TICKS;
-                default -> 0;
-            };
-        }
-        @Override public void set(int index, int value) { if (index == 0) coolProgress = value; }
-        @Override public int getCount() { return 2; }
-    };
-
     public IItemHandler getItemHandlerForMenu() { return itemHandler; }
-
-    @Override
-    public Component getDisplayName() { return Component.translatable("block.nuclearpowered.cooling_pond"); }
-
-    @Nullable
-    @Override
-    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new CoolingPondMenu(id, inv, this, data);
-    }
 
     public CoolingPondBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.COOLING_POND.get(), pos, state);
+    }
+
+    @Override
+    public BlockEntity self() { return this; }
+
+    @Override
+    public ModularUI createUI(Player player) {
+        ModularUI ui = new ModularUI(176, 166, this, player);
+        IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
+
+        NPMachineUI.addBackground(ui.mainGroup);
+        NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.cooling_pond");
+
+        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_INPUT, 56, 35, true, true));
+        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_COOLING, 116, 35, true, false));
+        ui.mainGroup.addWidget(NPMachineUI.progressArrow(78, 41, 24,
+                () -> coolProgress, () -> COOL_TICKS));
+
+        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+        return ui;
     }
 
     @Override
