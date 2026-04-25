@@ -1,18 +1,18 @@
 package io.github.ash1688.nuclearpowered.block.electricfurnace;
 
+import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
+import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
+import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
+import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
+import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
-import io.github.ash1688.nuclearpowered.menu.ElectricFurnaceMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.Containers;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SmeltingRecipe;
@@ -30,7 +30,7 @@ import net.minecraftforge.items.ItemStackHandler;
 import javax.annotation.Nullable;
 import java.util.Optional;
 
-public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvider {
+public class ElectricFurnaceBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
     public static final int SLOT_INPUT = 0;
     public static final int SLOT_OUTPUT = 1;
 
@@ -94,36 +94,6 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
 
     private LazyOptional<IEnergyStorage> lazyEnergy = LazyOptional.empty();
 
-    private final ContainerData data = new ContainerData() {
-        @Override
-        public int get(int index) {
-            return switch (index) {
-                case 0 -> progress;
-                case 1 -> maxProgress;
-                case 2 -> autoInput ? 1 : 0;
-                case 3 -> autoOutput ? 1 : 0;
-                case 4 -> storedFE;
-                case 5 -> ENERGY_CAPACITY;
-                default -> 0;
-            };
-        }
-
-        @Override
-        public void set(int index, int value) {
-            switch (index) {
-                case 0 -> progress = value;
-                case 1 -> maxProgress = value;
-                case 2 -> autoInput = value != 0;
-                case 3 -> autoOutput = value != 0;
-                case 4 -> storedFE = value;
-                // capacity is static
-            }
-        }
-
-        @Override
-        public int getCount() { return 6; }
-    };
-
     public ElectricFurnaceBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.ELECTRIC_FURNACE.get(), pos, state);
     }
@@ -145,15 +115,36 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements MenuProvi
 
     public void toggleAutoOutput() { autoOutput = !autoOutput; setChanged(); }
 
-    @Override
-    public Component getDisplayName() {
-        return Component.translatable("block.nuclearpowered.electric_furnace");
-    }
+    // --- LDLib UI ---
 
-    @Nullable
     @Override
-    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new ElectricFurnaceMenu(id, inv, this, data);
+    public BlockEntity self() { return this; }
+
+    @Override
+    public ModularUI createUI(Player player) {
+        ModularUI ui = new ModularUI(176, 166, this, player);
+        IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
+        IItemTransfer upgradeItems = ItemTransferHelperImpl.toItemTransfer(upgradeHandler);
+
+        NPMachineUI.addBackground(ui.mainGroup);
+        NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.electric_furnace");
+
+        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_INPUT, 56, 35, true, true));
+        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_OUTPUT, 116, 35, true, false));
+        ui.mainGroup.addWidget(new SlotWidget(upgradeItems, 0, 134, 35, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.progressArrow(78, 41, 24,
+                () -> progress, () -> maxProgress));
+
+        ui.mainGroup.addWidget(NPMachineUI.feBar(152, 17,
+                () -> storedFE, ENERGY_CAPACITY));
+
+        ui.mainGroup.addWidget(NPMachineUI.toggleButton(8, 58, 64, "Auto In",
+                () -> autoInput, this::toggleAutoInput));
+        ui.mainGroup.addWidget(NPMachineUI.toggleButton(80, 58, 64, "Auto Out",
+                () -> autoOutput, this::toggleAutoOutput));
+
+        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+        return ui;
     }
 
     @Override
