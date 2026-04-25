@@ -33,7 +33,12 @@ import javax.annotation.Nullable;
 // blocks in a row as you want capacity.
 public class CoolingPondBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
     public static final int SLOT_INPUT = 0;
+    // The right-hand slot now holds only the finished depleted rod. The hot rod
+    // stays in SLOT_INPUT during cooling so the GUI clearly shows what's being
+    // processed; only at the end of the cycle does a depleted rod appear here.
+    // Constant name kept for compat with older saves and external references.
     public static final int SLOT_COOLING = 1;
+    public static final int SLOT_OUTPUT = SLOT_COOLING;
     public static final int COOL_TICKS = 1200; // 60 seconds @ 20 TPS
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(2) {
@@ -123,10 +128,15 @@ public class CoolingPondBlockEntity extends BlockEntity implements IUIHolder.Blo
                     : ItemStack.EMPTY;
             itemHandler.setSize(2);
             if (!migrated.isEmpty()) {
-                // Old single-slot BEs held the rod that was actively cooling,
-                // not a queued one — promote it to SLOT_COOLING so the cooling
-                // cycle picks up where it left off.
-                itemHandler.setStackInSlot(SLOT_COOLING, migrated);
+                // Old single-slot BEs held the rod that was actively cooling.
+                // Under the current model the rod cools from SLOT_INPUT, so put
+                // it there if it's still hot; if it had already cooled to a
+                // depleted rod, drop it straight in the output slot.
+                if (migrated.is(ModItems.HOT_SPENT_FUEL_ROD.get())) {
+                    itemHandler.setStackInSlot(SLOT_INPUT, migrated);
+                } else {
+                    itemHandler.setStackInSlot(SLOT_OUTPUT, migrated);
+                }
             }
         }
         coolProgress = tag.getInt("cool");
@@ -141,31 +151,43 @@ public class CoolingPondBlockEntity extends BlockEntity implements IUIHolder.Blo
 
     public void tick(Level level, BlockPos pos, BlockState state) {
         if (level.isClientSide) return;
-        ItemStack cooling = itemHandler.getStackInSlot(SLOT_COOLING);
+        ItemStack input = itemHandler.getStackInSlot(SLOT_INPUT);
+        ItemStack output = itemHandler.getStackInSlot(SLOT_OUTPUT);
 
-        // Feed cooling slot from input queue whenever it's empty.
-        if (cooling.isEmpty()) {
-            ItemStack queued = itemHandler.getStackInSlot(SLOT_INPUT);
-            if (queued.is(ModItems.HOT_SPENT_FUEL_ROD.get())) {
-                itemHandler.setStackInSlot(SLOT_COOLING, new ItemStack(ModItems.HOT_SPENT_FUEL_ROD.get()));
-                queued.shrink(1);
-                coolProgress = 0;
-            }
-            return;
-        }
-
-        if (cooling.is(ModItems.HOT_SPENT_FUEL_ROD.get())) {
+        // Cool the hot rod in-place: it stays visible in SLOT_INPUT while the
+        // bar fills, and only converts to a depleted rod (in the output slot)
+        // once the cycle completes. Pauses if the output slot is full.
+        boolean canRun = input.is(ModItems.HOT_SPENT_FUEL_ROD.get()) && canFitDepleted(output);
+        if (canRun) {
             coolProgress++;
             setChanged();
             if (coolProgress >= COOL_TICKS) {
-                itemHandler.setStackInSlot(SLOT_COOLING,
-                        new ItemStack(ModItems.DEPLETED_URANIUM_FUEL_ROD.get()));
+                input.shrink(1);
+                ItemStack newOutput = itemHandler.getStackInSlot(SLOT_OUTPUT);
+                if (newOutput.isEmpty()) {
+                    itemHandler.setStackInSlot(SLOT_OUTPUT,
+                            new ItemStack(ModItems.DEPLETED_URANIUM_FUEL_ROD.get()));
+                } else {
+                    newOutput.grow(1);
+                }
                 coolProgress = 0;
             }
-        } else if (cooling.is(ModItems.DEPLETED_URANIUM_FUEL_ROD.get())) {
-            if (coolProgress != 0) { coolProgress = 0; setChanged(); }
+        } else if (coolProgress != 0) {
+            // No fuel or output blocked — reset progress so it doesn't carry
+            // over into the next rod mid-stack.
+            coolProgress = 0;
+            setChanged();
+        }
+
+        if (!itemHandler.getStackInSlot(SLOT_OUTPUT).isEmpty()) {
             autoPushOut(level, pos);
         }
+    }
+
+    private boolean canFitDepleted(ItemStack output) {
+        if (output.isEmpty()) return true;
+        if (!output.is(ModItems.DEPLETED_URANIUM_FUEL_ROD.get())) return false;
+        return output.getCount() < output.getMaxStackSize();
     }
 
     private void autoPushOut(Level level, BlockPos pos) {
