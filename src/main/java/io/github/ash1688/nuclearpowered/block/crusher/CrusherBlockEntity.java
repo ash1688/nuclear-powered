@@ -2,8 +2,12 @@ package io.github.ash1688.nuclearpowered.block.crusher;
 
 import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.texture.ColorRectAndBorderTexture;
 import com.lowdragmc.lowdraglib.gui.texture.ColorRectTexture;
+import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
+import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib.gui.texture.ProgressTexture;
+import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
 import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
 import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import com.lowdragmc.lowdraglib.gui.widget.ProgressWidget;
@@ -194,12 +198,19 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
                 .setHoverTooltips(net.minecraft.network.chat.Component.literal(
                         "Energy: " + storedFE + " / " + ENERGY_CAPACITY + " FE")));
 
-        // Auto in/out toggles. LDLib's default button texture renders a
-        // standard pressable button; click action toggles the BE flag.
-        ui.mainGroup.addWidget(new ButtonWidget(8, 58, 76, 18,
+        // Auto in/out toggle buttons. ButtonWidget without an explicit
+        // texture renders nothing visible (it intercepts clicks but draws
+        // no frame), so we compose a vanilla-style button texture from a
+        // bordered grey rectangle plus a text label, layered via
+        // GuiTextureGroup. Width 64 so two side-by-side buttons fit
+        // entirely to the left of the FE bar at x=152 and don't steal
+        // the bar's bottom-edge hover hit-box.
+        ui.mainGroup.addWidget(new ButtonWidget(8, 58, 64, 18,
+                makeButtonTexture("Auto In"),
                 cd -> toggleAutoInput())
                 .setHoverTooltips("Toggle auto input"));
-        ui.mainGroup.addWidget(new ButtonWidget(92, 58, 76, 18,
+        ui.mainGroup.addWidget(new ButtonWidget(80, 58, 64, 18,
+                makeButtonTexture("Auto Out"),
                 cd -> toggleAutoOutput())
                 .setHoverTooltips("Toggle auto output"));
 
@@ -219,6 +230,17 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
         }
 
         return ui;
+    }
+
+    /**
+     * Build a layered button texture: bordered grey fill (vanilla-button look)
+     * with a centred text label on top. Used for the auto in/out toggle
+     * buttons until we have a proper button atlas.
+     */
+    private static IGuiTexture makeButtonTexture(String label) {
+        return new GuiTextureGroup(
+                new ColorRectAndBorderTexture(0xFF8B8B8B, 0xFF373737, 1f),
+                new TextTexture(label).setColor(0xFFFFFFFF).setDropShadow(true));
     }
 
     @Override
