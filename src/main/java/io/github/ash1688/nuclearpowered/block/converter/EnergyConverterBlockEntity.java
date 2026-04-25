@@ -172,23 +172,35 @@ public class EnergyConverterBlockEntity extends BlockEntity {
             BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
             if (neighbour == null) continue;
             Direction facing = dir.getOpposite();
+            boolean firstForDir = !Boolean.TRUE.equals(TICK_LOGGED.put(dir, Boolean.TRUE));
 
             // Forge FE sink — push FE directly, 1:1.
             IEnergyStorage feSink = neighbour.getCapability(ForgeCapabilities.ENERGY, facing).orElse(null);
             if (feSink != null && feSink.canReceive()) {
                 int pushed = feSink.receiveEnergy(budget, false);
+                if (firstForDir) {
+                    TICK_LOG.info("[NP/Converter] dir={} neighbourClass={} ForgeENERGY pushed={}/{}",
+                            dir, neighbour.getClass().getName(), pushed, budget);
+                }
                 if (pushed > 0) {
                     storedFE -= pushed;
                     budget -= pushed;
                     setChanged();
                     continue;
                 }
+            } else if (firstForDir) {
+                TICK_LOG.info("[NP/Converter] dir={} neighbourClass={} no ForgeENERGY cap (or canReceive=false)",
+                        dir, neighbour.getClass().getName());
             }
 
             // GT EU sink — push via the compat shim, which handles the 4:1 math
             // and voltage/amperage accounting. Only reachable when GT is loaded.
             if (GTCompat.isLoaded()) {
                 int pushedFE = GTEnergyCompat.pushToNeighbour(this, neighbour, facing, budget);
+                if (firstForDir) {
+                    TICK_LOG.info("[NP/Converter] dir={} GT-EU push pushedFE={}/{}",
+                            dir, pushedFE, budget);
+                }
                 if (pushedFE > 0) {
                     storedFE -= pushedFE;
                     budget -= pushedFE;
@@ -197,4 +209,11 @@ public class EnergyConverterBlockEntity extends BlockEntity {
             }
         }
     }
+
+    // First-tick-per-face logging guard. Once each direction has logged we
+    // stay quiet to avoid log spam.
+    private static final java.util.concurrent.ConcurrentHashMap<Direction, Boolean> TICK_LOGGED =
+            new java.util.concurrent.ConcurrentHashMap<>();
+    private static final org.slf4j.Logger TICK_LOG =
+            com.mojang.logging.LogUtils.getLogger();
 }
