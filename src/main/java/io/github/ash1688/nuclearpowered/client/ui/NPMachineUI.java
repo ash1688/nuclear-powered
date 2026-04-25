@@ -85,16 +85,14 @@ public final class NPMachineUI {
     }
 
     /**
-     * Vertical FE bar 12x52. Orange fills from the top down as energy
-     * depletes (intuitive liquid-level behaviour). LDLib's UP_TO_DOWN
-     * fill direction produces the conventional "level drops" look —
-     * DOWN_TO_UP confusingly does the opposite.
+     * Vertical FE bar 12x52. Orange fills from the bottom up as energy
+     * accumulates (conventional liquid-tank look).
      */
     public static ProgressWidget feBar(int x, int y, IntSupplier stored, int capacity) {
         ProgressTexture tex = new ProgressTexture(
                 new ColorRectTexture(FE_BAR_EMPTY),
                 new ColorRectTexture(FE_BAR_FULL))
-                .setFillDirection(ProgressTexture.FillDirection.UP_TO_DOWN);
+                .setFillDirection(ProgressTexture.FillDirection.DOWN_TO_UP);
         return new ProgressWidget(
                 () -> capacity == 0 ? 0 : (double) stored.getAsInt() / capacity,
                 x, y, 12, 52, tex);
