@@ -202,17 +202,21 @@ public class EnergyConverterBlockEntity extends BlockEntity {
             }
         }
 
-        // Pass 2 — Forge FE sinks (NP machines, batteries, cables, third-mod
-        // FE consumers, GT compat wrappers). Anything that exposes the
-        // Forge ENERGY cap with canReceive lands here, splitting whatever
-        // budget the EU sinks didn't consume.
+        // Pass 2 — Forge FE pure sinks (canReceive && !canExtract). The
+        // !canExtract gate excludes buffers (batteries) and other dual-
+        // direction blocks: pushing FE into them would let the same FE
+        // bounce right back to us next tick via Forge ENERGY's
+        // bidirectional design, oscillating to zero net flow. Cables
+        // stay eligible because cable.passThrough.canExtract() is false
+        // (cables route, they don't store), so cable -> downstream
+        // buffer chains still work for indirect battery charging.
         for (Direction dir : Direction.values()) {
             if (budget <= 0) break;
             BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
             if (neighbour == null) continue;
             Direction facing = dir.getOpposite();
             IEnergyStorage feSink = neighbour.getCapability(ForgeCapabilities.ENERGY, facing).orElse(null);
-            if (feSink == null || !feSink.canReceive()) continue;
+            if (feSink == null || !feSink.canReceive() || feSink.canExtract()) continue;
             int pushed = feSink.receiveEnergy(budget, false);
             if (pushed > 0) {
                 storedFE -= pushed;
