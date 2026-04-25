@@ -1,20 +1,23 @@
 package io.github.ash1688.nuclearpowered.block.pile;
 
+import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
+import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.texture.ColorRectTexture;
+import com.lowdragmc.lowdraglib.gui.texture.ProgressTexture;
+import com.lowdragmc.lowdraglib.gui.widget.ProgressWidget;
+import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
+import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
+import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
+import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModBlocks;
 import io.github.ash1688.nuclearpowered.init.ModItems;
-import io.github.ash1688.nuclearpowered.menu.PileMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.Containers;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -32,7 +35,7 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.Set;
 
-public class PileBlockEntity extends BlockEntity implements MenuProvider {
+public class PileBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
     public static final int SLOT_FUEL = 0;
     public static final int SLOT_DEPLETED = 1;
 
@@ -108,38 +111,6 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     //                     x0.1 to x0.25 (read by the thermo's FE curve).
     private boolean extendedBurn = false;
     private boolean thermalDampener = false;
-
-    private final ContainerData data = new ContainerData() {
-        @Override
-        public int get(int index) {
-            return switch (index) {
-                case 0 -> heat;
-                case 1 -> getMaxHeat();
-                case 2 -> burnTime;
-                case 3 -> BURN_TICKS_PER_ROD;
-                case 4 -> autoInput ? 1 : 0;
-                case 5 -> autoOutput ? 1 : 0;
-                case 6 -> lastHeatDelta;
-                case 7 -> cachedCasingCount;
-                case 8 -> structureValid ? 1 : 0;
-                default -> 0;
-            };
-        }
-
-        @Override
-        public void set(int index, int value) {
-            switch (index) {
-                case 0 -> heat = value;
-                case 2 -> burnTime = value;
-                case 4 -> autoInput = value != 0;
-                case 5 -> autoOutput = value != 0;
-                // slowdown, max heat, casing count are derived — no setter.
-            }
-        }
-
-        @Override
-        public int getCount() { return 9; }
-    };
 
     public PileBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.GRAPHITE_PILE.get(), pos, state);
@@ -222,14 +193,45 @@ public class PileBlockEntity extends BlockEntity implements MenuProvider {
     public int getLastHeatDelta() { return lastHeatDelta; }
 
     @Override
-    public Component getDisplayName() {
-        return Component.translatable("block.nuclearpowered.graphite_pile");
-    }
+    public BlockEntity self() { return this; }
 
-    @Nullable
     @Override
-    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new PileMenu(id, inv, this, data);
+    public ModularUI createUI(Player player) {
+        ModularUI ui = new ModularUI(176, 166, this, player);
+        IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
+
+        NPMachineUI.addBackground(ui.mainGroup);
+        NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.graphite_pile");
+
+        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_FUEL, 56, 35, true, true));
+        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_DEPLETED, 116, 35, true, false));
+
+        // Burn-time arrow between fuel and depleted slots.
+        ui.mainGroup.addWidget(NPMachineUI.progressArrow(78, 41, 24,
+                () -> burnTime,
+                () -> extendedBurn ? (BURN_TICKS_PER_ROD * 3 / 2) : BURN_TICKS_PER_ROD));
+
+        // Heat bar — red-orange rising from the bottom. Tooltip shows the
+        // exact heat plus the last per-second delta so players can see
+        // whether the pile is heating or cooling at a glance.
+        ProgressTexture heatTex = new ProgressTexture(
+                new ColorRectTexture(NPMachineUI.FE_BAR_EMPTY),
+                new ColorRectTexture(0xFFD03020))
+                .setFillDirection(ProgressTexture.FillDirection.DOWN_TO_UP);
+        ProgressWidget heatBar = new ProgressWidget(
+                () -> getMaxHeat() == 0 ? 0 : (double) heat / getMaxHeat(),
+                152, 17, 12, 52, heatTex);
+        heatBar.setDynamicHoverTips(frac -> "Heat: " + heat + " / " + getMaxHeat()
+                + (lastHeatDelta == 0 ? "" : " (" + (lastHeatDelta > 0 ? "+" : "") + lastHeatDelta + "/s)"));
+        ui.mainGroup.addWidget(heatBar);
+
+        ui.mainGroup.addWidget(NPMachineUI.toggleButton(8, 58, 64, "Auto In",
+                () -> autoInput, this::toggleAutoInput));
+        ui.mainGroup.addWidget(NPMachineUI.toggleButton(80, 58, 64, "Auto Out",
+                () -> autoOutput, this::toggleAutoOutput));
+
+        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+        return ui;
     }
 
     @Override

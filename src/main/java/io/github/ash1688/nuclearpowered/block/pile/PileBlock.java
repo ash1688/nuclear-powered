@@ -19,7 +19,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.network.NetworkHooks;
+import com.lowdragmc.lowdraglib.gui.factory.BlockEntityUIFactory;
 
 import javax.annotation.Nullable;
 
@@ -69,7 +69,7 @@ public class PileBlock extends BaseEntityBlock {
                             "Pile already has Thermal Dampener");
                 }
                 if (player instanceof ServerPlayer sp) {
-                    NetworkHooks.openScreen(sp, pile, buf -> buf.writeBlockPos(pos));
+                    BlockEntityUIFactory.INSTANCE.openUI(pile, sp);
                 }
             }
         }
