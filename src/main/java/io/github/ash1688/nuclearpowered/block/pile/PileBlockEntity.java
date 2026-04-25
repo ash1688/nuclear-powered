@@ -397,13 +397,24 @@ public class PileBlockEntity extends BlockEntity implements IUIHolder.BlockEntit
     }
 
     private boolean isShellAround(Level level, BlockPos center) {
+        // The Fuel Rod Output Port is a casing variant — allowed in any of the 8
+        // outer bottom-row positions of the shell (dy = -1, excluding the bottom-
+        // centre block at dx = dz = 0). At most one port per pile; placing two
+        // breaks the multiblock until one is removed.
+        int portCount = 0;
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dz = -1; dz <= 1; dz++) {
                     BlockPos p = center.offset(dx, dy, dz);
                     if (p.equals(worldPosition)) continue; // skip the pile itself
-                    if (!level.getBlockState(p).is(ModBlocks.GRAPHITE_CASING.get())) {
-                        return false;
+                    BlockState bs = level.getBlockState(p);
+                    boolean isCasing = bs.is(ModBlocks.GRAPHITE_CASING.get());
+                    boolean isPort = bs.is(ModBlocks.FUEL_ROD_OUTPUT_PORT.get());
+                    if (!isCasing && !isPort) return false;
+                    if (isPort) {
+                        boolean validBottomOuter = (dy == -1) && !(dx == 0 && dz == 0);
+                        if (!validBottomOuter) return false;
+                        if (++portCount > 1) return false;
                     }
                 }
             }
@@ -437,7 +448,10 @@ public class PileBlockEntity extends BlockEntity implements IUIHolder.BlockEntit
             BlockPos pos = queue.poll();
             if (!visited.add(pos)) continue;
             BlockState bs = level.getBlockState(pos);
-            if (bs.is(ModBlocks.GRAPHITE_CASING.get())) {
+            if (bs.is(ModBlocks.GRAPHITE_CASING.get())
+                    || bs.is(ModBlocks.FUEL_ROD_OUTPUT_PORT.get())) {
+                // Ports count toward casing total — they reflect/cool heat the
+                // same as a plain casing block.
                 count++;
                 for (Direction dir : Direction.values()) {
                     BlockPos next = pos.relative(dir);

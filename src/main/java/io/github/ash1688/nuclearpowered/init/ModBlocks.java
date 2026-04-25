@@ -132,6 +132,19 @@ public final class ModBlocks {
                     .sound(SoundType.STONE)
                     .requiresCorrectToolForDrops()));
 
+    // Stand-in casing block that pulls depleted rods out of the pile and pushes
+    // them into an adjacent item handler (Cooling Pond, chest, hopper). Allowed
+    // in any of the 8 outer bottom-row positions of a 3x3x3 shell; the pile's
+    // structure check rejects it elsewhere.
+    public static final RegistryObject<io.github.ash1688.nuclearpowered.block.pile.output.FuelRodOutputPortBlock>
+            FUEL_ROD_OUTPUT_PORT = registerBlock("fuel_rod_output_port",
+                    () -> new io.github.ash1688.nuclearpowered.block.pile.output.FuelRodOutputPortBlock(
+                            BlockBehaviour.Properties.of()
+                                    .mapColor(MapColor.COLOR_BLACK)
+                                    .strength(3.5f, 4.0f)
+                                    .sound(SoundType.METAL)
+                                    .requiresCorrectToolForDrops()));
+
     public static final RegistryObject<ThermocoupleBlock> THERMOCOUPLE = registerBlock("thermocouple",
             () -> new ThermocoupleBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_ORANGE)

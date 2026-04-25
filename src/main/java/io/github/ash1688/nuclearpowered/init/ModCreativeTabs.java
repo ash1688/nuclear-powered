@@ -40,6 +40,7 @@ public final class ModCreativeTabs {
                         out.accept(ModBlocks.FUEL_FABRICATOR.get());
                         out.accept(ModBlocks.GRAPHITE_PILE.get());
                         out.accept(ModBlocks.GRAPHITE_CASING.get());
+                        out.accept(ModBlocks.FUEL_ROD_OUTPUT_PORT.get());
                         out.accept(ModBlocks.THERMOCOUPLE.get());
                         out.accept(ModBlocks.ENERGY_CABLE.get());
                         out.accept(ModBlocks.BATTERY.get());
