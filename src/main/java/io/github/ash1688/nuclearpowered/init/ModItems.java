@@ -68,6 +68,17 @@ public final class ModItems {
     public static final RegistryObject<Item> RESIDUAL_WASTE = ITEMS.register("residual_waste",
             () -> new Item(new Item.Properties()));
 
+    // GT-path only intermediate: the combined U + Pu stream that comes out of
+    // a GT Chemical Reactor's first extraction pass. NP's native Extraction
+    // Column splits Pu and reclaimed U in a single step (3-output recipe),
+    // but GT's single-block Chemical Reactor caps at 2 outputs, so the GT
+    // route runs a second partitioning pass that turns this mix into the
+    // separate plutonium_239 + reclaimed_uranium. Matches real PUREX
+    // chemistry, which also does partitioning as a distinct step after the
+    // initial solvent extraction.
+    public static final RegistryObject<Item> MIXED_ACTINIDES = ITEMS.register("mixed_actinides",
+            () -> new Item(new Item.Properties()));
+
     // Final outputs + reagents
     public static final RegistryObject<Item> RECLAIMED_URANIUM = ITEMS.register("reclaimed_uranium",
             () -> new Item(new Item.Properties()));

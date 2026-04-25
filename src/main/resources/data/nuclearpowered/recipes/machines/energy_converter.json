@@ -3,10 +3,11 @@
     { "type": "forge:not", "value": { "type": "forge:mod_loaded", "modid": "gtceu" } }
   ],
   "type": "minecraft:crafting_shaped",
-  "pattern": [ "III", "ILI", "III" ],
+  "pattern": [ "IRI", "RGR", "IRI" ],
   "key": {
     "I": { "item": "minecraft:iron_ingot" },
-    "L": { "item": "minecraft:lapis_lazuli" }
+    "R": { "item": "minecraft:redstone" },
+    "G": { "item": "minecraft:gold_ingot" }
   },
-  "result": { "item": "nuclearpowered:cs_column" }
+  "result": { "item": "nuclearpowered:energy_converter" }
 }

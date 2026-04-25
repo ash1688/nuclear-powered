@@ -1,0 +1,14 @@
+{
+  "conditions": [
+    { "type": "forge:mod_loaded", "modid": "gtceu" }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "pattern": [ "PGP", "WCW", "PGP" ],
+  "key": {
+    "P": { "tag": "forge:plates/steel" },
+    "G": { "tag": "forge:wires/gold" },
+    "W": { "tag": "forge:wires/copper" },
+    "C": { "tag": "forge:circuits/lv" }
+  },
+  "result": { "item": "nuclearpowered:energy_converter" }
+}

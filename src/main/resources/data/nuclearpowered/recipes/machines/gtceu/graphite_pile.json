@@ -1,0 +1,13 @@
+{
+  "conditions": [
+    { "type": "forge:mod_loaded", "modid": "gtceu" }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "pattern": [ "CPC", "PUP", "CPC" ],
+  "key": {
+    "C": { "item": "minecraft:coal_block" },
+    "P": { "tag": "forge:plates/steel" },
+    "U": { "tag": "forge:ingots/uranium" }
+  },
+  "result": { "item": "nuclearpowered:graphite_pile" }
+}

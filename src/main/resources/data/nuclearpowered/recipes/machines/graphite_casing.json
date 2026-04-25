@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [ "CIC", "ICI", "CIC" ],
+  "key": {
+    "C": { "item": "minecraft:coal_block" },
+    "I": { "item": "minecraft:iron_ingot" }
+  },
+  "result": { "item": "nuclearpowered:graphite_casing", "count": 4 }
+}

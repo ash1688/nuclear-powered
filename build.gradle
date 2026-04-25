@@ -23,6 +23,22 @@ repositories {
         name = "BlameJared (JEI, Patchouli, etc.)"
         url = "https://maven.blamejared.com/"
     }
+    // Modrinth's Maven proxy — hosts every Modrinth-published mod under the
+    // `maven.modrinth:<project>:<version>` coordinate. Used here for LDLib
+    // and GT CEu Modern; one repo covers both without chasing per-mod mavens.
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
+        }
+    }
+    // Tterrag — hosts Registrate, which is jar-in-jar'd inside GT CEu but
+    // needs to be on the compile classpath for NP's GT addon class.
+    maven {
+        name = "Tterrag (Registrate)"
+        url = "https://maven.tterrag.com/"
+    }
 }
 
 base {
@@ -128,6 +144,25 @@ dependencies {
     modCompileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
     modCompileOnly "mezz.jei:jei-${minecraft_version}-forge-api:${jei_version}"
     modLocalRuntime "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
+
+    // LDLib — mandatory. Provides the MetaMachine UI framework NP adopts in R2
+    // and the widget / coverable-block primitives used by the Tiered Assembler
+    // and FE<->EU Converter. Same artifact GT CEu depends on, but ship it as a
+    // first-party hard dep so standalone NP pack users pick it up too.
+    modImplementation "maven.modrinth:ldlib:${ldlib_version}"
+
+    // GregTech CEu Modern — soft dep. Compile-only so the compat layer can
+    // reference GT classes behind ModList.isLoaded("gtceu") guards without
+    // forcing GT on users who don't want it. localRuntime pulls it into dev
+    // runs so we can exercise cross-mod recipes + the EU<->FE converter.
+    modCompileOnly "maven.modrinth:gregtechceu-modern:${gtceu_version}"
+    modLocalRuntime "maven.modrinth:gregtechceu-modern:${gtceu_version}"
+
+    // Registrate — compile-only because GT CEu bundles it via jar-in-jar at
+    // runtime (see META-INF/jarjar/ inside the GT jar). The compiler still
+    // needs AbstractRegistrate on its classpath to validate GTRegistrate's
+    // type hierarchy when NP's GT addon class references it.
+    compileOnly "com.tterrag.registrate:Registrate:${registrate_version}"
 
     // Example mod dependency using a mod jar from ./libs with a flat dir repository
     // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar

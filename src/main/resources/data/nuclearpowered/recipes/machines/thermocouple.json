@@ -3,10 +3,11 @@
     { "type": "forge:not", "value": { "type": "forge:mod_loaded", "modid": "gtceu" } }
   ],
   "type": "minecraft:crafting_shaped",
-  "pattern": [ "III", "ILI", "III" ],
+  "pattern": [ "ICI", "CRC", "ICI" ],
   "key": {
     "I": { "item": "minecraft:iron_ingot" },
-    "L": { "item": "minecraft:lapis_lazuli" }
+    "C": { "item": "minecraft:copper_ingot" },
+    "R": { "item": "minecraft:redstone" }
   },
-  "result": { "item": "nuclearpowered:cs_column" }
+  "result": { "item": "nuclearpowered:thermocouple" }
 }

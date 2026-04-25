@@ -34,13 +34,13 @@ public class SteamPipeBlockEntity extends BlockEntity {
 
         @Override
         public boolean isFluidValid(int tank, FluidStack stack) {
-            return stack.getFluid() == ModFluids.STEAM.get();
+            return io.github.ash1688.nuclearpowered.compat.gtceu.SteamCompat.isSteam(stack.getFluid());
         }
 
         @Override
         public int fill(FluidStack resource, FluidAction action) {
             if (level == null || level.isClientSide || resource.isEmpty()) return 0;
-            if (resource.getFluid() != ModFluids.STEAM.get()) return 0;
+            if (!io.github.ash1688.nuclearpowered.compat.gtceu.SteamCompat.isSteam(resource.getFluid())) return 0;
             return distribute(resource, action);
         }
 

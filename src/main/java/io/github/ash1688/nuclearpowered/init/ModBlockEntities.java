@@ -4,6 +4,7 @@ import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.block.battery.BatteryBlockEntity;
 import io.github.ash1688.nuclearpowered.block.boiler.CoalBoilerBlockEntity;
 import io.github.ash1688.nuclearpowered.block.cable.EnergyCableBlockEntity;
+import io.github.ash1688.nuclearpowered.block.converter.EnergyConverterBlockEntity;
 import io.github.ash1688.nuclearpowered.block.coolingpond.CoolingPondBlockEntity;
 import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlockEntity;
 import io.github.ash1688.nuclearpowered.block.cscolumn.CsColumnBlockEntity;
@@ -120,6 +121,10 @@ public final class ModBlockEntities {
     public static final RegistryObject<BlockEntityType<HeaterBlockEntity>> HEATER =
             BLOCK_ENTITIES.register("heater", () ->
                     BlockEntityType.Builder.of(HeaterBlockEntity::new, ModBlocks.HEATER.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<EnergyConverterBlockEntity>> ENERGY_CONVERTER =
+            BLOCK_ENTITIES.register("energy_converter", () ->
+                    BlockEntityType.Builder.of(EnergyConverterBlockEntity::new, ModBlocks.ENERGY_CONVERTER.get()).build(null));
 
     private ModBlockEntities() {}
 

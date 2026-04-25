@@ -1,0 +1,14 @@
+{
+  "conditions": [
+    { "type": "forge:mod_loaded", "modid": "gtceu" }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "pattern": [ "PWP", "GCG", "PWP" ],
+  "key": {
+    "P": { "tag": "forge:plates/steel" },
+    "W": { "tag": "forge:wires/copper" },
+    "G": { "tag": "forge:wires/gold" },
+    "C": { "tag": "forge:circuits/lv" }
+  },
+  "result": { "item": "nuclearpowered:thermocouple" }
+}
