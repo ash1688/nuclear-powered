@@ -2,18 +2,10 @@ package io.github.ash1688.nuclearpowered.block.crusher;
 
 import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.texture.ColorRectAndBorderTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ColorRectTexture;
-import com.lowdragmc.lowdraglib.gui.texture.GuiTextureGroup;
-import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib.gui.texture.ProgressTexture;
-import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
-import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
-import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.lowdragmc.lowdraglib.gui.widget.ProgressWidget;
 import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
 import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
 import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
+import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModRecipes;
 import io.github.ash1688.nuclearpowered.recipe.CrusherRecipe;
@@ -153,94 +145,26 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
         IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
         IItemTransfer upgradeItems = ItemTransferHelperImpl.toItemTransfer(upgradeHandler);
 
-        // GUI panel background — vanilla container grey (0xC6C6C6). Without
-        // this LDLib draws nothing behind the widgets and the world bleeds
-        // through.
-        ui.mainGroup.setBackground(new ColorRectTexture(0xFFC6C6C6));
+        NPMachineUI.addBackground(ui.mainGroup);
+        NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.crusher");
 
-        // Title label — black with drop shadow for legibility on the grey
-        // panel; the LDLib font renders thinner than the vanilla title font,
-        // so the lighter 0x404040 used by vanilla GUIs reads weak.
-        ui.mainGroup.addWidget(new LabelWidget(8, 6,
-                "block.nuclearpowered.crusher")
-                .setTextColor(0xFFFFFFFF)
-                .setDropShadow(true));
-
-        // Item slots: input -> arrow -> output, plus the upgrade bay between
-        // output and FE bar. Coordinates mirror the previous CrusherScreen so
-        // saved JEI positions and player muscle memory transfer cleanly.
+        // Input -> progress arrow -> output, with upgrade bay to the right.
         ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_INPUT, 56, 35, true, true));
         ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_OUTPUT, 116, 35, true, false));
         ui.mainGroup.addWidget(new SlotWidget(upgradeItems, 0, 134, 35, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.progressArrow(78, 41, 24,
+                () -> progress, () -> maxProgress));
 
-        // Crafting progress arrow — orange fill on dark grey background, left
-        // to right. ProgressWidget without an explicit texture renders nothing,
-        // so we build a ProgressTexture from two ColorRectTextures.
-        ProgressTexture progressTex = new ProgressTexture(
-                new ColorRectTexture(0xFF222222),
-                new ColorRectTexture(0xFFE56B2B))
-                .setFillDirection(ProgressTexture.FillDirection.LEFT_TO_RIGHT);
-        ui.mainGroup.addWidget(new ProgressWidget(
-                () -> maxProgress == 0 ? 0 : (double) progress / maxProgress,
-                78, 41, 24, 4, progressTex));
+        ui.mainGroup.addWidget(NPMachineUI.feBar(152, 17,
+                () -> storedFE, ENERGY_CAPACITY));
 
-        // Vertical FE bar (152, 17, 12x52). LDLib's DOWN_TO_UP is naming-
-        // counterintuitive — it actually drains from the bottom up. Using
-        // UP_TO_DOWN gives the expected liquid-level behaviour where the
-        // top of the orange fill drops as energy depletes.
-        ProgressTexture feTex = new ProgressTexture(
-                new ColorRectTexture(0xFF222222),
-                new ColorRectTexture(0xFFE05A20))
-                .setFillDirection(ProgressTexture.FillDirection.UP_TO_DOWN);
-        ui.mainGroup.addWidget(new ProgressWidget(
-                () -> (double) storedFE / ENERGY_CAPACITY,
-                152, 17, 12, 52, feTex)
-                .setHoverTooltips(net.minecraft.network.chat.Component.literal(
-                        "Energy: " + storedFE + " / " + ENERGY_CAPACITY + " FE")));
+        ui.mainGroup.addWidget(NPMachineUI.toggleButton(8, 58, 64, "Auto In",
+                () -> autoInput, this::toggleAutoInput));
+        ui.mainGroup.addWidget(NPMachineUI.toggleButton(80, 58, 64, "Auto Out",
+                () -> autoOutput, this::toggleAutoOutput));
 
-        // Auto in/out toggle buttons. Labels are Supplier-driven so they
-        // re-render whenever the BE state flips ("Auto In: ON" / "OFF").
-        // ButtonWidget without an explicit texture draws nothing, so we
-        // compose a vanilla-style button (bordered grey + label) via
-        // GuiTextureGroup. Width 64 so two buttons fit to the left of
-        // the FE bar at x=152 without stealing its bottom-edge hover.
-        ui.mainGroup.addWidget(new ButtonWidget(8, 58, 64, 18,
-                makeButtonTexture(() -> "Auto In: " + (autoInput ? "ON" : "OFF")),
-                cd -> toggleAutoInput())
-                .setHoverTooltips("Click to toggle auto-input"));
-        ui.mainGroup.addWidget(new ButtonWidget(80, 58, 64, 18,
-                makeButtonTexture(() -> "Auto Out: " + (autoOutput ? "ON" : "OFF")),
-                cd -> toggleAutoOutput())
-                .setHoverTooltips("Click to toggle auto-output"));
-
-        // Player inventory (3x9) and hotbar (1x9). LDLib doesn't auto-add
-        // these; we lay them out at the standard vanilla positions so the
-        // player's slot layout matches every other GUI in the game.
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 9; col++) {
-                int idx = col + row * 9 + 9;
-                ui.mainGroup.addWidget(new SlotWidget(player.getInventory(), idx,
-                        8 + col * 18, 84 + row * 18, true, true));
-            }
-        }
-        for (int col = 0; col < 9; col++) {
-            ui.mainGroup.addWidget(new SlotWidget(player.getInventory(), col,
-                    8 + col * 18, 142, true, true));
-        }
-
+        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
         return ui;
-    }
-
-    /**
-     * Build a layered button texture: bordered grey fill (vanilla-button look)
-     * with a Supplier-driven text label on top. The supplier is re-evaluated
-     * each render so toggleable state ("ON" / "OFF") updates live without
-     * needing a separate label widget.
-     */
-    private static IGuiTexture makeButtonTexture(java.util.function.Supplier<String> label) {
-        return new GuiTextureGroup(
-                new ColorRectAndBorderTexture(0xFF8B8B8B, 0xFF373737, 1f),
-                new TextTexture(label).setColor(0xFFFFFFFF).setDropShadow(true));
     }
 
     @Override
