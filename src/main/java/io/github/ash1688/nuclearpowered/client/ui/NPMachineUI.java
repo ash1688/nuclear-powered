@@ -10,9 +10,13 @@ import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
 import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import com.lowdragmc.lowdraglib.gui.widget.ProgressWidget;
 import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
+import com.lowdragmc.lowdraglib.gui.widget.TankWidget;
 import com.lowdragmc.lowdraglib.gui.widget.Widget;
 import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
+import com.lowdragmc.lowdraglib.side.fluid.IFluidTransfer;
+import com.lowdragmc.lowdraglib.side.fluid.forge.FluidTransferHelperImpl;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
@@ -116,6 +120,26 @@ public final class NPMachineUI {
                     return max == 0 ? 0 : (double) progress.getAsInt() / max;
                 },
                 x, y, width, 4, tex);
+    }
+
+    /**
+     * Vertical fluid tank, 16x52 by default. Wraps a Forge {@link IFluidHandler}
+     * into LDLib's {@link IFluidTransfer} and renders the bucket-level texture
+     * + click-to-fill / click-to-drain hover overlay so players can move fluids
+     * with held buckets just like vanilla. Hover tooltip shows fluid name + amount
+     * automatically; no extra label widgets needed.
+     */
+    public static TankWidget tankBar(int x, int y, int width, int height,
+                                      IFluidHandler tank) {
+        IFluidTransfer wrapped = FluidTransferHelperImpl.toFluidTransfer(tank);
+        return new TankWidget(wrapped, 0, x, y, width, height, true, true)
+                .setShowAmount(true)
+                .setDrawHoverTips(true);
+    }
+
+    /** Default 16x52 tank at the given position. */
+    public static TankWidget tankBar(int x, int y, IFluidHandler tank) {
+        return tankBar(x, y, 16, 52, tank);
     }
 
     /**
