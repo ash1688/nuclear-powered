@@ -164,11 +164,16 @@ public class EnergyConverterBlockEntity extends BlockEntity {
 
     public void tick(Level level, BlockPos pos, BlockState state) {
         if (level.isClientSide || storedFE <= 0) return;
-        int budget = Math.min(storedFE, TRANSFER_RATE_FE_PER_TICK);
-        if (budget <= 0) return;
 
+        // Per-face budget: each side independently gets up to the LV transfer
+        // ceiling per tick. With 6 fully-loaded faces this lets the converter
+        // act as a routing hub at 6 * 128 = 768 FE/tick aggregate. Earlier
+        // versions used a global budget that the first iterated face drained
+        // entirely, starving every other side and silently bypassing the
+        // GT-EU push branch.
         for (Direction dir : Direction.values()) {
-            if (budget <= 0) break;
+            if (storedFE <= 0) break;
+            int budget = Math.min(storedFE, TRANSFER_RATE_FE_PER_TICK);
             BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
             if (neighbour == null) continue;
             Direction facing = dir.getOpposite();
@@ -184,7 +189,6 @@ public class EnergyConverterBlockEntity extends BlockEntity {
                 }
                 if (pushed > 0) {
                     storedFE -= pushed;
-                    budget -= pushed;
                     setChanged();
                     continue;
                 }
@@ -203,7 +207,6 @@ public class EnergyConverterBlockEntity extends BlockEntity {
                 }
                 if (pushedFE > 0) {
                     storedFE -= pushedFE;
-                    budget -= pushedFE;
                     setChanged();
                 }
             }
