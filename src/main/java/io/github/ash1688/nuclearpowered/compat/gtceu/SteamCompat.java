@@ -35,7 +35,7 @@ public final class SteamCompat {
 
     private static volatile Fluid activeEmit;
     private static volatile Fluid cachedGtSteam;
-    private static volatile boolean gtLookupLogged;
+    private static volatile boolean gtLookupMissWarned;
 
     private SteamCompat() {}
 
@@ -50,8 +50,6 @@ public final class SteamCompat {
             if (activeEmit != null) return activeEmit;
             Fluid gt = gtSteamOrNull();
             activeEmit = (gt != null) ? gt : ModFluids.STEAM.get();
-            ResourceLocation id = ForgeRegistries.FLUIDS.getKey(activeEmit);
-            LOGGER.info("[NP/Steam] Coal Boiler will emit fluid: {}", id);
             return activeEmit;
         }
     }
@@ -74,22 +72,17 @@ public final class SteamCompat {
         if (g != null) return g;
         g = ForgeRegistries.FLUIDS.getValue(GTCEU_STEAM_ID);
         cachedGtSteam = g;
-        if (!gtLookupLogged) {
-            gtLookupLogged = true;
-            if (g == null) {
-                // Couldn't find gtceu:steam. Dump every fluid ID that contains
-                // "steam" so we can see what GT actually named it and patch
-                // the lookup without another rebuild cycle.
-                String steamFluids = ForgeRegistries.FLUIDS.getKeys().stream()
-                        .map(ResourceLocation::toString)
-                        .filter(s -> s.toLowerCase().contains("steam"))
-                        .sorted()
-                        .collect(Collectors.joining(", "));
-                LOGGER.warn("[NP/Steam] gtceu:steam lookup returned NULL. Steam-ish fluids in the registry: [{}]",
-                        steamFluids);
-            } else {
-                LOGGER.info("[NP/Steam] Resolved gtceu:steam fluid successfully.");
-            }
+        // Defensive: a future GT version could rename or relocate the steam
+        // fluid. Keep the warning so a missed lookup is loud rather than
+        // silently falling back to NP steam (which GT machines reject).
+        if (g == null && !gtLookupMissWarned) {
+            gtLookupMissWarned = true;
+            String steamFluids = ForgeRegistries.FLUIDS.getKeys().stream()
+                    .map(ResourceLocation::toString)
+                    .filter(s -> s.toLowerCase().contains("steam"))
+                    .sorted()
+                    .collect(Collectors.joining(", "));
+            LOGGER.warn("gtceu:steam not found in fluid registry. Steam-ish fluids: [{}]", steamFluids);
         }
         return g;
     }

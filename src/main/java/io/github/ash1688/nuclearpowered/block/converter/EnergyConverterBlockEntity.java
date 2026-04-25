@@ -225,15 +225,7 @@ public class EnergyConverterBlockEntity extends BlockEntity {
     // --- Tick: push energy out to adjacent sinks ---
 
     public void tick(Level level, BlockPos pos, BlockState state) {
-        if (level.isClientSide) return;
-
-        // Diagnostic probe runs first and visits every face regardless of
-        // budget so a face that ends up empty-handed during the push pass
-        // still gets discovered and logged. Decoupled from the push so we
-        // can keep a single global FE budget without losing face visibility.
-        diagnosticProbe(level, pos);
-
-        if (storedFE <= 0) return;
+        if (level.isClientSide || storedFE <= 0) return;
 
         // Global budget — the converter is rated at TRANSFER_RATE_FE_PER_TICK
         // total. Per-face budgets caused net-negative flow because every
@@ -293,35 +285,4 @@ public class EnergyConverterBlockEntity extends BlockEntity {
             }
         }
     }
-
-    // One-shot probe — each direction is logged at most once per JVM
-    // session with whatever capabilities the neighbour exposes. Tells us
-    // exactly what's on each face regardless of how the push pass
-    // distributes the budget.
-    private void diagnosticProbe(Level level, BlockPos pos) {
-        for (Direction dir : Direction.values()) {
-            if (TICK_LOGGED.putIfAbsent(dir, Boolean.TRUE) != null) continue;
-            BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
-            if (neighbour == null) {
-                TICK_LOG.info("[NP/Converter] dir={} no neighbour BE", dir);
-                continue;
-            }
-            Direction facing = dir.getOpposite();
-            IEnergyStorage feSink = neighbour.getCapability(ForgeCapabilities.ENERGY, facing).orElse(null);
-            boolean hasGtEnergy = GTCompat.isLoaded()
-                    && GTEnergyCompat.hasEnergyContainer(neighbour, facing);
-            TICK_LOG.info("[NP/Converter] dir={} neighbourClass={} forgeENERGY={} (canReceive={}) gtENERGY={}",
-                    dir, neighbour.getClass().getName(),
-                    feSink != null,
-                    feSink != null && feSink.canReceive(),
-                    hasGtEnergy);
-        }
-    }
-
-    // First-tick-per-face logging guard. Once each direction has logged we
-    // stay quiet to avoid log spam.
-    private static final java.util.concurrent.ConcurrentHashMap<Direction, Boolean> TICK_LOGGED =
-            new java.util.concurrent.ConcurrentHashMap<>();
-    private static final org.slf4j.Logger TICK_LOG =
-            com.mojang.logging.LogUtils.getLogger();
 }

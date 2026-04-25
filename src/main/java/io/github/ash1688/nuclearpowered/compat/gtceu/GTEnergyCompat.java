@@ -2,15 +2,11 @@ package io.github.ash1688.nuclearpowered.compat.gtceu;
 
 import com.gregtechceu.gtceu.api.capability.IEnergyContainer;
 import com.gregtechceu.gtceu.api.capability.forge.GTCapability;
-import com.mojang.logging.LogUtils;
 import io.github.ash1688.nuclearpowered.block.converter.EnergyConverterBlockEntity;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
-import org.slf4j.Logger;
-
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * EU-side adapter for {@link EnergyConverterBlockEntity}.
@@ -27,11 +23,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * canonical 1 EU = 4 FE.</p>
  */
 public final class GTEnergyCompat {
-    private static final Logger LOGGER = LogUtils.getLogger();
-    // Log once per direction — enough to diagnose whether any GT sink was
-    // found and whether it actually accepts the offer.
-    private static final ConcurrentHashMap<Direction, Boolean> PUSH_LOGGED = new ConcurrentHashMap<>();
-
     private GTEnergyCompat() {}
 
     /** Capability-token match test — used by the BE's getCapability router. */
@@ -44,11 +35,6 @@ public final class GTEnergyCompat {
         return LazyOptional.of(() -> new Adapter(be));
     }
 
-    /** Diagnostic helper: does {@code neighbour} expose the GT EU cap on the given face? */
-    public static boolean hasEnergyContainer(BlockEntity neighbour, Direction facing) {
-        return neighbour.getCapability(GTCapability.CAPABILITY_ENERGY_CONTAINER, facing).isPresent();
-    }
-
     /**
      * Tick-side push — called from the BE's tick loop after the Forge FE push
      * fails. Returns the FE amount consumed on a successful push (so the BE
@@ -59,40 +45,16 @@ public final class GTEnergyCompat {
     public static int pushToNeighbour(EnergyConverterBlockEntity be, BlockEntity neighbour,
                                       Direction facing, int budgetFE) {
         IEnergyContainer sink = neighbour.getCapability(GTCapability.CAPABILITY_ENERGY_CONTAINER, facing).orElse(null);
-        boolean firstForDir = !Boolean.TRUE.equals(PUSH_LOGGED.put(facing, Boolean.TRUE));
-        if (sink == null) {
-            if (firstForDir) {
-                LOGGER.info("[NP/GT-EU] Push dir={} neighbourClass={} — no IEnergyContainer capability",
-                        facing, neighbour.getClass().getName());
-            }
-            return 0;
-        }
-        if (!sink.inputsEnergy(facing)) {
-            if (firstForDir) {
-                LOGGER.info("[NP/GT-EU] Push dir={} neighbourClass={} — sink refuses inputsEnergy on this face",
-                        facing, neighbour.getClass().getName());
-            }
-            return 0;
-        }
+        if (sink == null || !sink.inputsEnergy(facing)) return 0;
 
         // Convert FE budget to EU packets. We push at the GT LV voltage (32)
         // with as many amperage pulses as we can afford from the FE budget.
         long voltage = 32L;
         int feEquivalentPerPacket = (int) voltage * EnergyConverterBlockEntity.FE_PER_EU; // 128 FE
         int maxPackets = budgetFE / feEquivalentPerPacket;
-        if (maxPackets <= 0) {
-            if (firstForDir) {
-                LOGGER.info("[NP/GT-EU] Push dir={} budgetFE={} < feEquivalentPerPacket={}; nothing to send",
-                        facing, budgetFE, feEquivalentPerPacket);
-            }
-            return 0;
-        }
+        if (maxPackets <= 0) return 0;
 
         long amperageAccepted = sink.acceptEnergyFromNetwork(facing, voltage, maxPackets);
-        if (firstForDir) {
-            LOGGER.info("[NP/GT-EU] Push dir={} neighbourClass={} voltage={} maxPackets={} -> acceptedPackets={}",
-                    facing, neighbour.getClass().getName(), voltage, maxPackets, amperageAccepted);
-        }
         if (amperageAccepted <= 0) return 0;
         return (int) (amperageAccepted * feEquivalentPerPacket);
     }

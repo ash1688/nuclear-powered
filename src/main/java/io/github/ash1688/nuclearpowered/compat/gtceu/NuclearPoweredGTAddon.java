@@ -16,7 +16,6 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.fluids.FluidStack;
 import org.slf4j.Logger;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
@@ -44,10 +43,6 @@ public class NuclearPoweredGTAddon implements IGTAddon {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final GTRegistrate REGISTRATE = GTRegistrate.create(NuclearPowered.MODID);
 
-    public NuclearPoweredGTAddon() {
-        LOGGER.info("[NP/GT] NuclearPoweredGTAddon instantiated — @GTAddon discovery is working.");
-    }
-
     @Override
     public GTRegistrate getRegistrate() {
         return REGISTRATE;
@@ -60,32 +55,28 @@ public class NuclearPoweredGTAddon implements IGTAddon {
 
     @Override
     public void initializeAddon() {
-        LOGGER.info("[NP/GT] initializeAddon() called.");
+        // No init-time work — we only contribute recipes, no materials, items,
+        // covers, or machines of our own on the GT side.
     }
 
     @Override
     public void addRecipes(Consumer<FinishedRecipe> consumer) {
-        LOGGER.info("[NP/GT] addRecipes() starting — registering NP cross-mod recipes into GT machines.");
-        AtomicInteger ok = new AtomicInteger();
-        AtomicInteger failed = new AtomicInteger();
-        // Wrap the caller's consumer so we can count successes and catch any
-        // per-recipe exception that GT might silently swallow.
-        Consumer<FinishedRecipe> counting = recipe -> {
+        // Wrap the caller's consumer so any per-recipe exception thrown by
+        // GT's pipeline is logged with its recipe id rather than silently
+        // dropping the whole batch on the first failure.
+        Consumer<FinishedRecipe> safe = recipe -> {
             try {
                 consumer.accept(recipe);
-                ok.incrementAndGet();
             } catch (Throwable t) {
-                failed.incrementAndGet();
-                LOGGER.error("[NP/GT] consumer rejected recipe {}", recipe.getId(), t);
+                LOGGER.error("Cross-mod recipe rejected by GT: {}", recipe.getId(), t);
             }
         };
         try {
-            addOreProcessingRecipes(counting);
-            addReprocessingRecipes(counting);
+            addOreProcessingRecipes(safe);
+            addReprocessingRecipes(safe);
         } catch (Throwable t) {
-            LOGGER.error("[NP/GT] addRecipes() threw — recipe registration aborted partway", t);
+            LOGGER.error("NP -> GT recipe registration aborted partway", t);
         }
-        LOGGER.info("[NP/GT] addRecipes() done. registered={}, failed={}", ok.get(), failed.get());
     }
 
     // ------------------------------------------------------------------
