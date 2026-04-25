@@ -154,9 +154,13 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
         // through.
         ui.mainGroup.setBackground(new ColorRectTexture(0xFFC6C6C6));
 
-        // Title label.
+        // Title label — black with drop shadow for legibility on the grey
+        // panel; the LDLib font renders thinner than the vanilla title font,
+        // so the lighter 0x404040 used by vanilla GUIs reads weak.
         ui.mainGroup.addWidget(new LabelWidget(8, 6,
-                "block.nuclearpowered.crusher").setTextColor(0x404040));
+                "block.nuclearpowered.crusher")
+                .setTextColor(0xFFFFFFFF)
+                .setDropShadow(true));
 
         // Item slots: input -> arrow -> output, plus the upgrade bay between
         // output and FE bar. Coordinates mirror the previous CrusherScreen so
@@ -176,11 +180,14 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
                 () -> maxProgress == 0 ? 0 : (double) progress / maxProgress,
                 78, 41, 24, 4, progressTex));
 
-        // Vertical FE bar (152, 17, 12x52) — orange fill bottom-up.
+        // Vertical FE bar (152, 17, 12x52). LDLib's DOWN_TO_UP is naming-
+        // counterintuitive — it actually drains from the bottom up. Using
+        // UP_TO_DOWN gives the expected liquid-level behaviour where the
+        // top of the orange fill drops as energy depletes.
         ProgressTexture feTex = new ProgressTexture(
                 new ColorRectTexture(0xFF222222),
                 new ColorRectTexture(0xFFE05A20))
-                .setFillDirection(ProgressTexture.FillDirection.DOWN_TO_UP);
+                .setFillDirection(ProgressTexture.FillDirection.UP_TO_DOWN);
         ui.mainGroup.addWidget(new ProgressWidget(
                 () -> (double) storedFE / ENERGY_CAPACITY,
                 152, 17, 12, 52, feTex)
