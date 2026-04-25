@@ -1,20 +1,23 @@
 package io.github.ash1688.nuclearpowered.block.crusher;
 
+import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
+import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.texture.ProgressTexture;
+import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
+import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
+import com.lowdragmc.lowdraglib.gui.widget.ProgressWidget;
+import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
+import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
+import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModRecipes;
-import io.github.ash1688.nuclearpowered.menu.CrusherMenu;
 import io.github.ash1688.nuclearpowered.recipe.CrusherRecipe;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.Containers;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -30,7 +33,7 @@ import net.minecraftforge.items.ItemStackHandler;
 import javax.annotation.Nullable;
 import java.util.Optional;
 
-public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
+public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
     public static final int SLOT_INPUT = 0;
     public static final int SLOT_OUTPUT = 1;
 
@@ -92,36 +95,10 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
 
     private LazyOptional<IEnergyStorage> lazyEnergy = LazyOptional.empty();
 
-    private final ContainerData data = new ContainerData() {
-        @Override
-        public int get(int index) {
-            return switch (index) {
-                case 0 -> progress;
-                case 1 -> maxProgress;
-                case 2 -> autoInput ? 1 : 0;
-                case 3 -> autoOutput ? 1 : 0;
-                case 4 -> storedFE;
-                case 5 -> ENERGY_CAPACITY;
-                default -> 0;
-            };
-        }
-
-        @Override
-        public void set(int index, int value) {
-            switch (index) {
-                case 0 -> progress = value;
-                case 1 -> maxProgress = value;
-                case 2 -> autoInput = value != 0;
-                case 3 -> autoOutput = value != 0;
-                case 4 -> storedFE = value;
-            }
-        }
-
-        @Override
-        public int getCount() {
-            return 6;
-        }
-    };
+    // ContainerData is gone — LDLib widgets read field state directly via
+    // DoubleSupplier lambdas in createUI, and LDLib handles the server->client
+    // sync internally. No vanilla AbstractContainerMenu means no need for
+    // a serialised data slot bridge.
 
     public CrusherBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.CRUSHER.get(), pos, state);
@@ -158,15 +135,64 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
         setChanged();
     }
 
+    // --- LDLib UI ---
+
     @Override
-    public Component getDisplayName() {
-        return Component.translatable("block.nuclearpowered.crusher");
+    public BlockEntity self() {
+        return this;
     }
 
-    @Nullable
     @Override
-    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new CrusherMenu(id, inv, this, data);
+    public ModularUI createUI(Player player) {
+        ModularUI ui = new ModularUI(176, 166, this, player);
+        IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
+        IItemTransfer upgradeItems = ItemTransferHelperImpl.toItemTransfer(upgradeHandler);
+
+        // Background label (machine name shown at top — vanilla MenuProvider title equivalent).
+        ui.mainGroup.addWidget(new LabelWidget(8, 6,
+                "block.nuclearpowered.crusher").setTextColor(0x404040));
+
+        // Item slots: input -> arrow -> output, plus the upgrade bay between
+        // output and FE bar. Coordinates mirror the previous CrusherScreen so
+        // saved JEI positions and player muscle memory transfer cleanly.
+        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_INPUT, 56, 35, true, true));
+        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_OUTPUT, 116, 35, true, false));
+        ui.mainGroup.addWidget(new SlotWidget(upgradeItems, 0, 134, 35, true, true));
+
+        // Crafting progress arrow.
+        ui.mainGroup.addWidget(new ProgressWidget(
+                () -> maxProgress == 0 ? 0 : (double) progress / maxProgress,
+                78, 35, 24, 18));
+
+        // Vertical FE bar (152, 17, 12x52) — fills bottom-up as charge climbs.
+        ui.mainGroup.addWidget(new ProgressWidget(
+                () -> (double) storedFE / ENERGY_CAPACITY,
+                152, 17, 12, 52)
+                .setFillDirection(ProgressTexture.FillDirection.DOWN_TO_UP));
+
+        // Auto in/out toggles. Cycle button or simple ButtonWidget — using the
+        // latter and rebuilding the click action server-side via the BE flag.
+        ui.mainGroup.addWidget(new ButtonWidget(8, 58, 76, 18,
+                cd -> toggleAutoInput()).setButtonTexture(null));
+        ui.mainGroup.addWidget(new ButtonWidget(92, 58, 76, 18,
+                cd -> toggleAutoOutput()).setButtonTexture(null));
+
+        // Player inventory (3x9) and hotbar (1x9). LDLib doesn't auto-add
+        // these; we lay them out at the standard vanilla positions so the
+        // player's slot layout matches every other GUI in the game.
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 9; col++) {
+                int idx = col + row * 9 + 9;
+                ui.mainGroup.addWidget(new SlotWidget(player.getInventory(), idx,
+                        8 + col * 18, 84 + row * 18, true, true));
+            }
+        }
+        for (int col = 0; col < 9; col++) {
+            ui.mainGroup.addWidget(new SlotWidget(player.getInventory(), col,
+                    8 + col * 18, 142, true, true));
+        }
+
+        return ui;
     }
 
     @Override
