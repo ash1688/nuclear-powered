@@ -180,33 +180,44 @@ public class EnergyConverterBlockEntity extends BlockEntity {
         int budget = Math.min(storedFE, TRANSFER_RATE_FE_PER_TICK);
         if (budget <= 0) return;
 
-        for (Direction dir : Direction.values()) {
-            if (budget <= 0) break;
-            BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
-            if (neighbour == null) continue;
-            Direction facing = dir.getOpposite();
-
-            // Forge FE sink — push FE directly, 1:1.
-            IEnergyStorage feSink = neighbour.getCapability(ForgeCapabilities.ENERGY, facing).orElse(null);
-            if (feSink != null && feSink.canReceive()) {
-                int pushed = feSink.receiveEnergy(budget, false);
-                if (pushed > 0) {
-                    storedFE -= pushed;
-                    budget -= pushed;
-                    setChanged();
-                    continue;
-                }
-            }
-
-            // GT EU sink — push via the compat shim, which handles the 4:1 math
-            // and voltage/amperage accounting. Only reachable when GT is loaded.
-            if (GTCompat.isLoaded()) {
+        // Pass 1 — GT-only sinks (no Forge ENERGY cap exposed). These are
+        // typically GT machines that only speak EU; they're the ones the
+        // converter is *for*. Pushing here first stops an adjacent NP
+        // Battery / Cable from soaking up the whole budget before the
+        // EU consumer gets a turn.
+        if (GTCompat.isLoaded()) {
+            for (Direction dir : Direction.values()) {
+                if (budget <= 0) break;
+                BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
+                if (neighbour == null) continue;
+                Direction facing = dir.getOpposite();
+                IEnergyStorage feSink = neighbour.getCapability(ForgeCapabilities.ENERGY, facing).orElse(null);
+                if (feSink != null && feSink.canReceive()) continue; // pass 2 will handle this
                 int pushedFE = GTEnergyCompat.pushToNeighbour(this, neighbour, facing, budget);
                 if (pushedFE > 0) {
                     storedFE -= pushedFE;
                     budget -= pushedFE;
                     setChanged();
                 }
+            }
+        }
+
+        // Pass 2 — Forge FE sinks (NP machines, batteries, cables, third-mod
+        // FE consumers, GT compat wrappers). Anything that exposes the
+        // Forge ENERGY cap with canReceive lands here, splitting whatever
+        // budget the EU sinks didn't consume.
+        for (Direction dir : Direction.values()) {
+            if (budget <= 0) break;
+            BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
+            if (neighbour == null) continue;
+            Direction facing = dir.getOpposite();
+            IEnergyStorage feSink = neighbour.getCapability(ForgeCapabilities.ENERGY, facing).orElse(null);
+            if (feSink == null || !feSink.canReceive()) continue;
+            int pushed = feSink.receiveEnergy(budget, false);
+            if (pushed > 0) {
+                storedFE -= pushed;
+                budget -= pushed;
+                setChanged();
             }
         }
     }
