@@ -97,9 +97,14 @@ public final class NPMachineUI {
                 new ColorRectTexture(FE_BAR_EMPTY),
                 new ColorRectTexture(FE_BAR_FULL))
                 .setFillDirection(ProgressTexture.FillDirection.DOWN_TO_UP);
-        return new ProgressWidget(
+        ProgressWidget bar = new ProgressWidget(
                 () -> capacity == 0 ? 0 : (double) stored.getAsInt() / capacity,
                 x, y, 12, 52, tex);
+        // Hover tooltip shows current FE / capacity. The fraction arg LDLib
+        // passes in is ignored — we re-read the supplier so the number is
+        // exact, not rounded by the bar's pixel-step quantisation.
+        bar.setDynamicHoverTips(frac -> stored.getAsInt() + " / " + capacity + " FE");
+        return bar;
     }
 
     /**
