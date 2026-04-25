@@ -19,7 +19,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.network.NetworkHooks;
+import com.lowdragmc.lowdraglib.gui.factory.BlockEntityUIFactory;
 
 import javax.annotation.Nullable;
 
@@ -79,7 +79,7 @@ public class ThermocoupleBlock extends BaseEntityBlock {
                             Component.literal("Thermocouple: " + (tc.isCoolantMode() ? "COOLANT MODE" : "NORMAL")),
                             true);
                 } else if (player instanceof ServerPlayer sp) {
-                    NetworkHooks.openScreen(sp, tc, buf -> buf.writeBlockPos(pos));
+                    BlockEntityUIFactory.INSTANCE.openUI(tc, sp);
                 }
             }
         }

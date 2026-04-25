@@ -14,7 +14,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.network.NetworkHooks;
+import com.lowdragmc.lowdraglib.gui.factory.BlockEntityUIFactory;
 
 import javax.annotation.Nullable;
 
@@ -49,7 +49,7 @@ public class BatteryBlock extends BaseEntityBlock {
         if (!level.isClientSide) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof BatteryBlockEntity battery && player instanceof ServerPlayer sp) {
-                NetworkHooks.openScreen(sp, battery, buf -> buf.writeBlockPos(pos));
+                BlockEntityUIFactory.INSTANCE.openUI(battery, sp);
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);

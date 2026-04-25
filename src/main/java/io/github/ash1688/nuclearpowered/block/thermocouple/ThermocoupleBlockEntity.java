@@ -1,18 +1,15 @@
 package io.github.ash1688.nuclearpowered.block.thermocouple;
 
+import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
+import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
 import io.github.ash1688.nuclearpowered.block.pile.PileBlockEntity;
+import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModBlocks;
-import io.github.ash1688.nuclearpowered.menu.ThermocoupleMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -27,7 +24,7 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider {
+public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
     public static final int CAPACITY_FE = 10_000;
     // Cap raised above the 5K sweet-spot raw output (500 FE/tick) so the
     // efficiency curve below can actually swing values up and down without
@@ -87,40 +84,27 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
     private int scanCooldown = 0;
     private int lastGenerationFE = 0;
 
-    private final ContainerData data = new ContainerData() {
-        @Override
-        public int get(int index) {
-            return switch (index) {
-                case 0 -> storedFE;
-                case 1 -> CAPACITY_FE;
-                case 2 -> cachedPilePos != null ? 1 : 0;
-                case 3 -> lastGenerationFE;
-                default -> 0;
-            };
-        }
-
-        @Override
-        public void set(int index, int value) {
-            // Read-only indices.
-        }
-
-        @Override
-        public int getCount() { return 4; }
-    };
-
     public ThermocoupleBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.THERMOCOUPLE.get(), pos, state);
     }
 
     @Override
-    public Component getDisplayName() {
-        return Component.translatable("block.nuclearpowered.thermocouple");
-    }
+    public BlockEntity self() { return this; }
 
-    @Nullable
     @Override
-    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new ThermocoupleMenu(id, inv, this, data);
+    public ModularUI createUI(Player player) {
+        ModularUI ui = new ModularUI(176, 166, this, player);
+        NPMachineUI.addBackground(ui.mainGroup);
+        NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.thermocouple");
+
+        ui.mainGroup.addWidget(NPMachineUI.feBar(82, 17,
+                () -> storedFE, CAPACITY_FE));
+
+        ui.mainGroup.addWidget(NPMachineUI.toggleButton(8, 58, 80, "Coolant Mode",
+                () -> coolantMode, this::toggleCoolantMode));
+
+        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+        return ui;
     }
 
     @Override
