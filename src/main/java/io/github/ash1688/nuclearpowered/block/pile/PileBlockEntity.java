@@ -197,14 +197,14 @@ public class PileBlockEntity extends BlockEntity implements IUIHolder.BlockEntit
 
     @Override
     public ModularUI createUI(Player player) {
-        ModularUI ui = new ModularUI(176, 166, this, player);
+        ModularUI ui = new ModularUI(NPMachineUI.UI_W, NPMachineUI.UI_H, this, player);
         IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
 
         NPMachineUI.addBackground(ui.mainGroup);
         NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.graphite_pile");
 
-        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_FUEL, 56, 35, true, true));
-        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_DEPLETED, 116, 35, true, false));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_FUEL, 56, 35, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_DEPLETED, 116, 35, true, false));
 
         // Burn-time arrow between fuel and depleted slots.
         ui.mainGroup.addWidget(NPMachineUI.progressArrow(78, 41, 24,
@@ -213,24 +213,26 @@ public class PileBlockEntity extends BlockEntity implements IUIHolder.BlockEntit
 
         // Heat bar — red-orange rising from the bottom. Tooltip shows the
         // exact heat plus the last per-second delta so players can see
-        // whether the pile is heating or cooling at a glance.
+        // whether the pile is heating or cooling at a glance. Uses absolute
+        // coords (PANEL_X applied) since this is a custom ProgressWidget,
+        // not the shared feBar helper.
         ProgressTexture heatTex = new ProgressTexture(
                 new ColorRectTexture(NPMachineUI.FE_BAR_EMPTY),
                 new ColorRectTexture(0xFFD03020))
                 .setFillDirection(ProgressTexture.FillDirection.DOWN_TO_UP);
         ProgressWidget heatBar = new ProgressWidget(
                 () -> getMaxHeat() == 0 ? 0 : (double) heat / getMaxHeat(),
-                152, 17, 12, 52, heatTex);
+                NPMachineUI.PANEL_X + 152, 17, 12, 52, heatTex);
         heatBar.setDynamicHoverTips(frac -> "Heat: " + heat + " / " + getMaxHeat()
                 + (lastHeatDelta == 0 ? "" : " (" + (lastHeatDelta > 0 ? "+" : "") + lastHeatDelta + "/s)"));
         ui.mainGroup.addWidget(heatBar);
 
-        ui.mainGroup.addWidget(NPMachineUI.toggleButton(8, 58, 64, "Auto In",
-                () -> autoInput, this::toggleAutoInput));
-        ui.mainGroup.addWidget(NPMachineUI.toggleButton(80, 58, 64, "Auto Out",
-                () -> autoOutput, this::toggleAutoOutput));
-
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+
+        ui.mainGroup.addWidget(new io.github.ash1688.nuclearpowered.client.ui.NPTabs()
+                .ioTab(() -> autoInput, this::toggleAutoInput,
+                        () -> autoOutput, this::toggleAutoOutput)
+                .build());
         return ui;
     }
 

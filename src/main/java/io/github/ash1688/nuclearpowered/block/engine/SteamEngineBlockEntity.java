@@ -74,7 +74,7 @@ public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.Blo
 
     @Override
     public ModularUI createUI(Player player) {
-        ModularUI ui = new ModularUI(176, 166, this, player);
+        ModularUI ui = new ModularUI(NPMachineUI.UI_W, NPMachineUI.UI_H, this, player);
         NPMachineUI.addBackground(ui.mainGroup);
         NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.steam_engine");
 
@@ -83,6 +83,8 @@ public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.Blo
                 () -> storedFE, ENERGY_CAPACITY));
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+
+        ui.mainGroup.addWidget(new io.github.ash1688.nuclearpowered.client.ui.NPTabs().build());
         return ui;
     }
 

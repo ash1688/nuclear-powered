@@ -91,27 +91,27 @@ public class VitrifierBlockEntity extends BlockEntity implements IUIHolder.Block
 
     @Override
     public ModularUI createUI(Player player) {
-        ModularUI ui = new ModularUI(176, 166, this, player);
+        ModularUI ui = new ModularUI(NPMachineUI.UI_W, NPMachineUI.UI_H, this, player);
         IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
 
         NPMachineUI.addBackground(ui.mainGroup);
         NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.vitrifier");
 
-        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_INPUT_WASTE, 38, 26, true, true));
-        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_INPUT_FRIT, 38, 44, true, true));
-        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_OUTPUT, 116, 35, true, false));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_INPUT_WASTE, 38, 26, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_INPUT_FRIT, 38, 44, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_OUTPUT, 116, 35, true, false));
         ui.mainGroup.addWidget(NPMachineUI.progressArrow(78, 41, 24,
                 () -> progress, () -> PROCESS_TICKS));
 
         ui.mainGroup.addWidget(NPMachineUI.feBar(152, 17,
                 () -> storedFE, ENERGY_CAPACITY));
 
-        ui.mainGroup.addWidget(NPMachineUI.toggleButton(8, 58, 64, "Auto In",
-                () -> autoInput, this::toggleAutoInput));
-        ui.mainGroup.addWidget(NPMachineUI.toggleButton(80, 58, 64, "Auto Out",
-                () -> autoOutput, this::toggleAutoOutput));
-
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+
+        ui.mainGroup.addWidget(new io.github.ash1688.nuclearpowered.client.ui.NPTabs()
+                .ioTab(() -> autoInput, this::toggleAutoInput,
+                        () -> autoOutput, this::toggleAutoOutput)
+                .build());
         return ui;
     }
 

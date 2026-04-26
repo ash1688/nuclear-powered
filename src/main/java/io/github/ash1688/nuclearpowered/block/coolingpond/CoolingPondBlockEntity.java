@@ -73,18 +73,20 @@ public class CoolingPondBlockEntity extends BlockEntity implements IUIHolder.Blo
 
     @Override
     public ModularUI createUI(Player player) {
-        ModularUI ui = new ModularUI(176, 166, this, player);
+        ModularUI ui = new ModularUI(NPMachineUI.UI_W, NPMachineUI.UI_H, this, player);
         IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
 
         NPMachineUI.addBackground(ui.mainGroup);
         NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.cooling_pond");
 
-        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_INPUT, 56, 35, true, true));
-        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_COOLING, 116, 35, true, false));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_INPUT, 56, 35, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_OUTPUT, 116, 35, true, false));
         ui.mainGroup.addWidget(NPMachineUI.progressArrow(78, 41, 24,
                 () -> coolProgress, () -> COOL_TICKS));
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+
+        ui.mainGroup.addWidget(new io.github.ash1688.nuclearpowered.client.ui.NPTabs().build());
         return ui;
     }
 

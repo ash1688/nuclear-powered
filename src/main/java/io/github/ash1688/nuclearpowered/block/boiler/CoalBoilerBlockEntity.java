@@ -144,14 +144,14 @@ public class CoalBoilerBlockEntity extends BlockEntity implements IUIHolder.Bloc
 
     @Override
     public ModularUI createUI(Player player) {
-        ModularUI ui = new ModularUI(176, 166, this, player);
+        ModularUI ui = new ModularUI(NPMachineUI.UI_W, NPMachineUI.UI_H, this, player);
         IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
 
         NPMachineUI.addBackground(ui.mainGroup);
         NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.coal_boiler");
 
-        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_FUEL, 56, 53, true, true));
-        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_BUCKET, 56, 17, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_FUEL, 56, 53, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_BUCKET, 56, 17, true, true));
 
         // Burn-time progress bar (vertical-ish, render as horizontal bar above fuel slot).
         ui.mainGroup.addWidget(NPMachineUI.progressArrow(56, 41, 18,
@@ -161,6 +161,8 @@ public class CoalBoilerBlockEntity extends BlockEntity implements IUIHolder.Bloc
         ui.mainGroup.addWidget(NPMachineUI.tankBar(132, 17, steamTank));
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+
+        ui.mainGroup.addWidget(new io.github.ash1688.nuclearpowered.client.ui.NPTabs().build());
         return ui;
     }
 

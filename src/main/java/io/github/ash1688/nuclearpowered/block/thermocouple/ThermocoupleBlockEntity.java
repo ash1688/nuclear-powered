@@ -93,17 +93,22 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
 
     @Override
     public ModularUI createUI(Player player) {
-        ModularUI ui = new ModularUI(176, 166, this, player);
+        ModularUI ui = new ModularUI(NPMachineUI.UI_W, NPMachineUI.UI_H, this, player);
         NPMachineUI.addBackground(ui.mainGroup);
         NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.thermocouple");
 
         ui.mainGroup.addWidget(NPMachineUI.feBar(82, 17,
                 () -> storedFE, CAPACITY_FE));
 
-        ui.mainGroup.addWidget(NPMachineUI.toggleButton(8, 58, 80, "Coolant Mode",
-                () -> coolantMode, this::toggleCoolantMode));
+        // Coolant-mode toggle stays inline — it's a unique mode switch, not
+        // a generic auto-I/O. PANEL_X manually applied since toggleButton
+        // takes absolute coords.
+        ui.mainGroup.addWidget(NPMachineUI.toggleButton(NPMachineUI.PANEL_X + 8, 58, 80,
+                "Coolant Mode", () -> coolantMode, this::toggleCoolantMode));
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+
+        ui.mainGroup.addWidget(new io.github.ash1688.nuclearpowered.client.ui.NPTabs().build());
         return ui;
     }
 

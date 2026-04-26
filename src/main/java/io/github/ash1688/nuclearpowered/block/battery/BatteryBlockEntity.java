@@ -67,7 +67,7 @@ public class BatteryBlockEntity extends BlockEntity implements IUIHolder.BlockEn
 
     @Override
     public ModularUI createUI(Player player) {
-        ModularUI ui = new ModularUI(176, 166, this, player);
+        ModularUI ui = new ModularUI(NPMachineUI.UI_W, NPMachineUI.UI_H, this, player);
         NPMachineUI.addBackground(ui.mainGroup);
         NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.battery");
 
@@ -76,6 +76,9 @@ public class BatteryBlockEntity extends BlockEntity implements IUIHolder.BlockEn
                 () -> storedFE, CAPACITY_FE));
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+
+        // Tab strip for visual consistency (only Main tab — no toggles).
+        ui.mainGroup.addWidget(new io.github.ash1688.nuclearpowered.client.ui.NPTabs().build());
         return ui;
     }
 
