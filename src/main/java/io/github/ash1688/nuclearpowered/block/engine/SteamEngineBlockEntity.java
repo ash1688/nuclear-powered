@@ -95,11 +95,16 @@ public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.Blo
         ui.mainGroup.addWidget(NPMachineUI.feBar(104, 17,
                 () -> storedFE, ENERGY_CAPACITY));
 
-        // Status line: green "Running" while steam is being consumed, grey
-        // "Idle" otherwise. Minecraft format codes (§a, §7) colour the text
-        // inline since LabelWidget only takes a single base colour.
+        // Status line: green "Running (+N FE/t)" while steam is being
+        // consumed, grey "Idle" otherwise. Minecraft format codes (§a, §7)
+        // colour the text inline since LabelWidget only takes a single
+        // base colour. The number is the FE generated last tick — scales
+        // with steam tank fill so players can see exactly what their
+        // boiler setup is producing.
         ui.mainGroup.addWidget(new LabelWidget(NPMachineUI.PANEL_X + 8, 58,
-                () -> lastFEGenerated > 0 ? "§aRunning" : "§7Idle")
+                () -> lastFEGenerated > 0
+                        ? "§aRunning §f(+" + lastFEGenerated + " FE/t)"
+                        : "§7Idle")
                 .setDropShadow(true));
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
