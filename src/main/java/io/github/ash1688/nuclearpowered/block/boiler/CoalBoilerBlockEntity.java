@@ -133,6 +133,7 @@ public class CoalBoilerBlockEntity extends BlockEntity implements IUIHolder.Bloc
 
     private int burnTime = 0;         // ticks remaining on the current fuel item
     private int maxBurnTime = 0;      // total ticks the current fuel item provides
+    private int lastSteamGenerated = 0; // mB of steam produced last tick — drives status label
 
     public CoalBoilerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.COAL_BOILER.get(), pos, state);
@@ -161,10 +162,15 @@ public class CoalBoilerBlockEntity extends BlockEntity implements IUIHolder.Bloc
         ui.mainGroup.addWidget(NPMachineUI.tankBar(96, 17, waterTank));
         ui.mainGroup.addWidget(NPMachineUI.tankBar(132, 17, steamTank));
 
-        // Status line: green "Burning" while a coal item is on the burn timer,
-        // grey "Idle" otherwise. Re-evaluates every frame from the live BE.
+        // Status line: green "Burning (+N mB/t)" while actively producing
+        // steam, grey "Idle" otherwise. The rate (currently 2 mB/tick when
+        // unconstrained) drops to 0 when the steam tank is full, so the
+        // label doubles as feedback for "your engine isn't draining steam
+        // fast enough".
         ui.mainGroup.addWidget(new LabelWidget(NPMachineUI.PANEL_X + 8, 75,
-                () -> burnTime > 0 ? "§aBurning" : "§7Idle")
+                () -> lastSteamGenerated > 0
+                        ? "§aBurning §f(+" + lastSteamGenerated + " mB/t)"
+                        : (burnTime > 0 ? "§eBurning §f(stalled)" : "§7Idle"))
                 .setDropShadow(true));
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
@@ -227,6 +233,7 @@ public class CoalBoilerBlockEntity extends BlockEntity implements IUIHolder.Bloc
 
     public void tick(Level level, BlockPos pos, BlockState state) {
         boolean changed = false;
+        lastSteamGenerated = 0;
 
         // Bucket slot auto-fills the water tank, 1000 mB at a time.
         ItemStack bucket = itemHandler.getStackInSlot(SLOT_BUCKET);
@@ -261,6 +268,7 @@ public class CoalBoilerBlockEntity extends BlockEntity implements IUIHolder.Bloc
             steamTank.fill(new FluidStack(
                     io.github.ash1688.nuclearpowered.compat.gtceu.SteamCompat.activeEmitFluid(),
                     STEAM_PER_TICK), IFluidHandler.FluidAction.EXECUTE);
+            lastSteamGenerated = STEAM_PER_TICK;
             changed = true;
         }
 
