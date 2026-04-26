@@ -2,14 +2,11 @@ package io.github.ash1688.nuclearpowered.compat.gtceu;
 
 import com.gregtechceu.gtceu.api.capability.IEnergyContainer;
 import com.gregtechceu.gtceu.api.capability.forge.GTCapability;
-import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.block.converter.EnergyConverterBlockEntity;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * EU-side adapter for {@link EnergyConverterBlockEntity}.
@@ -51,13 +48,19 @@ public final class GTEnergyCompat {
      * shim) without accidentally also skipping each other: GT CEu auto-adds
      * an IEnergyContainer compat shim onto every block that exposes Forge
      * ENERGY, so NP blocks themselves look GT-aware when GT is loaded.
-     * Whitelisting the NP namespace keeps NP→NP FE flow working while
-     * still blocking the void path into foreign GT blocks.
+     *
+     * <p>Whitelisting by package name is intentional — registry lookups in
+     * 1.20.1 Forge can return null at runtime depending on init order, but
+     * a BE's runtime class is always its real implementation class, and
+     * every NP BE lives under the {@code io.github.ash1688.nuclearpowered}
+     * package tree. Foreign GT-aware BEs (battery buffers, generators,
+     * transformers) live elsewhere, so the prefix check cleanly separates
+     * "ours" from "theirs".</p>
      */
     public static boolean isExternalGTSink(BlockEntity neighbour, Direction facing) {
         if (!hasEUCapability(neighbour, facing)) return false;
-        ResourceLocation key = ForgeRegistries.BLOCK_ENTITY_TYPES.getKey(neighbour.getType());
-        return key == null || !NuclearPowered.MODID.equals(key.getNamespace());
+        return !neighbour.getClass().getName()
+                .startsWith("io.github.ash1688.nuclearpowered.");
     }
 
     /** Build the LazyOptional the BE hands out when GT asks for EU. */
