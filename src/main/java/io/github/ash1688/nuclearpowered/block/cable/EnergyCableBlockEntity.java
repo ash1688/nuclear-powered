@@ -28,13 +28,28 @@ public class EnergyCableBlockEntity extends BlockEntity {
     // Bound BFS so a pathologically large network can't stall the server thread.
     public static final int MAX_NETWORK_SIZE = 512;
 
-    private final IEnergyStorage passThrough = new IEnergyStorage() {
+    /**
+     * Per-face wrapper. Each face exposes a separate {@link IEnergyStorage}
+     * so when a neighbour pushes FE into the cable, we know <em>which</em>
+     * face it came from. The source face's neighbour is then excluded from
+     * the network distribution so we never route the FE straight back into
+     * the producer (the loop bug that left batteries oscillating in place
+     * with their storedFE never actually growing).
+     */
+    private final IEnergyStorage[] perFaceWrappers = new IEnergyStorage[6];
+    @SuppressWarnings("unchecked")
+    private final LazyOptional<IEnergyStorage>[] perFaceLazies = new LazyOptional[6];
+
+    /** Side-agnostic wrapper used when callers query the cap with side==null.
+     *  Treats the call as having no source face — distributes to every buffer
+     *  in the network. Vanilla rarely does this, but Forge sometimes does for
+     *  pre-flight cap checks. */
+    private final IEnergyStorage anySideWrapper = new IEnergyStorage() {
         @Override
         public int receiveEnergy(int amount, boolean simulate) {
             if (level == null || level.isClientSide || amount <= 0) return 0;
-            return distribute(amount, simulate);
+            return distribute(amount, simulate, null);
         }
-
         @Override public int extractEnergy(int maxExtract, boolean simulate) { return 0; }
         @Override public int getEnergyStored() { return 0; }
         @Override public int getMaxEnergyStored() { return 0; }
@@ -42,7 +57,7 @@ public class EnergyCableBlockEntity extends BlockEntity {
         @Override public boolean canReceive() { return true; }
     };
 
-    private LazyOptional<IEnergyStorage> lazyEnergy = LazyOptional.empty();
+    private LazyOptional<IEnergyStorage> lazyAnySide = LazyOptional.empty();
 
     public EnergyCableBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.ENERGY_CABLE.get(), pos, state);
@@ -50,50 +65,78 @@ public class EnergyCableBlockEntity extends BlockEntity {
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-        if (cap == ForgeCapabilities.ENERGY) return lazyEnergy.cast();
-        return super.getCapability(cap, side);
+        if (cap != ForgeCapabilities.ENERGY) return super.getCapability(cap, side);
+        if (side == null) return lazyAnySide.cast();
+        int idx = side.ordinal();
+        if (perFaceLazies[idx] == null) perFaceLazies[idx] = LazyOptional.of(() -> getOrCreateFaceWrapper(side));
+        return perFaceLazies[idx].cast();
+    }
+
+    /**
+     * Build (and memoise) the per-face wrapper. Each face's receiveEnergy
+     * passes its own direction down to {@link #distribute} so that
+     * {@link #discoverNetwork} can skip the BlockEntity at the source
+     * position from the buffer list.
+     */
+    private IEnergyStorage getOrCreateFaceWrapper(Direction face) {
+        int idx = face.ordinal();
+        IEnergyStorage existing = perFaceWrappers[idx];
+        if (existing != null) return existing;
+        IEnergyStorage wrapper = new IEnergyStorage() {
+            @Override
+            public int receiveEnergy(int amount, boolean simulate) {
+                if (level == null || level.isClientSide || amount <= 0) return 0;
+                return distribute(amount, simulate, face);
+            }
+            @Override public int extractEnergy(int maxExtract, boolean simulate) { return 0; }
+            @Override public int getEnergyStored() { return 0; }
+            @Override public int getMaxEnergyStored() { return 0; }
+            @Override public boolean canExtract() { return false; }
+            @Override public boolean canReceive() { return true; }
+        };
+        perFaceWrappers[idx] = wrapper;
+        return wrapper;
     }
 
     @Override
     public void onLoad() {
         super.onLoad();
-        lazyEnergy = LazyOptional.of(() -> passThrough);
+        lazyAnySide = LazyOptional.of(() -> anySideWrapper);
     }
 
     @Override
     public void invalidateCaps() {
         super.invalidateCaps();
-        lazyEnergy.invalidate();
+        lazyAnySide.invalidate();
+        for (int i = 0; i < perFaceLazies.length; i++) {
+            if (perFaceLazies[i] != null) perFaceLazies[i].invalidate();
+        }
     }
 
-    // BFS the connected cable network, then push `amount` into the non-cable
-    // consumers we discovered. Pure sinks (canReceive && !canExtract: furnace,
-    // crusher, etc.) go first so a battery next to a furnace can't swallow all
-    // the FE while the furnace starves. Leftover FE spills into buffers
-    // (batteries) via their own receiveEnergy cap.
-    private int distribute(int amount, boolean simulate) {
+    /**
+     * BFS the connected cable network and push {@code amount} into the
+     * non-cable consumers we discovered. Pure sinks (canReceive && !canExtract:
+     * furnace, crusher, etc.) go first so a battery next to a furnace can't
+     * swallow all the FE while the furnace starves. Leftover FE spills into
+     * buffers (batteries) via their own receiveEnergy cap.
+     *
+     * <p>{@code sourceFace} is the direction from which this cable received
+     * the FE — that neighbour is excluded from the buffer/sink list so we
+     * never feed FE back into the block that just pushed it to us.</p>
+     */
+    private int distribute(int amount, boolean simulate, @Nullable Direction sourceFace) {
         List<IEnergyStorage> pureSinks = new ArrayList<>();
         List<IEnergyStorage> buffers = new ArrayList<>();
-        discoverNetwork(pureSinks, buffers);
+        BlockPos sourcePos = sourceFace == null ? null : worldPosition.relative(sourceFace);
+        discoverNetwork(pureSinks, buffers, sourcePos);
 
-        // Pure sinks are eager — push everything they can take before
-        // touching buffers, so a furnace connected via cable doesn't starve
-        // because a battery happened to be discovered first.
         int remaining = pushInto(pureSinks, amount, simulate);
-        // Buffers get an even split. First-come-first-served on a list of
-        // buffers means whichever was first in BFS order would soak the full
-        // throughput each tick — fine when there's only one battery, but
-        // breaks when an Energy Converter shares the network with a NP
-        // Battery (the converter would hog all the FE until its 100 K buffer
-        // filled, leaving the battery starved for ~hours).
         if (remaining > 0) remaining = pushIntoEvenly(buffers, remaining, simulate);
         return amount - remaining;
     }
 
-    /**
-     * Greedy push: each sink takes as much as it can in turn. Used for pure
-     * sinks where we WANT the first ones reached to fill up immediately.
-     */
+    /** Greedy push: each sink takes as much as it can in turn. Used for pure
+     *  sinks where we WANT the first ones reached to fill up immediately. */
     private int pushInto(List<IEnergyStorage> sinks, int remaining, boolean simulate) {
         for (IEnergyStorage sink : sinks) {
             if (remaining <= 0) break;
@@ -103,24 +146,21 @@ public class EnergyCableBlockEntity extends BlockEntity {
     }
 
     /**
-     * Even-share push: divide {@code remaining} among the sinks, give each its
-     * share, then sweep up any leftover (from sinks that were full or
-     * rate-limited) into the first sink that still has room. This keeps two
-     * buffers on the same cable network filling at roughly the same rate
-     * instead of one hoarding everything until the other can finally start.
+     * Even-share push: divide {@code remaining} among the sinks, give each
+     * its share, then sweep up any leftover (from sinks that were full or
+     * rate-limited) into the next sink that still has room. Two buffers on
+     * the same cable network fill at roughly the same rate instead of one
+     * hoarding everything until the other can finally start.
      */
     private int pushIntoEvenly(List<IEnergyStorage> sinks, int remaining, boolean simulate) {
         if (sinks.isEmpty() || remaining <= 0) return remaining;
         int n = sinks.size();
         int perSink = Math.max(1, remaining / n);
-        // First pass — every sink gets a fair share.
         for (IEnergyStorage sink : sinks) {
             if (remaining <= 0) break;
             int share = Math.min(remaining, perSink);
             remaining -= sink.receiveEnergy(share, simulate);
         }
-        // Second pass — anything left (a sink hit its rate cap, or was
-        // already full) flows into whichever remaining sink has room.
         for (IEnergyStorage sink : sinks) {
             if (remaining <= 0) break;
             remaining -= sink.receiveEnergy(remaining, simulate);
@@ -128,7 +168,8 @@ public class EnergyCableBlockEntity extends BlockEntity {
         return remaining;
     }
 
-    private void discoverNetwork(List<IEnergyStorage> pureSinks, List<IEnergyStorage> buffers) {
+    private void discoverNetwork(List<IEnergyStorage> pureSinks, List<IEnergyStorage> buffers,
+                                  @Nullable BlockPos exclude) {
         Set<BlockPos> visited = new HashSet<>();
         Set<BlockPos> consumersSeen = new HashSet<>();
         Deque<BlockPos> queue = new ArrayDeque<>();
@@ -138,6 +179,9 @@ public class EnergyCableBlockEntity extends BlockEntity {
             BlockPos cur = queue.poll();
             for (Direction dir : Direction.values()) {
                 BlockPos npos = cur.relative(dir);
+                // Skip the source position so a producer pushing into the
+                // network doesn't end up receiving its own push back.
+                if (exclude != null && npos.equals(exclude)) continue;
                 BlockEntity be = level.getBlockEntity(npos);
                 if (be == null) continue;
                 if (be instanceof EnergyCableBlockEntity) {
