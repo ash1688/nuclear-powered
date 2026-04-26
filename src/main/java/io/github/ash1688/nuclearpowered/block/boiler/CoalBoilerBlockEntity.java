@@ -5,6 +5,7 @@ import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
 import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
 import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
+import com.mojang.logging.LogUtils;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModFluids;
@@ -33,6 +34,11 @@ import net.minecraftforge.items.ItemStackHandler;
 import javax.annotation.Nullable;
 
 public class CoalBoilerBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
+    private static final org.slf4j.Logger LOGGER = LogUtils.getLogger();
+    /** TEMPORARY debug interval (ticks). 0 = off. */
+    private static final int DEBUG_LOG_INTERVAL = 40;
+    private int debugTick = 0;
+
     public static final int SLOT_FUEL = 0;
     public static final int SLOT_BUCKET = 1;
 
@@ -226,6 +232,9 @@ public class CoalBoilerBlockEntity extends BlockEntity implements IUIHolder.Bloc
 
     public void tick(Level level, BlockPos pos, BlockState state) {
         boolean changed = false;
+        boolean log = DEBUG_LOG_INTERVAL > 0 && (debugTick++ % DEBUG_LOG_INTERVAL == 0);
+        if (log) LOGGER.info("[NP-Boiler] tick — burnTime={}/{} water={} steam={} canBoil(pre)? pos={}",
+                burnTime, maxBurnTime, waterTank.getFluidAmount(), steamTank.getFluidAmount(), pos);
 
         // Bucket slot auto-fills the water tank, 1000 mB at a time.
         ItemStack bucket = itemHandler.getStackInSlot(SLOT_BUCKET);
@@ -270,11 +279,17 @@ public class CoalBoilerBlockEntity extends BlockEntity implements IUIHolder.Bloc
     }
 
     private void pushSteam(Level level, BlockPos pos) {
+        boolean log = DEBUG_LOG_INTERVAL > 0 && (debugTick % DEBUG_LOG_INTERVAL == 0);
+        if (log) LOGGER.info("[NP-Boiler] pushSteam — tank has {} mB", steamTank.getFluidAmount());
         if (steamTank.getFluidAmount() <= 0) return;
         for (Direction dir : Direction.values()) {
             if (steamTank.getFluidAmount() <= 0) break;
             BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
-            if (neighbour == null) continue;
+            if (neighbour == null) {
+                if (log) LOGGER.info("[NP-Boiler]   {} -> no BE", dir);
+                continue;
+            }
+            if (log) LOGGER.info("[NP-Boiler]   {} -> {}", dir, neighbour.getClass().getName());
             neighbour.getCapability(ForgeCapabilities.FLUID_HANDLER, dir.getOpposite()).ifPresent(sink -> {
                 // Offer whatever fluid the tank currently holds — respects both
                 // steam variants during a cross-version save transition.
@@ -283,6 +298,8 @@ public class CoalBoilerBlockEntity extends BlockEntity implements IUIHolder.Bloc
                 FluidStack offer = new FluidStack(current.getFluid(),
                         Math.min(current.getAmount(), 200));
                 int accepted = sink.fill(offer, IFluidHandler.FluidAction.EXECUTE);
+                if (log) LOGGER.info("[NP-Boiler]     fluid={} offered={} accepted={}",
+                        current.getFluid(), offer.getAmount(), accepted);
                 if (accepted > 0) {
                     steamTank.drain(accepted, IFluidHandler.FluidAction.EXECUTE);
                 }

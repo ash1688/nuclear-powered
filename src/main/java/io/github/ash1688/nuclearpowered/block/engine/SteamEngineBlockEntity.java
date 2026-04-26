@@ -3,6 +3,7 @@ package io.github.ash1688.nuclearpowered.block.engine;
 import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
 import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
+import com.mojang.logging.LogUtils;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
 import io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat;
@@ -25,6 +26,12 @@ import net.minecraftforge.fluids.capability.templates.FluidTank;
 import javax.annotation.Nullable;
 
 public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
+    private static final org.slf4j.Logger LOGGER = LogUtils.getLogger();
+    /** TEMPORARY debug: spam every push attempt every Nth tick to diagnose
+     *  why FE isn't reaching the NP battery. Set to 0 to disable. */
+    private static final int DEBUG_PUSH_LOG_INTERVAL = 40; // ~2s
+    private int debugTick = 0;
+
     public static final int STEAM_CAPACITY_MB = 4000;
     public static final int ENERGY_CAPACITY = 20_000;
     public static final int MAX_OUTPUT_FE_PER_TICK = 512;
@@ -151,18 +158,30 @@ public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.Blo
         // Forge ENERGY shim silently voids FE when the EU side is full or
         // missing storage. The dedicated FE↔EU converter is the bridge for
         // GT integration.
+        boolean log = DEBUG_PUSH_LOG_INTERVAL > 0
+                && (debugTick++ % DEBUG_PUSH_LOG_INTERVAL == 0);
+        if (log) LOGGER.info("[NP-Engine] tick {} — storedFE={}, pos={}", debugTick, storedFE, pos);
         if (storedFE > 0) {
             for (Direction dir : Direction.values()) {
                 if (storedFE <= 0) break;
                 BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
-                if (neighbour == null) continue;
-                if (GTCompat.isLoaded()
-                        && GTEnergyCompat.isExternalGTSink(neighbour, dir.getOpposite())) continue;
+                if (neighbour == null) {
+                    if (log) LOGGER.info("[NP-Engine]   {} -> no BE", dir);
+                    continue;
+                }
+                String neighbourClass = neighbour.getClass().getName();
+                boolean gtLoaded = GTCompat.isLoaded();
+                boolean isExternalGT = gtLoaded
+                        && GTEnergyCompat.isExternalGTSink(neighbour, dir.getOpposite());
+                if (log) LOGGER.info("[NP-Engine]   {} -> {} (GTLoaded={}, externalGTSink={})",
+                        dir, neighbourClass, gtLoaded, isExternalGT);
+                if (isExternalGT) continue;
                 int delta = neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).map(sink -> {
                     if (!sink.canReceive()) return 0;
                     int offered = Math.min(storedFE, MAX_OUTPUT_FE_PER_TICK);
                     return sink.receiveEnergy(offered, false);
                 }).orElse(0);
+                if (log) LOGGER.info("[NP-Engine]     pushed {} FE", delta);
                 if (delta > 0) {
                     storedFE -= delta;
                     changed = true;
