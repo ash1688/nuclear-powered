@@ -41,4 +41,16 @@ public class FuelRodOutputPortBlock extends BaseEntityBlock {
         return createTickerHelper(type, ModBlockEntities.FUEL_ROD_OUTPUT_PORT.get(),
                 (lvl, pos, st, be) -> be.tick(lvl, pos, st));
     }
+
+    @Override
+    public void onRemove(BlockState state, net.minecraft.world.level.Level level,
+                         BlockPos pos, BlockState newState, boolean moved) {
+        if (!state.is(newState.getBlock())) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof FuelRodOutputPortBlockEntity port) {
+                port.drops();
+            }
+        }
+        super.onRemove(state, level, pos, newState, moved);
+    }
 }
