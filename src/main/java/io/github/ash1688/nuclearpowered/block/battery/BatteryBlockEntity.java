@@ -2,7 +2,6 @@ package io.github.ash1688.nuclearpowered.block.battery;
 
 import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.mojang.logging.LogUtils;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
 import io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat;
@@ -22,10 +21,6 @@ import net.minecraftforge.energy.IEnergyStorage;
 import javax.annotation.Nullable;
 
 public class BatteryBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
-    private static final org.slf4j.Logger LOGGER = LogUtils.getLogger();
-    /** TEMPORARY debug interval (ticks). 0 = off. */
-    private static final int DEBUG_PUSH_LOG_INTERVAL = 40;
-    private int debugTick = 0;
 
     // Holds ~20 reprocessing cycles' worth (1 cycle ~240K FE). IO ceiling
     // 2048/tick means a single battery comfortably covers the 1200 FE/tick
@@ -39,10 +34,6 @@ public class BatteryBlockEntity extends BlockEntity implements IUIHolder.BlockEn
         @Override
         public int receiveEnergy(int amount, boolean simulate) {
             int accept = Math.min(CAPACITY_FE - storedFE, Math.min(amount, MAX_IO_PER_TICK));
-            if (DEBUG_PUSH_LOG_INTERVAL > 0 && !simulate && accept > 0) {
-                LOGGER.info("[NP-Battery] receiveEnergy accepted {} (stored {} -> {})",
-                        accept, storedFE, storedFE + accept);
-            }
             if (accept <= 0) return 0;
             if (!simulate) {
                 storedFE += accept;
@@ -127,11 +118,7 @@ public class BatteryBlockEntity extends BlockEntity implements IUIHolder.BlockEn
     // machines. Minor oscillation with neighbouring cables is harmless (no FE created
     // or destroyed) and FE still reaches real sinks within a few ticks.
     public void tick(Level level, BlockPos pos, BlockState state) {
-        if (level.isClientSide) return;
-        boolean log = DEBUG_PUSH_LOG_INTERVAL > 0
-                && (debugTick++ % DEBUG_PUSH_LOG_INTERVAL == 0);
-        if (log) LOGGER.info("[NP-Battery] tick — storedFE={}, pos={}", storedFE, pos);
-        if (storedFE <= 0) return;
+        if (level.isClientSide || storedFE <= 0) return;
         for (Direction dir : Direction.values()) {
             if (storedFE <= 0) break;
             BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
@@ -141,18 +128,13 @@ public class BatteryBlockEntity extends BlockEntity implements IUIHolder.BlockEn
             // their EU side can't actually accept (e.g. battery buffer with
             // no batteries). Players who want to bridge to GT should put a
             // dedicated FE↔EU converter between the NP network and GT.
-            boolean gtLoaded = GTCompat.isLoaded();
-            boolean isExternalGT = gtLoaded
-                    && GTEnergyCompat.isExternalGTSink(neighbour, dir.getOpposite());
-            if (log) LOGGER.info("[NP-Battery]   {} -> {} (externalGTSink={})",
-                    dir, neighbour.getClass().getName(), isExternalGT);
-            if (isExternalGT) continue;
+            if (GTCompat.isLoaded()
+                    && GTEnergyCompat.isExternalGTSink(neighbour, dir.getOpposite())) continue;
             int delta = neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).map(sink -> {
                 if (!sink.canReceive()) return 0;
                 int offered = Math.min(storedFE, MAX_IO_PER_TICK);
                 return sink.receiveEnergy(offered, false);
             }).orElse(0);
-            if (log) LOGGER.info("[NP-Battery]     pushed {} FE", delta);
             if (delta > 0) {
                 storedFE -= delta;
                 setChanged();

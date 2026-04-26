@@ -3,7 +3,6 @@ package io.github.ash1688.nuclearpowered.block.engine;
 import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
 import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
-import com.mojang.logging.LogUtils;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
 import io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat;
@@ -26,21 +25,25 @@ import net.minecraftforge.fluids.capability.templates.FluidTank;
 import javax.annotation.Nullable;
 
 public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
-    private static final org.slf4j.Logger LOGGER = LogUtils.getLogger();
-    /** TEMPORARY debug: spam every push attempt every Nth tick to diagnose
-     *  why FE isn't reaching the NP battery. Set to 0 to disable. */
-    private static final int DEBUG_PUSH_LOG_INTERVAL = 40; // ~2s
-    private int debugTick = 0;
-
     public static final int STEAM_CAPACITY_MB = 4000;
     public static final int ENERGY_CAPACITY = 20_000;
     public static final int MAX_OUTPUT_FE_PER_TICK = 512;
 
-    // Conversion rate: each tick, consume STEAM_PER_TICK mB of steam and produce
-    // FE_PER_STEAM_TICK FE. 25 FE/tick is a +25% buff over the original 20 FE/tick
-    // so a single coal comfortably outpaces a single electric furnace's draw.
-    private static final int STEAM_PER_TICK = 2;
-    private static final int FE_PER_STEAM_TICK = 25;
+    // Conversion: each "batch" consumes STEAM_PER_BATCH mB of steam and
+    // produces FE_PER_BATCH FE. The number of batches the engine runs per
+    // tick scales with the steam tank's fill level — full tank runs the
+    // maximum batches, empty tank runs none. This way more boilers feeding
+    // into the engine raises its sustained tank level, which in turn raises
+    // the engine's FE/tick output.
+    //   1 boiler  = 2 mB/tick supply  -> ~5 % fill equilibrium  -> ~25 FE/tick
+    //   5 boilers = 10 mB/tick supply -> ~25 % fill equilibrium -> ~125 FE/tick
+    //   20 boilers = 40 mB/tick supply -> ~100 % fill equilibrium -> ~500 FE/tick
+    private static final int STEAM_PER_BATCH = 2;
+    private static final int FE_PER_BATCH = 25;
+    /** Maximum batches per tick. At max (full tank) the engine consumes
+     *  20 × 2 = 40 mB and produces 20 × 25 = 500 FE — close to the
+     *  {@link #MAX_OUTPUT_FE_PER_TICK} output cap. */
+    private static final int MAX_BATCHES_PER_TICK = 20;
 
     private final FluidTank steamTank = new io.github.ash1688.nuclearpowered.compat.gtceu.SteamTank(STEAM_CAPACITY_MB) {
         @Override
@@ -145,43 +148,44 @@ public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.Blo
         boolean changed = false;
         lastFEGenerated = 0;
 
-        // Convert steam to FE while both sides have capacity.
-        if (steamTank.getFluidAmount() >= STEAM_PER_TICK
-                && storedFE + FE_PER_STEAM_TICK <= ENERGY_CAPACITY) {
-            steamTank.drain(STEAM_PER_TICK, IFluidHandler.FluidAction.EXECUTE);
-            storedFE += FE_PER_STEAM_TICK;
-            lastFEGenerated = FE_PER_STEAM_TICK;
-            changed = true;
+        // Output scales with steam fill level: empty -> 0 batches, full ->
+        // MAX_BATCHES_PER_TICK. Math.ceil keeps the engine producing at least
+        // 1 batch any time there's steam in the tank (so a single boiler in
+        // equilibrium at low fill still delivers its 25 FE/tick).
+        int steamHeld = steamTank.getFluidAmount();
+        int steamCap = steamTank.getCapacity();
+        if (steamHeld >= STEAM_PER_BATCH && steamCap > 0) {
+            double fillFrac = (double) steamHeld / steamCap;
+            int batchesByFill = Math.max(1, (int) Math.ceil(fillFrac * MAX_BATCHES_PER_TICK));
+            int batchesBySteam = steamHeld / STEAM_PER_BATCH;
+            int batchesByCap = (ENERGY_CAPACITY - storedFE) / FE_PER_BATCH;
+            int batches = Math.min(batchesByFill, Math.min(batchesBySteam, batchesByCap));
+            if (batches > 0) {
+                int steamConsumed = batches * STEAM_PER_BATCH;
+                int feProduced = batches * FE_PER_BATCH;
+                steamTank.drain(steamConsumed, IFluidHandler.FluidAction.EXECUTE);
+                storedFE += feProduced;
+                lastFEGenerated = feProduced;
+                changed = true;
+            }
         }
 
         // Push FE to adjacent consumers. Skip GT-aware neighbours — their
         // Forge ENERGY shim silently voids FE when the EU side is full or
         // missing storage. The dedicated FE↔EU converter is the bridge for
         // GT integration.
-        boolean log = DEBUG_PUSH_LOG_INTERVAL > 0
-                && (debugTick++ % DEBUG_PUSH_LOG_INTERVAL == 0);
-        if (log) LOGGER.info("[NP-Engine] tick {} — storedFE={}, pos={}", debugTick, storedFE, pos);
         if (storedFE > 0) {
             for (Direction dir : Direction.values()) {
                 if (storedFE <= 0) break;
                 BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
-                if (neighbour == null) {
-                    if (log) LOGGER.info("[NP-Engine]   {} -> no BE", dir);
-                    continue;
-                }
-                String neighbourClass = neighbour.getClass().getName();
-                boolean gtLoaded = GTCompat.isLoaded();
-                boolean isExternalGT = gtLoaded
-                        && GTEnergyCompat.isExternalGTSink(neighbour, dir.getOpposite());
-                if (log) LOGGER.info("[NP-Engine]   {} -> {} (GTLoaded={}, externalGTSink={})",
-                        dir, neighbourClass, gtLoaded, isExternalGT);
-                if (isExternalGT) continue;
+                if (neighbour == null) continue;
+                if (GTCompat.isLoaded()
+                        && GTEnergyCompat.isExternalGTSink(neighbour, dir.getOpposite())) continue;
                 int delta = neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).map(sink -> {
                     if (!sink.canReceive()) return 0;
                     int offered = Math.min(storedFE, MAX_OUTPUT_FE_PER_TICK);
                     return sink.receiveEnergy(offered, false);
                 }).orElse(0);
-                if (log) LOGGER.info("[NP-Engine]     pushed {} FE", delta);
                 if (delta > 0) {
                     storedFE -= delta;
                     changed = true;
