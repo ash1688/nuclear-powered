@@ -147,6 +147,14 @@ public class EnergyCableBlockEntity extends BlockEntity {
                 // A single non-cable machine might border the network from several
                 // cables; only probe each position once.
                 if (!consumersSeen.add(npos)) continue;
+                // Skip GT-aware neighbours — their Forge ENERGY shim silently
+                // voids FE when the EU side can't actually accept (battery
+                // buffer with no batteries inserted, full machine, etc.).
+                // Players who want to bridge to GT route via the dedicated
+                // FE↔EU converter, which speaks both protocols.
+                if (io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()
+                        && io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat
+                                .hasEUCapability(be, dir.getOpposite())) continue;
                 be.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).ifPresent(cap -> {
                     if (!cap.canReceive()) return;
                     if (cap.canExtract()) buffers.add(cap);

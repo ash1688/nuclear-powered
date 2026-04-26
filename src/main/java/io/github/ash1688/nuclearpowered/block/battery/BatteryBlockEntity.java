@@ -3,6 +3,8 @@ package io.github.ash1688.nuclearpowered.block.battery;
 import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -120,6 +122,13 @@ public class BatteryBlockEntity extends BlockEntity implements IUIHolder.BlockEn
             if (storedFE <= 0) break;
             BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
             if (neighbour == null) continue;
+            // Skip GT-aware neighbours — battery buffers and similar GT
+            // blocks expose a Forge ENERGY shim that silently voids FE when
+            // their EU side can't actually accept (e.g. battery buffer with
+            // no batteries). Players who want to bridge to GT should put a
+            // dedicated FE↔EU converter between the NP network and GT.
+            if (GTCompat.isLoaded()
+                    && GTEnergyCompat.hasEUCapability(neighbour, dir.getOpposite())) continue;
             int delta = neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).map(sink -> {
                 if (!sink.canReceive()) return 0;
                 int offered = Math.min(storedFE, MAX_IO_PER_TICK);

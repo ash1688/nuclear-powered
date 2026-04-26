@@ -4,6 +4,8 @@ import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
 import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModFluids;
 import net.minecraft.core.BlockPos;
@@ -145,12 +147,17 @@ public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.Blo
             changed = true;
         }
 
-        // Push FE to adjacent consumers.
+        // Push FE to adjacent consumers. Skip GT-aware neighbours — their
+        // Forge ENERGY shim silently voids FE when the EU side is full or
+        // missing storage. The dedicated FE↔EU converter is the bridge for
+        // GT integration.
         if (storedFE > 0) {
             for (Direction dir : Direction.values()) {
                 if (storedFE <= 0) break;
                 BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
                 if (neighbour == null) continue;
+                if (GTCompat.isLoaded()
+                        && GTEnergyCompat.hasEUCapability(neighbour, dir.getOpposite())) continue;
                 int delta = neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).map(sink -> {
                     if (!sink.canReceive()) return 0;
                     int offered = Math.min(storedFE, MAX_OUTPUT_FE_PER_TICK);

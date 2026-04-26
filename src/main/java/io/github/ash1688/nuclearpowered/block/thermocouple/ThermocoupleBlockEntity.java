@@ -228,13 +228,17 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
             extractedThisInterval = false;
         }
 
-        // Push FE to adjacent consumers. Target is each neighbour's ENERGY capability
-        // queried from the side facing us.
+        // Push FE to adjacent consumers. Skip GT-aware neighbours so the
+        // Forge ENERGY shim on a battery-less GT buffer can't silently void
+        // the FE — players bridge to GT via the dedicated converter.
         if (storedFE > 0) {
             for (Direction dir : Direction.values()) {
                 if (storedFE <= 0) break;
                 BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
                 if (neighbour == null) continue;
+                if (io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()
+                        && io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat
+                                .hasEUCapability(neighbour, dir.getOpposite())) continue;
                 neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).ifPresent(sink -> {
                     if (!sink.canReceive()) return;
                     int offered = Math.min(storedFE, MAX_OUTPUT_FE_PER_TICK);
