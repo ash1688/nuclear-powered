@@ -44,8 +44,12 @@ public class CoalBoilerBlockEntity extends BlockEntity implements IUIHolder.Bloc
     // Boiler conversion rate while burning: consumes WATER_PER_TICK mB of water,
     // produces STEAM_PER_TICK mB of steam each tick. 1:2 ratio gives players a
     // slight "gain" from water (one bucket of water → two buckets of steam).
-    private static final int WATER_PER_TICK = 1;
-    private static final int STEAM_PER_TICK = 2;
+    // Bumped from 1 mB water → 2 mB steam to 5 mB water → 10 mB steam so a
+    // single boiler can keep a steam engine running closer to its mid-tier
+    // output band. Bucket of water now lasts 200 ticks (10 s) at full burn,
+    // matching the higher pace of the rest of the chain.
+    private static final int WATER_PER_TICK = 5;
+    private static final int STEAM_PER_TICK = 10;
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(2) {
         @Override
