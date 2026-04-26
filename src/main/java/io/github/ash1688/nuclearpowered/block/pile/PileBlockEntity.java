@@ -319,16 +319,11 @@ public class PileBlockEntity extends BlockEntity implements IUIHolder.BlockEntit
             changed = true;
         }
 
-        // TESTING: heat generation disabled while the Fuel Rod Output Port
-        // pipeline is being tested. Burn cycle still runs (rods deplete and
-        // produce hot spent rods), but the pile stays at 0 heat. Re-enable
-        // by flipping this flag back to false.
-        boolean disableHeat = true;
         // Heat bookkeeping once per second — fuel contributes +30, each casing
         // contributes +5 below 3K or a cumulative penalty above it. Thermo
         // cooling is applied separately by each thermocouple on the same cadence.
         heatTickCounter++;
-        if (!disableHeat && heatTickCounter >= HEAT_UPDATE_INTERVAL_TICKS) {
+        if (heatTickCounter >= HEAT_UPDATE_INTERVAL_TICKS) {
             heatTickCounter = 0;
             int fuelHeat = (burnTime > 0 && heat < FUEL_CUTOFF_HEAT) ? FUEL_HEAT_PER_SEC : 0;
             // Casings only contribute heat (the +5/sec reflection) when fuel is

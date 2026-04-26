@@ -2,10 +2,10 @@ package io.github.ash1688.nuclearpowered.block.crusher;
 
 import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
 import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
 import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
+import io.github.ash1688.nuclearpowered.client.ui.NPTabs;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModRecipes;
 import io.github.ash1688.nuclearpowered.recipe.CrusherRecipe;
@@ -141,7 +141,7 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
 
     @Override
     public ModularUI createUI(Player player) {
-        ModularUI ui = new ModularUI(176, 166, this, player);
+        ModularUI ui = new ModularUI(NPMachineUI.UI_W, NPMachineUI.UI_H, this, player);
         IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
         IItemTransfer upgradeItems = ItemTransferHelperImpl.toItemTransfer(upgradeHandler);
 
@@ -149,21 +149,22 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
         NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.crusher");
 
         // Input -> progress arrow -> output, with upgrade bay to the right.
-        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_INPUT, 56, 35, true, true));
-        ui.mainGroup.addWidget(new SlotWidget(machineItems, SLOT_OUTPUT, 116, 35, true, false));
-        ui.mainGroup.addWidget(new SlotWidget(upgradeItems, 0, 134, 35, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_INPUT, 56, 35, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_OUTPUT, 116, 35, true, false));
+        ui.mainGroup.addWidget(NPMachineUI.slot(upgradeItems, 0, 134, 35, true, true));
         ui.mainGroup.addWidget(NPMachineUI.progressArrow(78, 41, 24,
                 () -> progress, () -> maxProgress));
 
         ui.mainGroup.addWidget(NPMachineUI.feBar(152, 17,
                 () -> storedFE, ENERGY_CAPACITY));
 
-        ui.mainGroup.addWidget(NPMachineUI.toggleButton(8, 58, 64, "Auto In",
-                () -> autoInput, this::toggleAutoInput));
-        ui.mainGroup.addWidget(NPMachineUI.toggleButton(80, 58, 64, "Auto Out",
-                () -> autoOutput, this::toggleAutoOutput));
-
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+
+        // Left-edge collapsible tabs (Auto In/Out moved into the I/O tab).
+        ui.mainGroup.addWidget(new NPTabs()
+                .ioTab(() -> autoInput, this::toggleAutoInput,
+                        () -> autoOutput, this::toggleAutoOutput)
+                .build());
         return ui;
     }
 

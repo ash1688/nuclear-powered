@@ -7,6 +7,7 @@ import com.lowdragmc.lowdraglib.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib.gui.texture.ProgressTexture;
 import com.lowdragmc.lowdraglib.gui.texture.TextTexture;
 import com.lowdragmc.lowdraglib.gui.widget.ButtonWidget;
+import com.lowdragmc.lowdraglib.gui.widget.ImageWidget;
 import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import com.lowdragmc.lowdraglib.gui.widget.ProgressWidget;
 import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
@@ -15,6 +16,8 @@ import com.lowdragmc.lowdraglib.gui.widget.Widget;
 import com.lowdragmc.lowdraglib.gui.widget.WidgetGroup;
 import com.lowdragmc.lowdraglib.side.fluid.IFluidTransfer;
 import com.lowdragmc.lowdraglib.side.fluid.forge.FluidTransferHelperImpl;
+import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 
@@ -26,23 +29,32 @@ import java.util.function.IntSupplier;
  *
  * <p>Every machine's {@code createUI(Player)} reproduces the same handful of
  * pieces — vanilla-style background panel, title label, FE bar, processing
- * progress arrow, auto in/out toggle buttons, and the standard player
- * inventory + hotbar layout. Centralising those here keeps each machine's
- * UI builder short and makes restyling trivial: change a colour or a slot
- * position once and every machine picks it up.</p>
+ * progress arrow, and the standard player inventory + hotbar layout.
+ * Centralising those here keeps each machine's UI builder short and makes
+ * restyling trivial: change a colour or a slot position once and every
+ * machine picks it up.</p>
  *
- * <p>Layout conventions match what NP's pre-LDLib screens used so JEI overlays
- * and player muscle memory transfer cleanly across the port:
- * <ul>
- *   <li>176x166 panel, 0xC6C6C6 grey fill (vanilla container background).
- *   <li>Title at (8, 6).
- *   <li>Player inventory grid at (8, 84) 3x9, hotbar at (8, 142) 1x9.
- *   <li>FE bar 12x52 at (152, 17), orange fills downward as power drains.
- *   <li>Processing arrow 24x4 between input and output slots.
- *   <li>Auto in/out buttons at (8, 58) and (80, 58), 64x18 each.
- * </ul></p>
+ * <p>Layout: every machine UI is rendered as a 200×166 ModularUI. The
+ * leftmost {@link #TABS_W} pixels (24 px) are reserved for left-edge tab
+ * buttons (I/O, side config, redstone, etc.); the next {@link #PANEL_W}
+ * pixels (176) host the original 176×166 vanilla-shaped panel. All slot/
+ * widget positions passed to the helpers below are panel-relative —
+ * the helpers add {@link #PANEL_X} (= TABS_W) automatically, so machine
+ * code reads the same as before the tab strip was added.</p>
  */
 public final class NPMachineUI {
+    /** Width of the left-edge tab strip. */
+    public static final int TABS_W = 24;
+    /** Inner panel width — matches the original vanilla 176×166 GUI. */
+    public static final int PANEL_W = 176;
+    public static final int PANEL_H = 166;
+    /** Total ModularUI width: tabs strip + panel. */
+    public static final int UI_W = TABS_W + PANEL_W;
+    public static final int UI_H = PANEL_H;
+    /** X offset where the inner panel starts (= TABS_W). All slot/widget
+     *  positions in helpers are panel-relative; helpers add this offset. */
+    public static final int PANEL_X = TABS_W;
+
     /** Vanilla container background grey. Matches every other Minecraft GUI. */
     public static final int PANEL_BG = 0xFFC6C6C6;
 
@@ -61,31 +73,44 @@ public final class NPMachineUI {
 
     private NPMachineUI() {}
 
-    /** Vanilla-style grey background covering the whole modular panel. */
+    /** Vanilla-style grey background covering the inner panel only (not the tab strip). */
     public static void addBackground(WidgetGroup root) {
-        root.setBackground(new ColorRectTexture(PANEL_BG));
+        root.addWidget(new ImageWidget(PANEL_X, 0, PANEL_W, PANEL_H,
+                new ColorRectTexture(PANEL_BG)));
     }
 
-    /** White drop-shadow title at (8, 6); takes a translation key. */
+    /** White drop-shadow title at panel-(8, 6); takes a translation key. */
     public static void addTitle(WidgetGroup root, String langKey) {
-        root.addWidget(new LabelWidget(8, 6, langKey)
+        root.addWidget(new LabelWidget(PANEL_X + 8, 6, langKey)
                 .setTextColor(0xFFFFFFFF)
                 .setDropShadow(true));
     }
 
-    /** Standard 9x3 player inventory + 9 hotbar at vanilla positions. */
+    /** Standard 9x3 player inventory + 9 hotbar at vanilla panel-relative positions. */
     public static void addPlayerInventory(WidgetGroup root, Player player) {
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 int idx = col + row * 9 + 9;
                 root.addWidget(new SlotWidget(player.getInventory(), idx,
-                        8 + col * 18, 84 + row * 18, true, true));
+                        PANEL_X + 8 + col * 18, 84 + row * 18, true, true));
             }
         }
         for (int col = 0; col < 9; col++) {
             root.addWidget(new SlotWidget(player.getInventory(), col,
-                    8 + col * 18, 142, true, true));
+                    PANEL_X + 8 + col * 18, 142, true, true));
         }
+    }
+
+    /** Machine slot at panel-relative (x, y), offset to absolute coords. */
+    public static SlotWidget slot(IItemTransfer handler, int slotIdx, int x, int y,
+                                   boolean canPut, boolean canTake) {
+        return new SlotWidget(handler, slotIdx, PANEL_X + x, y, canPut, canTake);
+    }
+
+    /** Slot bound to a vanilla {@link Container} (player inv etc.). */
+    public static SlotWidget slot(Container container, int slotIdx, int x, int y,
+                                   boolean canPut, boolean canTake) {
+        return new SlotWidget(container, slotIdx, PANEL_X + x, y, canPut, canTake);
     }
 
     /**
@@ -99,10 +124,7 @@ public final class NPMachineUI {
                 .setFillDirection(ProgressTexture.FillDirection.DOWN_TO_UP);
         ProgressWidget bar = new ProgressWidget(
                 () -> capacity == 0 ? 0 : (double) stored.getAsInt() / capacity,
-                x, y, 12, 52, tex);
-        // Hover tooltip shows current FE / capacity. The fraction arg LDLib
-        // passes in is ignored — we re-read the supplier so the number is
-        // exact, not rounded by the bar's pixel-step quantisation.
+                PANEL_X + x, y, 12, 52, tex);
         bar.setDynamicHoverTips(frac -> stored.getAsInt() + " / " + capacity + " FE");
         return bar;
     }
@@ -124,7 +146,7 @@ public final class NPMachineUI {
                     int max = maxProgress.getAsInt();
                     return max == 0 ? 0 : (double) progress.getAsInt() / max;
                 },
-                x, y, width, 4, tex);
+                PANEL_X + x, y, width, 4, tex);
     }
 
     /**
@@ -137,12 +159,12 @@ public final class NPMachineUI {
     public static TankWidget tankBar(int x, int y, int width, int height,
                                       IFluidHandler tank) {
         IFluidTransfer wrapped = FluidTransferHelperImpl.toFluidTransfer(tank);
-        return new TankWidget(wrapped, 0, x, y, width, height, true, true)
+        return new TankWidget(wrapped, 0, PANEL_X + x, y, width, height, true, true)
                 .setShowAmount(true)
                 .setDrawHoverTips(true);
     }
 
-    /** Default 16x52 tank at the given position. */
+    /** Default 16x52 tank at the given panel-relative position. */
     public static TankWidget tankBar(int x, int y, IFluidHandler tank) {
         return tankBar(x, y, 16, 52, tank);
     }
@@ -151,6 +173,10 @@ public final class NPMachineUI {
      * Auto in/out style toggle button. Label is Supplier-driven so the
      * button text re-renders with "ON" / "OFF" appended each frame as the
      * BE state flips. Standard size 64x18, click runs the supplied action.
+     *
+     * <p>Position is given in absolute coords (no PANEL_X offset) — toggle
+     * buttons are now used inside tab content panels, where the caller
+     * already owns the layout space.</p>
      */
     public static Widget toggleButton(int x, int y, int width, String label,
                                        BooleanSupplier state,
