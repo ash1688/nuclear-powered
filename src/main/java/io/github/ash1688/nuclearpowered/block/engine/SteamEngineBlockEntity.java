@@ -2,6 +2,7 @@ package io.github.ash1688.nuclearpowered.block.engine;
 
 import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModFluids;
@@ -82,9 +83,14 @@ public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.Blo
         ui.mainGroup.addWidget(NPMachineUI.feBar(104, 17,
                 () -> storedFE, ENERGY_CAPACITY));
 
-        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+        // Status line: green "Running" while steam is being consumed, grey
+        // "Idle" otherwise. Minecraft format codes (§a, §7) colour the text
+        // inline since LabelWidget only takes a single base colour.
+        ui.mainGroup.addWidget(new LabelWidget(NPMachineUI.PANEL_X + 8, 58,
+                () -> lastFEGenerated > 0 ? "§aRunning" : "§7Idle")
+                .setDropShadow(true));
 
-        ui.mainGroup.addWidget(new io.github.ash1688.nuclearpowered.client.ui.NPTabs().build());
+        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
         return ui;
     }
 

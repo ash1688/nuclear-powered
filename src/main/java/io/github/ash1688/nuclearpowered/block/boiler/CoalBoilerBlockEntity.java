@@ -2,7 +2,7 @@ package io.github.ash1688.nuclearpowered.block.boiler;
 
 import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
-import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
+import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
 import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
@@ -160,9 +160,13 @@ public class CoalBoilerBlockEntity extends BlockEntity implements IUIHolder.Bloc
         ui.mainGroup.addWidget(NPMachineUI.tankBar(96, 17, waterTank));
         ui.mainGroup.addWidget(NPMachineUI.tankBar(132, 17, steamTank));
 
-        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+        // Status line: green "Burning" while a coal item is on the burn timer,
+        // grey "Idle" otherwise. Re-evaluates every frame from the live BE.
+        ui.mainGroup.addWidget(new LabelWidget(NPMachineUI.PANEL_X + 8, 75,
+                () -> burnTime > 0 ? "§aBurning" : "§7Idle")
+                .setDropShadow(true));
 
-        ui.mainGroup.addWidget(new io.github.ash1688.nuclearpowered.client.ui.NPTabs().build());
+        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
         return ui;
     }
 

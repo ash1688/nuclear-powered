@@ -73,8 +73,19 @@ public final class NPMachineUI {
 
     private NPMachineUI() {}
 
-    /** Vanilla-style grey background covering the inner panel only (not the tab strip). */
+    /** Slightly darker grey for the left-edge tab strip — visually delineates
+     *  the tab area from the main panel even when no tabs are populated yet. */
+    public static final int TAB_STRIP_BG = 0xFFA0A0A0;
+
+    /**
+     * Vanilla-style grey background. Renders a darker strip on the left edge
+     * (tab area) and the standard {@link #PANEL_BG} grey for the inner panel,
+     * so even machines that don't ship custom tabs look intentionally laid
+     * out instead of having empty space on the left.
+     */
     public static void addBackground(WidgetGroup root) {
+        root.addWidget(new ImageWidget(0, 0, TABS_W, PANEL_H,
+                new ColorRectTexture(TAB_STRIP_BG)));
         root.addWidget(new ImageWidget(PANEL_X, 0, PANEL_W, PANEL_H,
                 new ColorRectTexture(PANEL_BG)));
     }

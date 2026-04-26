@@ -107,8 +107,6 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
                 "Coolant Mode", () -> coolantMode, this::toggleCoolantMode));
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
-
-        ui.mainGroup.addWidget(new io.github.ash1688.nuclearpowered.client.ui.NPTabs().build());
         return ui;
     }
 

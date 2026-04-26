@@ -85,8 +85,6 @@ public class CoolingPondBlockEntity extends BlockEntity implements IUIHolder.Blo
                 () -> coolProgress, () -> COOL_TICKS));
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
-
-        ui.mainGroup.addWidget(new io.github.ash1688.nuclearpowered.client.ui.NPTabs().build());
         return ui;
     }
 

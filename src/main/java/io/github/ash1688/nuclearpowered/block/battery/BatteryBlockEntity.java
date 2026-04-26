@@ -76,9 +76,7 @@ public class BatteryBlockEntity extends BlockEntity implements IUIHolder.BlockEn
                 () -> storedFE, CAPACITY_FE));
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
-
-        // Tab strip for visual consistency (only Main tab — no toggles).
-        ui.mainGroup.addWidget(new io.github.ash1688.nuclearpowered.client.ui.NPTabs().build());
+        // Tab strip is reserved for future side-config / energy-direction tabs.
         return ui;
     }
 
