@@ -136,7 +136,13 @@ public final class NPMachineUI {
         ProgressWidget bar = new ProgressWidget(
                 () -> capacity == 0 ? 0 : (double) stored.getAsInt() / capacity,
                 PANEL_X + x, y, 12, 52, tex);
-        bar.setDynamicHoverTips(frac -> stored.getAsInt() + " / " + capacity + " FE");
+        // Tooltip uses the SYNCED progress fraction (LDLib ships it from
+        // server→client each tick), not the stored.getAsInt() supplier — the
+        // supplier runs client-side and the client BE's storedFE isn't synced
+        // by default, so it would always read 0. Multiplying back by capacity
+        // gives the live server-side value for the player.
+        bar.setDynamicHoverTips(frac ->
+                Math.round(frac * capacity) + " / " + capacity + " FE");
         return bar;
     }
 

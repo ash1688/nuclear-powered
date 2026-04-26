@@ -223,8 +223,13 @@ public class PileBlockEntity extends BlockEntity implements IUIHolder.BlockEntit
         ProgressWidget heatBar = new ProgressWidget(
                 () -> getMaxHeat() == 0 ? 0 : (double) heat / getMaxHeat(),
                 NPMachineUI.PANEL_X + 152, 17, 12, 52, heatTex);
-        heatBar.setDynamicHoverTips(frac -> "Heat: " + heat + " / " + getMaxHeat()
-                + (lastHeatDelta == 0 ? "" : " (" + (lastHeatDelta > 0 ? "+" : "") + lastHeatDelta + "/s)"));
+        // Tooltip uses the synced fraction — client-side heat/lastHeatDelta
+        // aren't synced by the default BE pipeline, so reading them directly
+        // would always show 0. The fraction is shipped server→client each
+        // tick by ProgressWidget itself, so multiplying back by max gives
+        // the real server-side heat value.
+        heatBar.setDynamicHoverTips(frac ->
+                "Heat: " + Math.round(frac * getMaxHeat()) + " / " + getMaxHeat());
         ui.mainGroup.addWidget(heatBar);
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
