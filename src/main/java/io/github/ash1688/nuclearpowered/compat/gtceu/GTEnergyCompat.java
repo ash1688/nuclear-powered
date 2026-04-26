@@ -30,6 +30,17 @@ public final class GTEnergyCompat {
         return cap == GTCapability.CAPABILITY_ENERGY_CONTAINER;
     }
 
+    /**
+     * Does this neighbour expose GT's IEnergyContainer on the given face?
+     * The converter uses this to detect GT machines/buffers that also
+     * happen to expose Forge ENERGY as a compat shim — for those, we
+     * route via the GT cap exclusively because the Forge shim on a GT
+     * battery buffer with no batteries silently voids any FE pushed in.
+     */
+    public static boolean hasEUCapability(BlockEntity neighbour, Direction facing) {
+        return neighbour.getCapability(GTCapability.CAPABILITY_ENERGY_CONTAINER, facing).isPresent();
+    }
+
     /** Build the LazyOptional the BE hands out when GT asks for EU. */
     public static LazyOptional<IEnergyContainer> createLazy(EnergyConverterBlockEntity be) {
         return LazyOptional.of(() -> new Adapter(be));

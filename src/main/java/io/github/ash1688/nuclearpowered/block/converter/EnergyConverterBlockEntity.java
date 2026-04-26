@@ -234,20 +234,34 @@ public class EnergyConverterBlockEntity extends BlockEntity {
         int budget = Math.min(storedFE, TRANSFER_RATE_FE_PER_TICK);
         if (budget <= 0) return;
 
-        // Pass 1 — GT-only sinks (no Forge ENERGY cap exposed). These are
-        // typically GT machines that only speak EU; they're the ones the
-        // converter is *for*. Pushing here first stops an adjacent NP
-        // Battery / Cable from soaking up the whole budget before the
-        // EU consumer gets a turn.
+        // Decide GT-vs-Forge per neighbour up front. GT machines and battery
+        // buffers expose BOTH a Forge ENERGY compat shim and a GT
+        // IEnergyContainer. The Forge shim on a battery buffer with no
+        // batteries inside still happily accepts FE and voids it (no
+        // storage = no behaviour) — using the GT cap for any neighbour
+        // that exposes it lets us see the real "can't accept" state and
+        // back-pressure naturally instead of dumping FE into the void.
+        boolean[] preferGT = new boolean[6];
+        if (GTCompat.isLoaded()) {
+            for (Direction dir : Direction.values()) {
+                BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
+                if (neighbour == null) continue;
+                if (GTEnergyCompat.hasEUCapability(neighbour, dir.getOpposite())) {
+                    preferGT[dir.ordinal()] = true;
+                }
+            }
+        }
+
+        // Pass 1 — GT-cap neighbours. Push EU via GT's voltage/amperage
+        // protocol; if GT rejects (no battery, full, etc.) we DO NOT fall
+        // back to the Forge cap on the same face — that's the void path.
         if (GTCompat.isLoaded()) {
             for (Direction dir : Direction.values()) {
                 if (budget <= 0) break;
+                if (!preferGT[dir.ordinal()]) continue;
                 BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
                 if (neighbour == null) continue;
-                Direction facing = dir.getOpposite();
-                IEnergyStorage feSink = neighbour.getCapability(ForgeCapabilities.ENERGY, facing).orElse(null);
-                if (feSink != null && feSink.canReceive()) continue; // pass 2 will handle this
-                int pushedFE = GTEnergyCompat.pushToNeighbour(this, neighbour, facing, budget);
+                int pushedFE = GTEnergyCompat.pushToNeighbour(this, neighbour, dir.getOpposite(), budget);
                 if (pushedFE > 0) {
                     storedFE -= pushedFE;
                     budget -= pushedFE;
@@ -256,21 +270,14 @@ public class EnergyConverterBlockEntity extends BlockEntity {
             }
         }
 
-        // Pass 2 — Forge FE sinks. Per-face received-tick check skips a
-        // neighbour that pushed FE into us within the last game tick,
-        // preventing the FE from bouncing straight back via Forge
-        // ENERGY's bidirectional design. Other batteries (not currently
-        // pushing) are still eligible, so the converter can charge a
-        // downstream buffer when an upstream source is on a different
-        // face.
+        // Pass 2 — Forge FE sinks that DON'T also speak GT (NP cables, NP
+        // batteries, vanilla-shape FE machines). Per-face received-tick
+        // check skips a neighbour that pushed FE into us within the last
+        // game tick to prevent oscillation.
         long now = level.getGameTime();
         for (Direction dir : Direction.values()) {
             if (budget <= 0) break;
-            // Bidirectional Forge ENERGY would otherwise oscillate FE
-            // back to whatever just fed us. The 1-tick window absorbs
-            // BE iteration order: even if Converter ticks before its
-            // source within the same game tick, the next tick's pass 2
-            // will see the stale flag and skip the back-push.
+            if (preferGT[dir.ordinal()]) continue; // handled (or rejected) in Pass 1
             if (now - lastReceiveTickFromFace[dir.ordinal()] <= 1) continue;
             BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
             if (neighbour == null) continue;
