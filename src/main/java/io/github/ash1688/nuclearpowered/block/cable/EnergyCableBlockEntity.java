@@ -76,12 +76,51 @@ public class EnergyCableBlockEntity extends BlockEntity {
         List<IEnergyStorage> buffers = new ArrayList<>();
         discoverNetwork(pureSinks, buffers);
 
+        // Pure sinks are eager — push everything they can take before
+        // touching buffers, so a furnace connected via cable doesn't starve
+        // because a battery happened to be discovered first.
         int remaining = pushInto(pureSinks, amount, simulate);
-        if (remaining > 0) remaining = pushInto(buffers, remaining, simulate);
+        // Buffers get an even split. First-come-first-served on a list of
+        // buffers means whichever was first in BFS order would soak the full
+        // throughput each tick — fine when there's only one battery, but
+        // breaks when an Energy Converter shares the network with a NP
+        // Battery (the converter would hog all the FE until its 100 K buffer
+        // filled, leaving the battery starved for ~hours).
+        if (remaining > 0) remaining = pushIntoEvenly(buffers, remaining, simulate);
         return amount - remaining;
     }
 
+    /**
+     * Greedy push: each sink takes as much as it can in turn. Used for pure
+     * sinks where we WANT the first ones reached to fill up immediately.
+     */
     private int pushInto(List<IEnergyStorage> sinks, int remaining, boolean simulate) {
+        for (IEnergyStorage sink : sinks) {
+            if (remaining <= 0) break;
+            remaining -= sink.receiveEnergy(remaining, simulate);
+        }
+        return remaining;
+    }
+
+    /**
+     * Even-share push: divide {@code remaining} among the sinks, give each its
+     * share, then sweep up any leftover (from sinks that were full or
+     * rate-limited) into the first sink that still has room. This keeps two
+     * buffers on the same cable network filling at roughly the same rate
+     * instead of one hoarding everything until the other can finally start.
+     */
+    private int pushIntoEvenly(List<IEnergyStorage> sinks, int remaining, boolean simulate) {
+        if (sinks.isEmpty() || remaining <= 0) return remaining;
+        int n = sinks.size();
+        int perSink = Math.max(1, remaining / n);
+        // First pass — every sink gets a fair share.
+        for (IEnergyStorage sink : sinks) {
+            if (remaining <= 0) break;
+            int share = Math.min(remaining, perSink);
+            remaining -= sink.receiveEnergy(share, simulate);
+        }
+        // Second pass — anything left (a sink hit its rate cap, or was
+        // already full) flows into whichever remaining sink has room.
         for (IEnergyStorage sink : sinks) {
             if (remaining <= 0) break;
             remaining -= sink.receiveEnergy(remaining, simulate);
