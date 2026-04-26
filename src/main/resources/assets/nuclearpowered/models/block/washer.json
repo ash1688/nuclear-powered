@@ -1,6 +1,12 @@
 {
-  "parent": "minecraft:block/cube_all",
+  "parent": "minecraft:block/cube",
   "textures": {
-    "all": "nuclearpowered:block/washer"
+    "north": "nuclearpowered:block/washer/front",
+    "south": "nuclearpowered:block/core/back",
+    "east": "nuclearpowered:block/core/side",
+    "west": "nuclearpowered:block/core/side",
+    "up": "nuclearpowered:block/core/top",
+    "down": "nuclearpowered:block/core/bottom",
+    "particle": "nuclearpowered:block/core/side"
   }
 }

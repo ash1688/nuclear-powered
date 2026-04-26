@@ -1,4 +1,12 @@
 {
-  "parent": "minecraft:block/cube_all",
-  "textures": { "all": "minecraft:block/prismarine" }
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "north": "nuclearpowered:block/cooling_pond/front",
+    "south": "nuclearpowered:block/core/back",
+    "east": "nuclearpowered:block/core/side",
+    "west": "nuclearpowered:block/core/side",
+    "up": "nuclearpowered:block/core/top",
+    "down": "nuclearpowered:block/core/bottom",
+    "particle": "nuclearpowered:block/core/side"
+  }
 }

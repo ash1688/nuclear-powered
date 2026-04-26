@@ -1,22 +1,12 @@
 {
-  "parent": "minecraft:block/block",
-  "render_type": "cutout",
+  "parent": "minecraft:block/cube",
   "textures": {
-    "particle": "nuclearpowered:block/coal_boiler",
-    "all": "nuclearpowered:block/coal_boiler"
-  },
-  "elements": [
-    {
-      "from": [0, 0, 0],
-      "to": [16, 20, 16],
-      "faces": {
-        "down":  { "uv": [0, 0, 16, 16], "texture": "#all", "cullface": "down" },
-        "up":    { "uv": [0, 0, 16, 16], "texture": "#all" },
-        "north": { "uv": [0, 0, 16, 16], "texture": "#all" },
-        "south": { "uv": [0, 0, 16, 16], "texture": "#all" },
-        "west":  { "uv": [0, 0, 16, 16], "texture": "#all" },
-        "east":  { "uv": [0, 0, 16, 16], "texture": "#all" }
-      }
-    }
-  ]
+    "north": "nuclearpowered:block/coal_boiler/front",
+    "south": "nuclearpowered:block/core/back",
+    "east": "nuclearpowered:block/core/side",
+    "west": "nuclearpowered:block/core/side",
+    "up": "nuclearpowered:block/core/top",
+    "down": "nuclearpowered:block/core/bottom",
+    "particle": "nuclearpowered:block/core/side"
+  }
 }
