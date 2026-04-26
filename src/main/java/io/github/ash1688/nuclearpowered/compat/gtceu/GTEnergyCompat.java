@@ -2,11 +2,14 @@ package io.github.ash1688.nuclearpowered.compat.gtceu;
 
 import com.gregtechceu.gtceu.api.capability.IEnergyContainer;
 import com.gregtechceu.gtceu.api.capability.forge.GTCapability;
+import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.block.converter.EnergyConverterBlockEntity;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * EU-side adapter for {@link EnergyConverterBlockEntity}.
@@ -39,6 +42,22 @@ public final class GTEnergyCompat {
      */
     public static boolean hasEUCapability(BlockEntity neighbour, Direction facing) {
         return neighbour.getCapability(GTCapability.CAPABILITY_ENERGY_CONTAINER, facing).isPresent();
+    }
+
+    /**
+     * "External GT-aware" — the neighbour exposes GT's IEnergyContainer AND
+     * isn't an NP block. NP-side energy producers use this to skip pushing
+     * FE into batteryless GT buffers (which void it via the Forge ENERGY
+     * shim) without accidentally also skipping each other: GT CEu auto-adds
+     * an IEnergyContainer compat shim onto every block that exposes Forge
+     * ENERGY, so NP blocks themselves look GT-aware when GT is loaded.
+     * Whitelisting the NP namespace keeps NP→NP FE flow working while
+     * still blocking the void path into foreign GT blocks.
+     */
+    public static boolean isExternalGTSink(BlockEntity neighbour, Direction facing) {
+        if (!hasEUCapability(neighbour, facing)) return false;
+        ResourceLocation key = ForgeRegistries.BLOCK_ENTITY_TYPES.getKey(neighbour.getType());
+        return key == null || !NuclearPowered.MODID.equals(key.getNamespace());
     }
 
     /** Build the LazyOptional the BE hands out when GT asks for EU. */

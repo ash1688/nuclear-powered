@@ -238,7 +238,7 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
                 if (neighbour == null) continue;
                 if (io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()
                         && io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat
-                                .hasEUCapability(neighbour, dir.getOpposite())) continue;
+                                .isExternalGTSink(neighbour, dir.getOpposite())) continue;
                 neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).ifPresent(sink -> {
                     if (!sink.canReceive()) return;
                     int offered = Math.min(storedFE, MAX_OUTPUT_FE_PER_TICK);

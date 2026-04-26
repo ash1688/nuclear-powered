@@ -157,7 +157,7 @@ public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.Blo
                 BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
                 if (neighbour == null) continue;
                 if (GTCompat.isLoaded()
-                        && GTEnergyCompat.hasEUCapability(neighbour, dir.getOpposite())) continue;
+                        && GTEnergyCompat.isExternalGTSink(neighbour, dir.getOpposite())) continue;
                 int delta = neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).map(sink -> {
                     if (!sink.canReceive()) return 0;
                     int offered = Math.min(storedFE, MAX_OUTPUT_FE_PER_TICK);

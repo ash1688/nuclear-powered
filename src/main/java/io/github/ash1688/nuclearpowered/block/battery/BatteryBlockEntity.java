@@ -128,7 +128,7 @@ public class BatteryBlockEntity extends BlockEntity implements IUIHolder.BlockEn
             // no batteries). Players who want to bridge to GT should put a
             // dedicated FE↔EU converter between the NP network and GT.
             if (GTCompat.isLoaded()
-                    && GTEnergyCompat.hasEUCapability(neighbour, dir.getOpposite())) continue;
+                    && GTEnergyCompat.isExternalGTSink(neighbour, dir.getOpposite())) continue;
             int delta = neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).map(sink -> {
                 if (!sink.canReceive()) return 0;
                 int offered = Math.min(storedFE, MAX_IO_PER_TICK);

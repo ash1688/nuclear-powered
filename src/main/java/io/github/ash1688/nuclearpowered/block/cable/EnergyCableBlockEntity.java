@@ -154,7 +154,7 @@ public class EnergyCableBlockEntity extends BlockEntity {
                 // FE↔EU converter, which speaks both protocols.
                 if (io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()
                         && io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat
-                                .hasEUCapability(be, dir.getOpposite())) continue;
+                                .isExternalGTSink(be, dir.getOpposite())) continue;
                 be.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).ifPresent(cap -> {
                     if (!cap.canReceive()) return;
                     if (cap.canExtract()) buffers.add(cap);
