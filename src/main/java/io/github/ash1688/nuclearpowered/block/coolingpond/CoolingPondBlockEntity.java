@@ -2,6 +2,7 @@ package io.github.ash1688.nuclearpowered.block.coolingpond;
 
 import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
 import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
 import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
@@ -78,6 +79,12 @@ public class CoolingPondBlockEntity extends BlockEntity implements IUIHolder.Blo
 
         NPMachineUI.addBackground(ui.mainGroup);
         NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.cooling_pond");
+
+        ui.mainGroup.addWidget(new LabelWidget(NPMachineUI.PANEL_X + 8, 20,
+                () -> level != null && isInValidRow(level, worldPosition)
+                        ? "§aMultiblock OK"
+                        : "§cNeeds 1×3 row of ponds")
+                .setDropShadow(true));
 
         ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_INPUT, 56, 35, true, true));
         ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_OUTPUT, 116, 35, true, false));
