@@ -1,18 +1,15 @@
 package io.github.ash1688.nuclearpowered.block.thermocouple;
 
+import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
+import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
 import io.github.ash1688.nuclearpowered.block.pile.PileBlockEntity;
+import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModBlocks;
-import io.github.ash1688.nuclearpowered.menu.ThermocoupleMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -27,7 +24,7 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider {
+public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
     public static final int CAPACITY_FE = 10_000;
     // Cap raised above the 5K sweet-spot raw output (500 FE/tick) so the
     // efficiency curve below can actually swing values up and down without
@@ -87,40 +84,30 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
     private int scanCooldown = 0;
     private int lastGenerationFE = 0;
 
-    private final ContainerData data = new ContainerData() {
-        @Override
-        public int get(int index) {
-            return switch (index) {
-                case 0 -> storedFE;
-                case 1 -> CAPACITY_FE;
-                case 2 -> cachedPilePos != null ? 1 : 0;
-                case 3 -> lastGenerationFE;
-                default -> 0;
-            };
-        }
-
-        @Override
-        public void set(int index, int value) {
-            // Read-only indices.
-        }
-
-        @Override
-        public int getCount() { return 4; }
-    };
-
     public ThermocoupleBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.THERMOCOUPLE.get(), pos, state);
     }
 
     @Override
-    public Component getDisplayName() {
-        return Component.translatable("block.nuclearpowered.thermocouple");
-    }
+    public BlockEntity self() { return this; }
 
-    @Nullable
     @Override
-    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new ThermocoupleMenu(id, inv, this, data);
+    public ModularUI createUI(Player player) {
+        ModularUI ui = new ModularUI(NPMachineUI.UI_W, NPMachineUI.UI_H, this, player);
+        NPMachineUI.addBackground(ui.mainGroup);
+        NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.thermocouple");
+
+        ui.mainGroup.addWidget(NPMachineUI.feBar(82, 17,
+                () -> storedFE, CAPACITY_FE));
+
+        // Coolant-mode toggle stays inline — it's a unique mode switch, not
+        // a generic auto-I/O. PANEL_X manually applied since toggleButton
+        // takes absolute coords.
+        ui.mainGroup.addWidget(NPMachineUI.toggleButton(NPMachineUI.PANEL_X + 8, 58, 80,
+                "Coolant Mode", () -> coolantMode, this::toggleCoolantMode));
+
+        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+        return ui;
     }
 
     @Override
@@ -200,7 +187,7 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
         // broken or replaced, drop it and re-scan.
         if (cachedPilePos != null) {
             BlockState cached = level.getBlockState(cachedPilePos);
-            if (!cached.is(ModBlocks.GRAPHITE_PILE.get())) cachedPilePos = null;
+            if (!cached.is(ModBlocks.GRAPHITE_PILE_CONTROLLER.get())) cachedPilePos = null;
         }
         if (scanCooldown-- <= 0 || cachedPilePos == null) {
             findConnectedPile(level);
@@ -241,13 +228,17 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
             extractedThisInterval = false;
         }
 
-        // Push FE to adjacent consumers. Target is each neighbour's ENERGY capability
-        // queried from the side facing us.
+        // Push FE to adjacent consumers. Skip GT-aware neighbours so the
+        // Forge ENERGY shim on a battery-less GT buffer can't silently void
+        // the FE — players bridge to GT via the dedicated converter.
         if (storedFE > 0) {
             for (Direction dir : Direction.values()) {
                 if (storedFE <= 0) break;
                 BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
                 if (neighbour == null) continue;
+                if (io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()
+                        && io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat
+                                .isExternalGTSink(neighbour, dir.getOpposite())) continue;
                 neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).ifPresent(sink -> {
                     if (!sink.canReceive()) return;
                     int offered = Math.min(storedFE, MAX_OUTPUT_FE_PER_TICK);
@@ -278,7 +269,7 @@ public class ThermocoupleBlockEntity extends BlockEntity implements MenuProvider
             BlockPos p = queue.poll();
             if (!visited.add(p)) continue;
             BlockState bs = level.getBlockState(p);
-            if (bs.is(ModBlocks.GRAPHITE_PILE.get())) {
+            if (bs.is(ModBlocks.GRAPHITE_PILE_CONTROLLER.get())) {
                 cachedPilePos = p;
                 return;
             }

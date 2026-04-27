@@ -1,5 +1,5 @@
 {
-  "parent": "nuclearpowered:graphite_pile",
+  "parent": "nuclearpowered:graphite_pile_controller",
   "display": {
     "icon": { "item": "nuclearpowered:thermocouple" },
     "title": { "translate": "advancement.nuclearpowered.thermocouple.title" },

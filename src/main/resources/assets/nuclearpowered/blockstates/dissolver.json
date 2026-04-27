@@ -1,5 +1,8 @@
 {
   "variants": {
-    "": { "model": "nuclearpowered:block/dissolver" }
+    "facing=north": { "model": "nuclearpowered:block/dissolver" },
+    "facing=south": { "model": "nuclearpowered:block/dissolver", "y": 180 },
+    "facing=east":  { "model": "nuclearpowered:block/dissolver", "y": 90 },
+    "facing=west":  { "model": "nuclearpowered:block/dissolver", "y": 270 }
   }
 }

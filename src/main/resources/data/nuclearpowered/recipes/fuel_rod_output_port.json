@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "nuclearpowered:graphite_casing" },
+    { "item": "minecraft:hopper" }
+  ],
+  "result": { "item": "nuclearpowered:fuel_rod_output_port", "count": 1 }
+}

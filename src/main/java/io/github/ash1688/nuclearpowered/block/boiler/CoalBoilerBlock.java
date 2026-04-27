@@ -7,18 +7,18 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseEntityBlock;
+import io.github.ash1688.nuclearpowered.block.FacingMachineBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.network.NetworkHooks;
+import com.lowdragmc.lowdraglib.gui.factory.BlockEntityUIFactory;
 
 import javax.annotation.Nullable;
 
-public class CoalBoilerBlock extends BaseEntityBlock {
+public class CoalBoilerBlock extends FacingMachineBlock {
     public CoalBoilerBlock(Properties props) {
         super(props);
     }
@@ -49,7 +49,7 @@ public class CoalBoilerBlock extends BaseEntityBlock {
         if (!level.isClientSide) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof CoalBoilerBlockEntity boiler && player instanceof ServerPlayer sp) {
-                NetworkHooks.openScreen(sp, boiler, buf -> buf.writeBlockPos(pos));
+                BlockEntityUIFactory.INSTANCE.openUI(boiler, sp);
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);

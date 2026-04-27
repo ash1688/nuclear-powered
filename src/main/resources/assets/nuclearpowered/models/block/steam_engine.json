@@ -1,22 +1,12 @@
 {
-  "parent": "minecraft:block/block",
-  "render_type": "cutout",
+  "parent": "minecraft:block/cube",
   "textures": {
-    "particle": "nuclearpowered:block/steam_engine",
-    "all": "nuclearpowered:block/steam_engine"
-  },
-  "elements": [
-    {
-      "from": [-2, 0, 0],
-      "to": [16, 20, 16],
-      "faces": {
-        "down":  { "uv": [0, 0, 16, 16], "texture": "#all", "cullface": "down" },
-        "up":    { "uv": [0, 0, 16, 16], "texture": "#all" },
-        "north": { "uv": [0, 0, 16, 16], "texture": "#all" },
-        "south": { "uv": [0, 0, 16, 16], "texture": "#all" },
-        "west":  { "uv": [0, 0, 16, 16], "texture": "#all" },
-        "east":  { "uv": [0, 0, 16, 16], "texture": "#all" }
-      }
-    }
-  ]
+    "north": "nuclearpowered:block/steam_engine/front",
+    "south": "nuclearpowered:block/steam_engine/back",
+    "east": "nuclearpowered:block/steam_engine/side",
+    "west": "nuclearpowered:block/steam_engine/side",
+    "up": "nuclearpowered:block/steam_engine/top",
+    "down": "nuclearpowered:block/steam_engine/bottom",
+    "particle": "nuclearpowered:block/steam_engine/side"
+  }
 }

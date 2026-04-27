@@ -1,7 +1,8 @@
 {
   "variants": {
-    "": {
-      "model": "nuclearpowered:block/steam_engine"
-    }
+    "facing=north": { "model": "nuclearpowered:block/steam_engine" },
+    "facing=south": { "model": "nuclearpowered:block/steam_engine", "y": 180 },
+    "facing=east":  { "model": "nuclearpowered:block/steam_engine", "y": 90 },
+    "facing=west":  { "model": "nuclearpowered:block/steam_engine", "y": 270 }
   }
 }

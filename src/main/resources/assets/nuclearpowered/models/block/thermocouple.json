@@ -1,4 +1,12 @@
 {
-  "parent": "minecraft:block/cube_all",
-  "textures": { "all": "nuclearpowered:block/thermocouple" }
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "north": "nuclearpowered:block/thermocouple/front",
+    "south": "nuclearpowered:block/thermocouple/back",
+    "east": "nuclearpowered:block/thermocouple/side",
+    "west": "nuclearpowered:block/thermocouple/side",
+    "up": "nuclearpowered:block/thermocouple/top",
+    "down": "nuclearpowered:block/thermocouple/bottom",
+    "particle": "nuclearpowered:block/thermocouple/side"
+  }
 }

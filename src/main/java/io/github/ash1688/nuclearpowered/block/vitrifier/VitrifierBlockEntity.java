@@ -1,19 +1,19 @@
 package io.github.ash1688.nuclearpowered.block.vitrifier;
 
+import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
+import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
+import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
+import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
+import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModItems;
-import io.github.ash1688.nuclearpowered.menu.VitrifierMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.Containers;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -32,7 +32,7 @@ import javax.annotation.Nullable;
 // solidify into stable vitrified waste blocks for long-term storage. 400 FE/tick,
 // completing the ~1200 FE/tick chain total so running all five machines
 // simultaneously needs more than one battery on the network.
-public class VitrifierBlockEntity extends BlockEntity implements MenuProvider {
+public class VitrifierBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
     public static final int SLOT_INPUT_WASTE = 0;
     public static final int SLOT_INPUT_FRIT = 1;
     public static final int SLOT_OUTPUT = 2;
@@ -76,31 +76,6 @@ public class VitrifierBlockEntity extends BlockEntity implements MenuProvider {
     };
     private LazyOptional<IEnergyStorage> lazyEnergy = LazyOptional.empty();
 
-    private final ContainerData data = new ContainerData() {
-        @Override
-        public int get(int index) {
-            return switch (index) {
-                case 0 -> progress;
-                case 1 -> PROCESS_TICKS;
-                case 2 -> autoInput ? 1 : 0;
-                case 3 -> autoOutput ? 1 : 0;
-                case 4 -> storedFE;
-                case 5 -> ENERGY_CAPACITY;
-                default -> 0;
-            };
-        }
-        @Override
-        public void set(int index, int value) {
-            switch (index) {
-                case 0 -> progress = value;
-                case 2 -> autoInput = value != 0;
-                case 3 -> autoOutput = value != 0;
-                case 4 -> storedFE = value;
-            }
-        }
-        @Override public int getCount() { return 6; }
-    };
-
     public VitrifierBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.VITRIFIER.get(), pos, state);
     }
@@ -111,12 +86,33 @@ public class VitrifierBlockEntity extends BlockEntity implements MenuProvider {
     public void toggleAutoInput() { autoInput = !autoInput; setChanged(); }
     public void toggleAutoOutput() { autoOutput = !autoOutput; setChanged(); }
 
-    @Override public Component getDisplayName() { return Component.translatable("block.nuclearpowered.vitrifier"); }
-
-    @Nullable
     @Override
-    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new VitrifierMenu(id, inv, this, data);
+    public BlockEntity self() { return this; }
+
+    @Override
+    public ModularUI createUI(Player player) {
+        ModularUI ui = new ModularUI(NPMachineUI.UI_W, NPMachineUI.UI_H, this, player);
+        IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
+
+        NPMachineUI.addBackground(ui.mainGroup);
+        NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.vitrifier");
+
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_INPUT_WASTE, 38, 26, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_INPUT_FRIT, 38, 44, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_OUTPUT, 116, 35, true, false));
+        ui.mainGroup.addWidget(NPMachineUI.progressArrow(78, 41, 24,
+                () -> progress, () -> PROCESS_TICKS));
+
+        ui.mainGroup.addWidget(NPMachineUI.feBar(152, 17,
+                () -> storedFE, ENERGY_CAPACITY));
+
+        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+
+        ui.mainGroup.addWidget(new io.github.ash1688.nuclearpowered.client.ui.NPTabs()
+                .ioTab(() -> autoInput, this::toggleAutoInput,
+                        () -> autoOutput, this::toggleAutoOutput)
+                .build());
+        return ui;
     }
 
     @Override

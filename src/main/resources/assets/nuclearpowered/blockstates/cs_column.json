@@ -1,3 +1,8 @@
 {
-  "variants": { "": { "model": "nuclearpowered:block/cs_column" } }
+  "variants": {
+    "facing=north": { "model": "nuclearpowered:block/cs_column" },
+    "facing=south": { "model": "nuclearpowered:block/cs_column", "y": 180 },
+    "facing=east":  { "model": "nuclearpowered:block/cs_column", "y": 90 },
+    "facing=west":  { "model": "nuclearpowered:block/cs_column", "y": 270 }
+  }
 }

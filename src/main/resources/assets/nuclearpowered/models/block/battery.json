@@ -1,6 +1,12 @@
 {
-  "parent": "minecraft:block/cube_all",
+  "parent": "minecraft:block/cube",
   "textures": {
-    "all": "nuclearpowered:block/battery"
+    "north": "nuclearpowered:block/battery/front",
+    "south": "nuclearpowered:block/battery/back",
+    "east": "nuclearpowered:block/battery/side",
+    "west": "nuclearpowered:block/battery/side",
+    "up": "nuclearpowered:block/battery/top",
+    "down": "nuclearpowered:block/battery/bottom",
+    "particle": "nuclearpowered:block/battery/side"
   }
 }

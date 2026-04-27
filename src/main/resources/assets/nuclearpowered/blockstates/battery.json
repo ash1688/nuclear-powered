@@ -1,5 +1,8 @@
 {
   "variants": {
-    "": { "model": "nuclearpowered:block/battery" }
+    "facing=north": { "model": "nuclearpowered:block/battery" },
+    "facing=south": { "model": "nuclearpowered:block/battery", "y": 180 },
+    "facing=east":  { "model": "nuclearpowered:block/battery", "y": 90 },
+    "facing=west":  { "model": "nuclearpowered:block/battery", "y": 270 }
   }
 }

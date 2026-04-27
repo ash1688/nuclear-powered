@@ -1,7 +1,8 @@
 {
   "variants": {
-    "": {
-      "model": "nuclearpowered:block/coal_boiler"
-    }
+    "facing=north": { "model": "nuclearpowered:block/coal_boiler" },
+    "facing=south": { "model": "nuclearpowered:block/coal_boiler", "y": 180 },
+    "facing=east":  { "model": "nuclearpowered:block/coal_boiler", "y": 90 },
+    "facing=west":  { "model": "nuclearpowered:block/coal_boiler", "y": 270 }
   }
 }

@@ -30,6 +30,39 @@ public final class GTEnergyCompat {
         return cap == GTCapability.CAPABILITY_ENERGY_CONTAINER;
     }
 
+    /**
+     * Does this neighbour expose GT's IEnergyContainer on the given face?
+     * The converter uses this to detect GT machines/buffers that also
+     * happen to expose Forge ENERGY as a compat shim — for those, we
+     * route via the GT cap exclusively because the Forge shim on a GT
+     * battery buffer with no batteries silently voids any FE pushed in.
+     */
+    public static boolean hasEUCapability(BlockEntity neighbour, Direction facing) {
+        return neighbour.getCapability(GTCapability.CAPABILITY_ENERGY_CONTAINER, facing).isPresent();
+    }
+
+    /**
+     * "External GT-aware" — the neighbour exposes GT's IEnergyContainer AND
+     * isn't an NP block. NP-side energy producers use this to skip pushing
+     * FE into batteryless GT buffers (which void it via the Forge ENERGY
+     * shim) without accidentally also skipping each other: GT CEu auto-adds
+     * an IEnergyContainer compat shim onto every block that exposes Forge
+     * ENERGY, so NP blocks themselves look GT-aware when GT is loaded.
+     *
+     * <p>Whitelisting by package name is intentional — registry lookups in
+     * 1.20.1 Forge can return null at runtime depending on init order, but
+     * a BE's runtime class is always its real implementation class, and
+     * every NP BE lives under the {@code io.github.ash1688.nuclearpowered}
+     * package tree. Foreign GT-aware BEs (battery buffers, generators,
+     * transformers) live elsewhere, so the prefix check cleanly separates
+     * "ours" from "theirs".</p>
+     */
+    public static boolean isExternalGTSink(BlockEntity neighbour, Direction facing) {
+        if (!hasEUCapability(neighbour, facing)) return false;
+        return !neighbour.getClass().getName()
+                .startsWith("io.github.ash1688.nuclearpowered.");
+    }
+
     /** Build the LazyOptional the BE hands out when GT asks for EU. */
     public static LazyOptional<IEnergyContainer> createLazy(EnergyConverterBlockEntity be) {
         return LazyOptional.of(() -> new Adapter(be));

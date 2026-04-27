@@ -1,19 +1,19 @@
 package io.github.ash1688.nuclearpowered.block.boiler;
 
+import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
+import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
+import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
+import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
+import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModFluids;
-import io.github.ash1688.nuclearpowered.menu.CoalBoilerMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.Containers;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -32,7 +32,8 @@ import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
 
-public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
+public class CoalBoilerBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
+
     public static final int SLOT_FUEL = 0;
     public static final int SLOT_BUCKET = 1;
 
@@ -43,8 +44,12 @@ public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
     // Boiler conversion rate while burning: consumes WATER_PER_TICK mB of water,
     // produces STEAM_PER_TICK mB of steam each tick. 1:2 ratio gives players a
     // slight "gain" from water (one bucket of water → two buckets of steam).
-    private static final int WATER_PER_TICK = 1;
-    private static final int STEAM_PER_TICK = 2;
+    // Bumped from 1 mB water → 2 mB steam to 5 mB water → 10 mB steam so a
+    // single boiler can keep a steam engine running closer to its mid-tier
+    // output band. Bucket of water now lasts 200 ticks (10 s) at full burn,
+    // matching the higher pace of the rest of the chain.
+    private static final int WATER_PER_TICK = 5;
+    private static final int STEAM_PER_TICK = 10;
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(2) {
         @Override
@@ -132,27 +137,7 @@ public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
 
     private int burnTime = 0;         // ticks remaining on the current fuel item
     private int maxBurnTime = 0;      // total ticks the current fuel item provides
-
-    private final ContainerData data = new ContainerData() {
-        @Override
-        public int get(int index) {
-            return switch (index) {
-                case 0 -> waterTank.getFluidAmount();
-                case 1 -> waterTank.getCapacity();
-                case 2 -> steamTank.getFluidAmount();
-                case 3 -> steamTank.getCapacity();
-                case 4 -> burnTime;
-                case 5 -> maxBurnTime;
-                default -> 0;
-            };
-        }
-
-        @Override
-        public void set(int index, int value) {}
-
-        @Override
-        public int getCount() { return 6; }
-    };
+    private int lastSteamGenerated = 0; // mB of steam produced last tick — drives status label
 
     public CoalBoilerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.COAL_BOILER.get(), pos, state);
@@ -161,14 +146,39 @@ public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
     public IItemHandler getItemHandlerForMenu() { return itemHandler; }
 
     @Override
-    public Component getDisplayName() {
-        return Component.translatable("block.nuclearpowered.coal_boiler");
-    }
+    public BlockEntity self() { return this; }
 
-    @Nullable
     @Override
-    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new CoalBoilerMenu(id, inv, this, data);
+    public ModularUI createUI(Player player) {
+        ModularUI ui = new ModularUI(NPMachineUI.UI_W, NPMachineUI.UI_H, this, player);
+        IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
+
+        NPMachineUI.addBackground(ui.mainGroup);
+        NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.coal_boiler");
+
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_FUEL, 56, 53, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_BUCKET, 56, 17, true, true));
+
+        // Burn-time progress bar (vertical-ish, render as horizontal bar above fuel slot).
+        ui.mainGroup.addWidget(NPMachineUI.progressArrow(56, 41, 18,
+                () -> burnTime, () -> maxBurnTime == 0 ? 1 : maxBurnTime));
+
+        ui.mainGroup.addWidget(NPMachineUI.tankBar(96, 17, waterTank));
+        ui.mainGroup.addWidget(NPMachineUI.tankBar(132, 17, steamTank));
+
+        // Status line: green "Burning (+N mB/t)" while actively producing
+        // steam, grey "Idle" otherwise. The rate (currently 2 mB/tick when
+        // unconstrained) drops to 0 when the steam tank is full, so the
+        // label doubles as feedback for "your engine isn't draining steam
+        // fast enough".
+        ui.mainGroup.addWidget(new LabelWidget(NPMachineUI.PANEL_X + 8, 75,
+                () -> lastSteamGenerated > 0
+                        ? "§aBurning §f(+" + lastSteamGenerated + " mB/t)"
+                        : (burnTime > 0 ? "§eBurning §f(stalled)" : "§7Idle"))
+                .setDropShadow(true));
+
+        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+        return ui;
     }
 
     @Override
@@ -227,6 +237,7 @@ public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
 
     public void tick(Level level, BlockPos pos, BlockState state) {
         boolean changed = false;
+        lastSteamGenerated = 0;
 
         // Bucket slot auto-fills the water tank, 1000 mB at a time.
         ItemStack bucket = itemHandler.getStackInSlot(SLOT_BUCKET);
@@ -261,6 +272,7 @@ public class CoalBoilerBlockEntity extends BlockEntity implements MenuProvider {
             steamTank.fill(new FluidStack(
                     io.github.ash1688.nuclearpowered.compat.gtceu.SteamCompat.activeEmitFluid(),
                     STEAM_PER_TICK), IFluidHandler.FluidAction.EXECUTE);
+            lastSteamGenerated = STEAM_PER_TICK;
             changed = true;
         }
 

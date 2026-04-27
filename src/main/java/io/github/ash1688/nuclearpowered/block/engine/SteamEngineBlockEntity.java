@@ -1,17 +1,17 @@
 package io.github.ash1688.nuclearpowered.block.engine;
 
+import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
+import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
+import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModFluids;
-import io.github.ash1688.nuclearpowered.menu.SteamEngineMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -24,16 +24,26 @@ import net.minecraftforge.fluids.capability.templates.FluidTank;
 
 import javax.annotation.Nullable;
 
-public class SteamEngineBlockEntity extends BlockEntity implements MenuProvider {
+public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
     public static final int STEAM_CAPACITY_MB = 4000;
     public static final int ENERGY_CAPACITY = 20_000;
     public static final int MAX_OUTPUT_FE_PER_TICK = 512;
 
-    // Conversion rate: each tick, consume STEAM_PER_TICK mB of steam and produce
-    // FE_PER_STEAM_TICK FE. 25 FE/tick is a +25% buff over the original 20 FE/tick
-    // so a single coal comfortably outpaces a single electric furnace's draw.
-    private static final int STEAM_PER_TICK = 2;
-    private static final int FE_PER_STEAM_TICK = 25;
+    // Conversion: each "batch" consumes STEAM_PER_BATCH mB of steam and
+    // produces FE_PER_BATCH FE. The number of batches the engine runs per
+    // tick scales with the steam tank's fill level — full tank runs the
+    // maximum batches, empty tank runs none. This way more boilers feeding
+    // into the engine raises its sustained tank level, which in turn raises
+    // the engine's FE/tick output.
+    //   1 boiler  = 2 mB/tick supply  -> ~5 % fill equilibrium  -> ~25 FE/tick
+    //   5 boilers = 10 mB/tick supply -> ~25 % fill equilibrium -> ~125 FE/tick
+    //   20 boilers = 40 mB/tick supply -> ~100 % fill equilibrium -> ~500 FE/tick
+    private static final int STEAM_PER_BATCH = 2;
+    private static final int FE_PER_BATCH = 25;
+    /** Maximum batches per tick. At max (full tank) the engine consumes
+     *  20 × 2 = 40 mB and produces 20 × 25 = 500 FE — close to the
+     *  {@link #MAX_OUTPUT_FE_PER_TICK} output cap. */
+    private static final int MAX_BATCHES_PER_TICK = 20;
 
     private final FluidTank steamTank = new io.github.ash1688.nuclearpowered.compat.gtceu.SteamTank(STEAM_CAPACITY_MB) {
         @Override
@@ -68,39 +78,37 @@ public class SteamEngineBlockEntity extends BlockEntity implements MenuProvider 
 
     private int lastFEGenerated = 0;
 
-    private final ContainerData data = new ContainerData() {
-        @Override
-        public int get(int index) {
-            return switch (index) {
-                case 0 -> steamTank.getFluidAmount();
-                case 1 -> steamTank.getCapacity();
-                case 2 -> storedFE;
-                case 3 -> ENERGY_CAPACITY;
-                case 4 -> lastFEGenerated;
-                default -> 0;
-            };
-        }
-
-        @Override
-        public void set(int index, int value) {}
-
-        @Override
-        public int getCount() { return 5; }
-    };
-
     public SteamEngineBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.STEAM_ENGINE.get(), pos, state);
     }
 
     @Override
-    public Component getDisplayName() {
-        return Component.translatable("block.nuclearpowered.steam_engine");
-    }
+    public BlockEntity self() { return this; }
 
-    @Nullable
     @Override
-    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new SteamEngineMenu(id, inv, this, data);
+    public ModularUI createUI(Player player) {
+        ModularUI ui = new ModularUI(NPMachineUI.UI_W, NPMachineUI.UI_H, this, player);
+        NPMachineUI.addBackground(ui.mainGroup);
+        NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.steam_engine");
+
+        ui.mainGroup.addWidget(NPMachineUI.tankBar(60, 17, steamTank));
+        ui.mainGroup.addWidget(NPMachineUI.feBar(104, 17,
+                () -> storedFE, ENERGY_CAPACITY));
+
+        // Status line: green "Running (+N FE/t)" while steam is being
+        // consumed, grey "Idle" otherwise. Minecraft format codes (§a, §7)
+        // colour the text inline since LabelWidget only takes a single
+        // base colour. The number is the FE generated last tick — scales
+        // with steam tank fill so players can see exactly what their
+        // boiler setup is producing.
+        ui.mainGroup.addWidget(new LabelWidget(NPMachineUI.PANEL_X + 8, 58,
+                () -> lastFEGenerated > 0
+                        ? "§aRunning §f(+" + lastFEGenerated + " FE/t)"
+                        : "§7Idle")
+                .setDropShadow(true));
+
+        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+        return ui;
     }
 
     @Override
@@ -145,21 +153,39 @@ public class SteamEngineBlockEntity extends BlockEntity implements MenuProvider 
         boolean changed = false;
         lastFEGenerated = 0;
 
-        // Convert steam to FE while both sides have capacity.
-        if (steamTank.getFluidAmount() >= STEAM_PER_TICK
-                && storedFE + FE_PER_STEAM_TICK <= ENERGY_CAPACITY) {
-            steamTank.drain(STEAM_PER_TICK, IFluidHandler.FluidAction.EXECUTE);
-            storedFE += FE_PER_STEAM_TICK;
-            lastFEGenerated = FE_PER_STEAM_TICK;
-            changed = true;
+        // Output scales with steam fill level: empty -> 0 batches, full ->
+        // MAX_BATCHES_PER_TICK. Math.ceil keeps the engine producing at least
+        // 1 batch any time there's steam in the tank (so a single boiler in
+        // equilibrium at low fill still delivers its 25 FE/tick).
+        int steamHeld = steamTank.getFluidAmount();
+        int steamCap = steamTank.getCapacity();
+        if (steamHeld >= STEAM_PER_BATCH && steamCap > 0) {
+            double fillFrac = (double) steamHeld / steamCap;
+            int batchesByFill = Math.max(1, (int) Math.ceil(fillFrac * MAX_BATCHES_PER_TICK));
+            int batchesBySteam = steamHeld / STEAM_PER_BATCH;
+            int batchesByCap = (ENERGY_CAPACITY - storedFE) / FE_PER_BATCH;
+            int batches = Math.min(batchesByFill, Math.min(batchesBySteam, batchesByCap));
+            if (batches > 0) {
+                int steamConsumed = batches * STEAM_PER_BATCH;
+                int feProduced = batches * FE_PER_BATCH;
+                steamTank.drain(steamConsumed, IFluidHandler.FluidAction.EXECUTE);
+                storedFE += feProduced;
+                lastFEGenerated = feProduced;
+                changed = true;
+            }
         }
 
-        // Push FE to adjacent consumers.
+        // Push FE to adjacent consumers. Skip GT-aware neighbours — their
+        // Forge ENERGY shim silently voids FE when the EU side is full or
+        // missing storage. The dedicated FE↔EU converter is the bridge for
+        // GT integration.
         if (storedFE > 0) {
             for (Direction dir : Direction.values()) {
                 if (storedFE <= 0) break;
                 BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
                 if (neighbour == null) continue;
+                if (GTCompat.isLoaded()
+                        && GTEnergyCompat.isExternalGTSink(neighbour, dir.getOpposite())) continue;
                 int delta = neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).map(sink -> {
                     if (!sink.canReceive()) return 0;
                     int offered = Math.min(storedFE, MAX_OUTPUT_FE_PER_TICK);

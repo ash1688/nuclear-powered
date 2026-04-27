@@ -158,7 +158,7 @@
 			]
 			id: "1A1B1C1D1E1F2004"
 			rewards: [{ id: "1A1B1C1D1E1F300B" count: 3 item: "nuclearpowered:fermi_iii_coin" type: "item" }]
-			tasks: [{ id: "1A1B1C1D1E1F400B" item: "nuclearpowered:graphite_pile" type: "item" }]
+			tasks: [{ id: "1A1B1C1D1E1F400B" item: "nuclearpowered:graphite_pile_controller" type: "item" }]
 			title: "Control Rods in Place"
 			x: 10.0d
 			y: 2.0d

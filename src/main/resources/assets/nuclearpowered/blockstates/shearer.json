@@ -1,5 +1,8 @@
 {
   "variants": {
-    "": { "model": "nuclearpowered:block/shearer" }
+    "facing=north": { "model": "nuclearpowered:block/shearer" },
+    "facing=south": { "model": "nuclearpowered:block/shearer", "y": 180 },
+    "facing=east":  { "model": "nuclearpowered:block/shearer", "y": 90 },
+    "facing=west":  { "model": "nuclearpowered:block/shearer", "y": 270 }
   }
 }

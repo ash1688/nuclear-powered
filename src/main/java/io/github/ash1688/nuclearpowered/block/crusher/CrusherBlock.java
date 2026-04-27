@@ -1,5 +1,6 @@
 package io.github.ash1688.nuclearpowered.block.crusher;
 
+import com.lowdragmc.lowdraglib.gui.factory.BlockEntityUIFactory;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
@@ -7,18 +8,17 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseEntityBlock;
+import io.github.ash1688.nuclearpowered.block.FacingMachineBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.network.NetworkHooks;
 
 import javax.annotation.Nullable;
 
-public class CrusherBlock extends BaseEntityBlock {
+public class CrusherBlock extends FacingMachineBlock {
     public CrusherBlock(Properties props) {
         super(props);
     }
@@ -49,7 +49,11 @@ public class CrusherBlock extends BaseEntityBlock {
         if (!level.isClientSide) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof CrusherBlockEntity crusher && player instanceof ServerPlayer sp) {
-                NetworkHooks.openScreen(sp, crusher, buf -> buf.writeBlockPos(pos));
+                // LDLib BE-UI factory replaces the vanilla MenuProvider /
+                // NetworkHooks.openScreen path. Crusher's ModularUI is built
+                // server-side in CrusherBlockEntity.createUI; LDLib handles
+                // the sync handshake and client-side rendering.
+                BlockEntityUIFactory.INSTANCE.openUI(crusher, sp);
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);

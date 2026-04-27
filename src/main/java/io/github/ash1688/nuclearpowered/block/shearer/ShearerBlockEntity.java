@@ -1,19 +1,19 @@
 package io.github.ash1688.nuclearpowered.block.shearer;
 
+import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
+import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
+import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
+import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
+import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModItems;
-import io.github.ash1688.nuclearpowered.menu.ShearerMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.Containers;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -32,7 +32,7 @@ import javax.annotation.Nullable;
 // chopped fuel plus scrap cladding. Only operation currently: one depleted rod
 // -> one chopped_fuel + one cladding_scrap. Power-hungry by design (50 FE/tick)
 // to encourage players to build more than one pile for reprocessing throughput.
-public class ShearerBlockEntity extends BlockEntity implements MenuProvider {
+public class ShearerBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
     public static final int SLOT_INPUT = 0;
     public static final int SLOT_OUTPUT_FUEL = 1;
     public static final int SLOT_OUTPUT_SCRAP = 2;
@@ -90,31 +90,6 @@ public class ShearerBlockEntity extends BlockEntity implements MenuProvider {
     };
     private LazyOptional<IEnergyStorage> lazyEnergy = LazyOptional.empty();
 
-    private final ContainerData data = new ContainerData() {
-        @Override
-        public int get(int index) {
-            return switch (index) {
-                case 0 -> progress;
-                case 1 -> effectiveProcessTicks();
-                case 2 -> autoInput ? 1 : 0;
-                case 3 -> autoOutput ? 1 : 0;
-                case 4 -> storedFE;
-                case 5 -> ENERGY_CAPACITY;
-                default -> 0;
-            };
-        }
-        @Override
-        public void set(int index, int value) {
-            switch (index) {
-                case 0 -> progress = value;
-                case 2 -> autoInput = value != 0;
-                case 3 -> autoOutput = value != 0;
-                case 4 -> storedFE = value;
-            }
-        }
-        @Override public int getCount() { return 6; }
-    };
-
     public ShearerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.SHEARER.get(), pos, state);
     }
@@ -132,12 +107,35 @@ public class ShearerBlockEntity extends BlockEntity implements MenuProvider {
     public void toggleAutoInput() { autoInput = !autoInput; setChanged(); }
     public void toggleAutoOutput() { autoOutput = !autoOutput; setChanged(); }
 
-    @Override public Component getDisplayName() { return Component.translatable("block.nuclearpowered.shearer"); }
-
-    @Nullable
     @Override
-    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new ShearerMenu(id, inv, this, data);
+    public BlockEntity self() { return this; }
+
+    @Override
+    public ModularUI createUI(Player player) {
+        ModularUI ui = new ModularUI(NPMachineUI.UI_W, NPMachineUI.UI_H, this, player);
+        IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
+        IItemTransfer upgradeItems = ItemTransferHelperImpl.toItemTransfer(upgradeHandler);
+
+        NPMachineUI.addBackground(ui.mainGroup);
+        NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.shearer");
+
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_INPUT, 56, 35, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_OUTPUT_FUEL, 108, 26, true, false));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_OUTPUT_SCRAP, 108, 44, true, false));
+        ui.mainGroup.addWidget(NPMachineUI.slot(upgradeItems, 0, 134, 35, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.progressArrow(78, 41, 24,
+                () -> progress, this::effectiveProcessTicks));
+
+        ui.mainGroup.addWidget(NPMachineUI.feBar(152, 17,
+                () -> storedFE, ENERGY_CAPACITY));
+
+        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+
+        ui.mainGroup.addWidget(new io.github.ash1688.nuclearpowered.client.ui.NPTabs()
+                .ioTab(() -> autoInput, this::toggleAutoInput,
+                        () -> autoOutput, this::toggleAutoOutput)
+                .build());
+        return ui;
     }
 
     @Override

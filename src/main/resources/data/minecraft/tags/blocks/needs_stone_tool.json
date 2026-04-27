@@ -1,7 +1,7 @@
 {
   "replace": false,
   "values": [
-    "nuclearpowered:graphite_pile",
+    "nuclearpowered:graphite_pile_controller",
     "nuclearpowered:graphite_casing"
   ]
 }

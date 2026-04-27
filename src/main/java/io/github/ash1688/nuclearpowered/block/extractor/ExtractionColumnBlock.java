@@ -7,18 +7,18 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseEntityBlock;
+import io.github.ash1688.nuclearpowered.block.FacingMachineBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.network.NetworkHooks;
+import com.lowdragmc.lowdraglib.gui.factory.BlockEntityUIFactory;
 
 import javax.annotation.Nullable;
 
-public class ExtractionColumnBlock extends BaseEntityBlock {
+public class ExtractionColumnBlock extends FacingMachineBlock {
     public ExtractionColumnBlock(Properties props) { super(props); }
 
     @Override public RenderShape getRenderShape(BlockState state) { return RenderShape.MODEL; }
@@ -44,7 +44,7 @@ public class ExtractionColumnBlock extends BaseEntityBlock {
         if (!level.isClientSide) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof ExtractionColumnBlockEntity col && player instanceof ServerPlayer sp) {
-                NetworkHooks.openScreen(sp, col, buf -> buf.writeBlockPos(pos));
+                BlockEntityUIFactory.INSTANCE.openUI(col, sp);
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);

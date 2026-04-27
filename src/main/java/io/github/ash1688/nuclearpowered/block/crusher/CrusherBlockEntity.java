@@ -1,20 +1,20 @@
 package io.github.ash1688.nuclearpowered.block.crusher;
 
+import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
+import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
+import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
+import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
+import io.github.ash1688.nuclearpowered.client.ui.NPTabs;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModRecipes;
-import io.github.ash1688.nuclearpowered.menu.CrusherMenu;
 import io.github.ash1688.nuclearpowered.recipe.CrusherRecipe;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.Containers;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -30,7 +30,7 @@ import net.minecraftforge.items.ItemStackHandler;
 import javax.annotation.Nullable;
 import java.util.Optional;
 
-public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
+public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEntityUI {
     public static final int SLOT_INPUT = 0;
     public static final int SLOT_OUTPUT = 1;
 
@@ -92,36 +92,10 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
 
     private LazyOptional<IEnergyStorage> lazyEnergy = LazyOptional.empty();
 
-    private final ContainerData data = new ContainerData() {
-        @Override
-        public int get(int index) {
-            return switch (index) {
-                case 0 -> progress;
-                case 1 -> maxProgress;
-                case 2 -> autoInput ? 1 : 0;
-                case 3 -> autoOutput ? 1 : 0;
-                case 4 -> storedFE;
-                case 5 -> ENERGY_CAPACITY;
-                default -> 0;
-            };
-        }
-
-        @Override
-        public void set(int index, int value) {
-            switch (index) {
-                case 0 -> progress = value;
-                case 1 -> maxProgress = value;
-                case 2 -> autoInput = value != 0;
-                case 3 -> autoOutput = value != 0;
-                case 4 -> storedFE = value;
-            }
-        }
-
-        @Override
-        public int getCount() {
-            return 6;
-        }
-    };
+    // ContainerData is gone — LDLib widgets read field state directly via
+    // DoubleSupplier lambdas in createUI, and LDLib handles the server->client
+    // sync internally. No vanilla AbstractContainerMenu means no need for
+    // a serialised data slot bridge.
 
     public CrusherBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.CRUSHER.get(), pos, state);
@@ -158,15 +132,40 @@ public class CrusherBlockEntity extends BlockEntity implements MenuProvider {
         setChanged();
     }
 
+    // --- LDLib UI ---
+
     @Override
-    public Component getDisplayName() {
-        return Component.translatable("block.nuclearpowered.crusher");
+    public BlockEntity self() {
+        return this;
     }
 
-    @Nullable
     @Override
-    public AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
-        return new CrusherMenu(id, inv, this, data);
+    public ModularUI createUI(Player player) {
+        ModularUI ui = new ModularUI(NPMachineUI.UI_W, NPMachineUI.UI_H, this, player);
+        IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
+        IItemTransfer upgradeItems = ItemTransferHelperImpl.toItemTransfer(upgradeHandler);
+
+        NPMachineUI.addBackground(ui.mainGroup);
+        NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.crusher");
+
+        // Input -> progress arrow -> output, with upgrade bay to the right.
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_INPUT, 56, 35, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_OUTPUT, 116, 35, true, false));
+        ui.mainGroup.addWidget(NPMachineUI.slot(upgradeItems, 0, 134, 35, true, true));
+        ui.mainGroup.addWidget(NPMachineUI.progressArrow(78, 41, 24,
+                () -> progress, () -> maxProgress));
+
+        ui.mainGroup.addWidget(NPMachineUI.feBar(152, 17,
+                () -> storedFE, ENERGY_CAPACITY));
+
+        NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+
+        // Left-edge collapsible tabs (Auto In/Out moved into the I/O tab).
+        ui.mainGroup.addWidget(new NPTabs()
+                .ioTab(() -> autoInput, this::toggleAutoInput,
+                        () -> autoOutput, this::toggleAutoOutput)
+                .build());
+        return ui;
     }
 
     @Override

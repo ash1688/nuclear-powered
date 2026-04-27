@@ -1,5 +1,8 @@
 {
   "variants": {
-    "": { "model": "nuclearpowered:block/extraction_column" }
+    "facing=north": { "model": "nuclearpowered:block/extraction_column" },
+    "facing=south": { "model": "nuclearpowered:block/extraction_column", "y": 180 },
+    "facing=east":  { "model": "nuclearpowered:block/extraction_column", "y": 90 },
+    "facing=west":  { "model": "nuclearpowered:block/extraction_column", "y": 270 }
   }
 }

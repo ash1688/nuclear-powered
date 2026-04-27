@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "nuclearpowered:block/fuel_rod_output_port" }
+  }
+}
