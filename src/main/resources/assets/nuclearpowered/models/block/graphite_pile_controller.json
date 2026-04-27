@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "north": "nuclearpowered:block/graphite_pile_controller/front",
+    "south": "nuclearpowered:block/graphite_pile_controller/side",
+    "east": "nuclearpowered:block/graphite_pile_controller/side",
+    "west": "nuclearpowered:block/graphite_pile_controller/side",
+    "up": "nuclearpowered:block/graphite_pile_controller/side",
+    "down": "nuclearpowered:block/graphite_pile_controller/side",
+    "particle": "nuclearpowered:block/graphite_pile_controller/side"
+  }
+}

@@ -1,3 +1,8 @@
 {
-  "variants": { "": { "model": "nuclearpowered:block/vitrifier" } }
+  "variants": {
+    "facing=north": { "model": "nuclearpowered:block/vitrifier" },
+    "facing=south": { "model": "nuclearpowered:block/vitrifier", "y": 180 },
+    "facing=east":  { "model": "nuclearpowered:block/vitrifier", "y": 90 },
+    "facing=west":  { "model": "nuclearpowered:block/vitrifier", "y": 270 }
+  }
 }

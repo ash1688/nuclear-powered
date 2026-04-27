@@ -8,5 +8,5 @@
     "C": { "item": "minecraft:coal_block" },
     "U": { "tag": "forge:ingots/uranium" }
   },
-  "result": { "item": "nuclearpowered:graphite_pile" }
+  "result": { "item": "nuclearpowered:graphite_pile_controller" }
 }

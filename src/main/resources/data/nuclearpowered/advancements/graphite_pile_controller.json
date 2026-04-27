@@ -1,0 +1,17 @@
+{
+  "parent": "nuclearpowered:root",
+  "display": {
+    "icon": { "item": "nuclearpowered:graphite_pile_controller" },
+    "title": { "translate": "advancement.nuclearpowered.graphite_pile_controller.title" },
+    "description": { "translate": "advancement.nuclearpowered.graphite_pile_controller.description" },
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "got_pile": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": { "items": [ { "items": [ "nuclearpowered:graphite_pile_controller" ] } ] }
+    }
+  },
+  "requirements": [ [ "got_pile" ] ]
+}

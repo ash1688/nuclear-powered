@@ -7,7 +7,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseEntityBlock;
+import io.github.ash1688.nuclearpowered.block.FacingMachineBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
@@ -18,7 +18,7 @@ import com.lowdragmc.lowdraglib.gui.factory.BlockEntityUIFactory;
 
 import javax.annotation.Nullable;
 
-public class CoalBoilerBlock extends BaseEntityBlock {
+public class CoalBoilerBlock extends FacingMachineBlock {
     public CoalBoilerBlock(Properties props) {
         super(props);
     }

@@ -27,7 +27,7 @@ public class HeaterBlockEntity extends BlockEntity {
         if (!state.getValue(HeaterBlock.ACTIVE)) return;
         for (Direction dir : Direction.values()) {
             BlockPos npos = pos.relative(dir);
-            if (!level.getBlockState(npos).is(ModBlocks.GRAPHITE_PILE.get())) continue;
+            if (!level.getBlockState(npos).is(ModBlocks.GRAPHITE_PILE_CONTROLLER.get())) continue;
             BlockEntity be = level.getBlockEntity(npos);
             if (!(be instanceof PileBlockEntity pile)) continue;
             int heat = pile.getHeat();

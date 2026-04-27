@@ -2,11 +2,11 @@
   "parent": "minecraft:block/cube",
   "textures": {
     "north": "nuclearpowered:block/coal_boiler/front",
-    "south": "nuclearpowered:block/core/back",
-    "east": "nuclearpowered:block/core/side",
-    "west": "nuclearpowered:block/core/side",
-    "up": "nuclearpowered:block/core/top",
-    "down": "nuclearpowered:block/core/bottom",
-    "particle": "nuclearpowered:block/core/side"
+    "south": "nuclearpowered:block/coal_boiler/back",
+    "east": "nuclearpowered:block/coal_boiler/side",
+    "west": "nuclearpowered:block/coal_boiler/side",
+    "up": "nuclearpowered:block/coal_boiler/top",
+    "down": "nuclearpowered:block/coal_boiler/bottom",
+    "particle": "nuclearpowered:block/coal_boiler/side"
   }
 }

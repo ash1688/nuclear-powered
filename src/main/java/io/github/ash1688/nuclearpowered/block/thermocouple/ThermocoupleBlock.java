@@ -12,7 +12,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseEntityBlock;
+import io.github.ash1688.nuclearpowered.block.FacingMachineBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
@@ -23,7 +23,7 @@ import com.lowdragmc.lowdraglib.gui.factory.BlockEntityUIFactory;
 
 import javax.annotation.Nullable;
 
-public class ThermocoupleBlock extends BaseEntityBlock {
+public class ThermocoupleBlock extends FacingMachineBlock {
     public ThermocoupleBlock(Properties props) {
         super(props);
     }

@@ -46,9 +46,9 @@ public final class ModBlockEntities {
             BLOCK_ENTITIES.register("electric_furnace", () ->
                     BlockEntityType.Builder.of(ElectricFurnaceBlockEntity::new, ModBlocks.ELECTRIC_FURNACE.get()).build(null));
 
-    public static final RegistryObject<BlockEntityType<PileBlockEntity>> GRAPHITE_PILE =
-            BLOCK_ENTITIES.register("graphite_pile", () ->
-                    BlockEntityType.Builder.of(PileBlockEntity::new, ModBlocks.GRAPHITE_PILE.get()).build(null));
+    public static final RegistryObject<BlockEntityType<PileBlockEntity>> GRAPHITE_PILE_CONTROLLER =
+            BLOCK_ENTITIES.register("graphite_pile_controller", () ->
+                    BlockEntityType.Builder.of(PileBlockEntity::new, ModBlocks.GRAPHITE_PILE_CONTROLLER.get()).build(null));
 
     public static final RegistryObject<BlockEntityType<io.github.ash1688.nuclearpowered.block.pile.output.FuelRodOutputPortBlockEntity>>
             FUEL_ROD_OUTPUT_PORT = BLOCK_ENTITIES.register("fuel_rod_output_port", () ->

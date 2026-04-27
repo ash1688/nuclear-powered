@@ -1,3 +1,8 @@
 {
-  "variants": { "": { "model": "nuclearpowered:block/cooling_pond" } }
+  "variants": {
+    "facing=north": { "model": "nuclearpowered:block/cooling_pond" },
+    "facing=south": { "model": "nuclearpowered:block/cooling_pond", "y": 180 },
+    "facing=east":  { "model": "nuclearpowered:block/cooling_pond", "y": 90 },
+    "facing=west":  { "model": "nuclearpowered:block/cooling_pond", "y": 270 }
+  }
 }

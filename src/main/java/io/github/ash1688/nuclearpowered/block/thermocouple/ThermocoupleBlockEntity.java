@@ -187,7 +187,7 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
         // broken or replaced, drop it and re-scan.
         if (cachedPilePos != null) {
             BlockState cached = level.getBlockState(cachedPilePos);
-            if (!cached.is(ModBlocks.GRAPHITE_PILE.get())) cachedPilePos = null;
+            if (!cached.is(ModBlocks.GRAPHITE_PILE_CONTROLLER.get())) cachedPilePos = null;
         }
         if (scanCooldown-- <= 0 || cachedPilePos == null) {
             findConnectedPile(level);
@@ -269,7 +269,7 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
             BlockPos p = queue.poll();
             if (!visited.add(p)) continue;
             BlockState bs = level.getBlockState(p);
-            if (bs.is(ModBlocks.GRAPHITE_PILE.get())) {
+            if (bs.is(ModBlocks.GRAPHITE_PILE_CONTROLLER.get())) {
                 cachedPilePos = p;
                 return;
             }

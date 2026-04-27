@@ -6,7 +6,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "nuclearpowered:graphite_pile"
+          "name": "nuclearpowered:graphite_pile_controller"
         }
       ],
       "conditions": [

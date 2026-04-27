@@ -116,7 +116,7 @@ public final class ModBlocks {
                     .sound(SoundType.METAL)
                     .lightLevel(state -> 7)));
 
-    public static final RegistryObject<PileBlock> GRAPHITE_PILE = registerBlock("graphite_pile",
+    public static final RegistryObject<PileBlock> GRAPHITE_PILE_CONTROLLER = registerBlock("graphite_pile_controller",
             () -> new PileBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_BLACK)
                     .strength(4.0f, 5.0f)

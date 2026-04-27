@@ -100,7 +100,7 @@ public class FuelRodOutputPortBlockEntity extends BlockEntity {
         // pile position no longer holds a pile block.
         if (cachedPilePos != null) {
             BlockState cached = level.getBlockState(cachedPilePos);
-            if (!cached.is(ModBlocks.GRAPHITE_PILE.get())) cachedPilePos = null;
+            if (!cached.is(ModBlocks.GRAPHITE_PILE_CONTROLLER.get())) cachedPilePos = null;
         }
         if (scanCooldown-- <= 0 || cachedPilePos == null) {
             findConnectedPile(level);
@@ -142,7 +142,7 @@ public class FuelRodOutputPortBlockEntity extends BlockEntity {
             BlockPos neighbourPos = pos.relative(dir);
             BlockState ns = level.getBlockState(neighbourPos);
             if (ns.is(ModBlocks.GRAPHITE_CASING.get())
-                    || ns.is(ModBlocks.GRAPHITE_PILE.get())
+                    || ns.is(ModBlocks.GRAPHITE_PILE_CONTROLLER.get())
                     || ns.is(ModBlocks.FUEL_ROD_OUTPUT_PORT.get())) continue;
             BlockEntity neighbour = level.getBlockEntity(neighbourPos);
             if (neighbour == null) continue;
@@ -172,7 +172,7 @@ public class FuelRodOutputPortBlockEntity extends BlockEntity {
             BlockPos p = queue.poll();
             if (!visited.add(p)) continue;
             BlockState bs = level.getBlockState(p);
-            if (bs.is(ModBlocks.GRAPHITE_PILE.get())) {
+            if (bs.is(ModBlocks.GRAPHITE_PILE_CONTROLLER.get())) {
                 cachedPilePos = p;
                 return;
             }

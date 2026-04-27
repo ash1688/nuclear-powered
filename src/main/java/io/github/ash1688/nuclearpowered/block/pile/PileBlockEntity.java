@@ -113,7 +113,7 @@ public class PileBlockEntity extends BlockEntity implements IUIHolder.BlockEntit
     private boolean thermalDampener = false;
 
     public PileBlockEntity(BlockPos pos, BlockState state) {
-        super(ModBlockEntities.GRAPHITE_PILE.get(), pos, state);
+        super(ModBlockEntities.GRAPHITE_PILE_CONTROLLER.get(), pos, state);
     }
 
     public IItemHandler getItemHandlerForMenu() { return itemHandler; }
@@ -201,7 +201,7 @@ public class PileBlockEntity extends BlockEntity implements IUIHolder.BlockEntit
         IItemTransfer machineItems = ItemTransferHelperImpl.toItemTransfer(itemHandler);
 
         NPMachineUI.addBackground(ui.mainGroup);
-        NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.graphite_pile");
+        NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.graphite_pile_controller");
 
         ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_FUEL, 56, 35, true, true));
         ui.mainGroup.addWidget(NPMachineUI.slot(machineItems, SLOT_DEPLETED, 116, 35, true, false));
