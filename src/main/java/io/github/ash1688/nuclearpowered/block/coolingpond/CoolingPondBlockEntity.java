@@ -143,6 +143,7 @@ public class CoolingPondBlockEntity extends BlockEntity implements MenuProvider 
 
     public void tick(Level level, BlockPos pos, BlockState state) {
         if (level.isClientSide) return;
+        if (!isInValidRow(level, pos)) return;
         ItemStack cooling = itemHandler.getStackInSlot(SLOT_COOLING);
 
         // Feed cooling slot from input queue whenever it's empty.
@@ -168,6 +169,29 @@ public class CoolingPondBlockEntity extends BlockEntity implements MenuProvider 
             if (coolProgress != 0) { coolProgress = 0; setChanged(); }
             autoPushOut(level, pos);
         }
+    }
+
+    // Multiblock gate: a pond only operates when it belongs to a contiguous
+    // run of 3+ cooling ponds along the X or Z axis (any position in the row).
+    private boolean isInValidRow(Level level, BlockPos pos) {
+        return countAxis(level, pos, Direction.Axis.X) >= 3
+                || countAxis(level, pos, Direction.Axis.Z) >= 3;
+    }
+
+    private int countAxis(Level level, BlockPos pos, Direction.Axis axis) {
+        Direction pos1 = Direction.fromAxisAndDirection(axis, Direction.AxisDirection.POSITIVE);
+        Direction neg = Direction.fromAxisAndDirection(axis, Direction.AxisDirection.NEGATIVE);
+        return 1 + countDir(level, pos, pos1) + countDir(level, pos, neg);
+    }
+
+    private int countDir(Level level, BlockPos pos, Direction dir) {
+        int count = 0;
+        BlockPos cursor = pos.relative(dir);
+        while (level.getBlockState(cursor).getBlock() instanceof CoolingPondBlock) {
+            count++;
+            cursor = cursor.relative(dir);
+        }
+        return count;
     }
 
     private void autoPushOut(Level level, BlockPos pos) {
