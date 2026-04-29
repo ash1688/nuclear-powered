@@ -168,6 +168,85 @@ public final class ModItems {
     public static final RegistryObject<Item> REAGENT_BUNDLE = ITEMS.register("reagent_bundle",
             () -> new Item(new Item.Properties().stacksTo(16)));
 
+    // --- Component tier (frames, cores, sub-assemblies, intermediates) ---
+    // Crafting components consumed by machine recipes. No behavior — they exist
+    // purely as ingredients. Blocks (tank, vat, fluid_pipe, machines) live in
+    // ModBlocks; everything else is a plain Item here.
+
+    // Frames — housing for each machine class.
+    public static final RegistryObject<Item> COAL_BOILER_FRAME = ITEMS.register("coal_boiler_frame",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> MACHINE_FRAME = ITEMS.register("machine_frame",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> MACHINE_FRAME_T2 = ITEMS.register("machine_frame_t2",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> MACHINE_FRAME_T3 = ITEMS.register("machine_frame_t3",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> PILE_FRAME = ITEMS.register("pile_frame",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> STEAM_ENGINE_FRAME = ITEMS.register("steam_engine_frame",
+            () -> new Item(new Item.Properties()));
+
+    // Cores — functional guts for energy machines.
+    public static final RegistryObject<Item> BATTERY_CORE = ITEMS.register("battery_core",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> THERMO_CORE = ITEMS.register("thermo_core",
+            () -> new Item(new Item.Properties()));
+
+    // Components — sub-assemblies used in machine recipes.
+    public static final RegistryObject<Item> PUMP = ITEMS.register("pump",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> CIRCUIT = ITEMS.register("circuit",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> ELECTRIC_CIRCUIT = ITEMS.register("electric_circuit",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> ELECTRO_MAGNET = ITEMS.register("electro_magnet",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> POWER_CELL = ITEMS.register("power_cell",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> SMALL_GENERATOR = ITEMS.register("small_generator",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> HEATING_COIL = ITEMS.register("heating_coil",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> HEATING_ELEMENT = ITEMS.register("heating_element",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> IRON_SHEAR = ITEMS.register("iron_shear",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> VICE = ITEMS.register("vice",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> JAGGED_FLINT = ITEMS.register("jagged_flint",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> WATER_JET = ITEMS.register("water_jet",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> NOZZLE = ITEMS.register("nozzle",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> WRENCH = ITEMS.register("wrench",
+            () -> new Item(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> IRON_GRATE = ITEMS.register("iron_grate",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> FUEL_ASSEMBLY = ITEMS.register("fuel_assembly",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> WHEEL = ITEMS.register("wheel",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> RUBBER_RING = ITEMS.register("rubber_ring",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> COPPER_PIPE = ITEMS.register("copper_pipe",
+            () -> new Item(new Item.Properties()));
+
+    // Intermediates — produced by macerator/slicer/squeezer machine processes.
+    public static final RegistryObject<Item> SILICON = ITEMS.register("silicon",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> SILICON_BASE = ITEMS.register("silicon_base",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> PCB = ITEMS.register("pcb",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> RUBBER = ITEMS.register("rubber",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> EMPTY_FUEL_ROD = ITEMS.register("empty_fuel_rod",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> EMPTY_FUEL_ROD_T2 = ITEMS.register("empty_fuel_rod_t2",
+            () -> new Item(new Item.Properties()));
+
     // Filled buckets for the reprocessing reagents. Registered here rather than
     // inside ModFluids so we can reference the Items registry cleanly; the
     // ForgeFlowingFluid.Properties in ModFluids then points back at these via

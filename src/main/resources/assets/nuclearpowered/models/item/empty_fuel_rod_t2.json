@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "nuclearpowered:item/empty_fuel_rod_t2"
+  }
+}
