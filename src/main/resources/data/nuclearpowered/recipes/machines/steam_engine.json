@@ -1,11 +1,28 @@
 {
   "type": "minecraft:crafting_shaped",
-  "pattern": [ "IPI", "ICI", "IFI" ],
+  "pattern": [
+    "BBB",
+    "PPW",
+    "CFC"
+  ],
   "key": {
-    "I": { "item": "minecraft:iron_ingot" },
-    "P": { "item": "minecraft:piston" },
-    "C": { "item": "minecraft:copper_ingot" },
-    "F": { "item": "minecraft:furnace" }
+    "B": {
+      "tag": "forge:plates/bronze"
+    },
+    "P": {
+      "item": "minecraft:piston"
+    },
+    "W": {
+      "item": "nuclearpowered:wheel"
+    },
+    "C": {
+      "item": "minecraft:clay"
+    },
+    "F": {
+      "item": "nuclearpowered:steam_engine_frame"
+    }
   },
-  "result": { "item": "nuclearpowered:steam_engine" }
+  "result": {
+    "item": "nuclearpowered:steam_engine"
+  }
 }

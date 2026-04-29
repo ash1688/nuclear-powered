@@ -1,28 +1,25 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "SSS",
-    "IFB",
-    "CCC"
+    "GIG",
+    "BCB",
+    "GIG"
   ],
   "key": {
-    "S": {
-      "item": "minecraft:stone_bricks"
+    "G": {
+      "item": "minecraft:coal_block"
     },
     "I": {
       "tag": "forge:plates/iron"
-    },
-    "F": {
-      "item": "nuclearpowered:coal_boiler_frame"
     },
     "B": {
       "item": "minecraft:iron_bars"
     },
     "C": {
-      "item": "minecraft:clay"
+      "item": "minecraft:coal_block"
     }
   },
   "result": {
-    "item": "nuclearpowered:coal_boiler"
+    "item": "nuclearpowered:pile_frame"
   }
 }

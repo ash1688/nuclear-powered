@@ -1,12 +1,28 @@
 {
-  "conditions": [
-    { "type": "forge:not", "value": { "type": "forge:mod_loaded", "modid": "gtceu" } }
-  ],
   "type": "minecraft:crafting_shaped",
-  "pattern": [ "III", "IBI", "III" ],
+  "pattern": [
+    "OHO",
+    "OTO",
+    "PFP"
+  ],
   "key": {
-    "I": { "item": "minecraft:iron_ingot" },
-    "B": { "item": "minecraft:blaze_powder" }
+    "O": {
+      "item": "minecraft:obsidian"
+    },
+    "H": {
+      "item": "nuclearpowered:heating_element"
+    },
+    "T": {
+      "item": "nuclearpowered:tank"
+    },
+    "P": {
+      "tag": "nuclearpowered:plates/structural"
+    },
+    "F": {
+      "item": "nuclearpowered:machine_frame"
+    }
   },
-  "result": { "item": "nuclearpowered:vitrifier" }
+  "result": {
+    "item": "nuclearpowered:vitrifier"
+  }
 }

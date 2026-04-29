@@ -1,12 +1,31 @@
 {
-  "conditions": [
-    { "type": "forge:not", "value": { "type": "forge:mod_loaded", "modid": "gtceu" } }
-  ],
   "type": "minecraft:crafting_shaped",
-  "pattern": [ "III", "IBI", "III" ],
+  "pattern": [
+    "OTO",
+    "IVI",
+    "PFP"
+  ],
   "key": {
-    "I": { "item": "minecraft:iron_ingot" },
-    "B": { "item": "minecraft:bucket" }
+    "O": {
+      "item": "minecraft:obsidian"
+    },
+    "T": {
+      "item": "nuclearpowered:tank"
+    },
+    "I": {
+      "tag": "forge:plates/iron"
+    },
+    "V": {
+      "item": "nuclearpowered:vat"
+    },
+    "P": {
+      "tag": "nuclearpowered:plates/structural"
+    },
+    "F": {
+      "item": "nuclearpowered:machine_frame"
+    }
   },
-  "result": { "item": "nuclearpowered:dissolver" }
+  "result": {
+    "item": "nuclearpowered:dissolver"
+  }
 }

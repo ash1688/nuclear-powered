@@ -1,13 +1,28 @@
 {
-  "conditions": [
-    { "type": "forge:not", "value": { "type": "forge:mod_loaded", "modid": "gtceu" } }
-  ],
   "type": "minecraft:crafting_shaped",
-  "pattern": [ "IWI", "WEW", "IWI" ],
+  "pattern": [
+    "SBS",
+    "LTL",
+    "SOS"
+  ],
   "key": {
-    "I": { "item": "minecraft:iron_ingot" },
-    "W": { "item": "minecraft:water_bucket" },
-    "E": { "item": "minecraft:blue_ice" }
+    "S": {
+      "tag": "nuclearpowered:plates/structural"
+    },
+    "B": {
+      "item": "minecraft:iron_bars"
+    },
+    "L": {
+      "tag": "forge:plates/lead"
+    },
+    "T": {
+      "item": "nuclearpowered:tank"
+    },
+    "O": {
+      "item": "minecraft:obsidian"
+    }
   },
-  "result": { "item": "nuclearpowered:cooling_pond" }
+  "result": {
+    "item": "nuclearpowered:cooling_pond"
+  }
 }

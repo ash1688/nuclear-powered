@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "EIE",
+    "ISI",
+    "EIE"
+  ],
+  "key": {
+    "E": {
+      "item": "nuclearpowered:empty_fuel_rod"
+    },
+    "I": {
+      "tag": "forge:plates/iron"
+    },
+    "S": {
+      "tag": "forge:ingots/steel"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:fuel_assembly"
+  }
+}

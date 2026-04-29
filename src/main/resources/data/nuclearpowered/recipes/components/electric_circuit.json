@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "EGW",
+    "BPN",
+    "RRR"
+  ],
+  "key": {
+    "E": {
+      "tag": "forge:wires/electrum"
+    },
+    "G": {
+      "tag": "forge:wires/gold"
+    },
+    "W": {
+      "tag": "forge:wires/copper"
+    },
+    "B": {
+      "item": "minecraft:blue_dye"
+    },
+    "P": {
+      "item": "nuclearpowered:pcb"
+    },
+    "N": {
+      "item": "minecraft:green_dye"
+    },
+    "R": {
+      "item": "nuclearpowered:rubber"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:electric_circuit"
+  }
+}

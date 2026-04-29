@@ -1,24 +1,18 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "UTp",
-    "LTC",
+    "III",
+    "CRI",
     "PFP"
   ],
   "key": {
-    "U": {
-      "item": "nuclearpowered:pump"
-    },
-    "T": {
-      "item": "nuclearpowered:tank"
-    },
-    "p": {
-      "item": "minecraft:piston"
-    },
-    "L": {
-      "tag": "forge:plates/lead"
+    "I": {
+      "tag": "forge:plates/iron"
     },
     "C": {
+      "tag": "forge:ingots/copper"
+    },
+    "R": {
       "item": "nuclearpowered:circuit"
     },
     "P": {
@@ -29,6 +23,6 @@
     }
   },
   "result": {
-    "item": "nuclearpowered:cs_column"
+    "item": "nuclearpowered:wiremill"
   }
 }

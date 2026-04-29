@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "CRC",
+    "PFP",
+    "CRC"
+  ],
+  "key": {
+    "C": {
+      "tag": "forge:plates/constantan"
+    },
+    "R": {
+      "item": "nuclearpowered:circuit"
+    },
+    "P": {
+      "tag": "forge:plates/steel"
+    },
+    "F": {
+      "item": "nuclearpowered:machine_frame"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:machine_frame_t2"
+  }
+}

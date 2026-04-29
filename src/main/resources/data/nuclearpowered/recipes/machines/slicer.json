@@ -1,25 +1,25 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "UWC",
-    "TVT",
+    "IRC",
+    "IGW",
     "PFP"
   ],
   "key": {
-    "U": {
-      "item": "nuclearpowered:pump"
+    "I": {
+      "tag": "forge:plates/iron"
     },
-    "W": {
-      "item": "nuclearpowered:water_jet"
+    "R": {
+      "item": "minecraft:redstone_lamp"
     },
     "C": {
       "item": "nuclearpowered:circuit"
     },
-    "T": {
-      "item": "nuclearpowered:tank"
+    "G": {
+      "item": "minecraft:glass"
     },
-    "V": {
-      "item": "nuclearpowered:vat"
+    "W": {
+      "item": "nuclearpowered:power_cell"
     },
     "P": {
       "tag": "nuclearpowered:plates/structural"
@@ -29,6 +29,6 @@
     }
   },
   "result": {
-    "item": "nuclearpowered:washer"
+    "item": "nuclearpowered:slicer"
   }
 }

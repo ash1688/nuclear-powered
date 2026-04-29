@@ -1,12 +1,28 @@
 {
-  "conditions": [
-    { "type": "forge:not", "value": { "type": "forge:mod_loaded", "modid": "gtceu" } }
-  ],
   "type": "minecraft:crafting_shaped",
-  "pattern": [ "III", "IGI", "III" ],
+  "pattern": [
+    "UTT",
+    "CTT",
+    "PFP"
+  ],
   "key": {
-    "I": { "item": "minecraft:iron_ingot" },
-    "G": { "item": "minecraft:glass_bottle" }
+    "U": {
+      "item": "nuclearpowered:pump"
+    },
+    "T": {
+      "item": "nuclearpowered:tank"
+    },
+    "C": {
+      "item": "nuclearpowered:circuit"
+    },
+    "P": {
+      "tag": "nuclearpowered:plates/structural"
+    },
+    "F": {
+      "item": "nuclearpowered:machine_frame"
+    }
   },
-  "result": { "item": "nuclearpowered:extraction_column" }
+  "result": {
+    "item": "nuclearpowered:extraction_column"
+  }
 }

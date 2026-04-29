@@ -1,34 +1,31 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "UWC",
-    "TVT",
-    "PFP"
+    "FFF",
+    "WCI",
+    "PMP"
   ],
   "key": {
-    "U": {
-      "item": "nuclearpowered:pump"
+    "F": {
+      "item": "minecraft:flint"
     },
     "W": {
-      "item": "nuclearpowered:water_jet"
+      "tag": "forge:wires/copper"
     },
     "C": {
       "item": "nuclearpowered:circuit"
     },
-    "T": {
-      "item": "nuclearpowered:tank"
-    },
-    "V": {
-      "item": "nuclearpowered:vat"
+    "I": {
+      "tag": "forge:plates/iron"
     },
     "P": {
       "tag": "nuclearpowered:plates/structural"
     },
-    "F": {
+    "M": {
       "item": "nuclearpowered:machine_frame"
     }
   },
   "result": {
-    "item": "nuclearpowered:washer"
+    "item": "nuclearpowered:macerator"
   }
 }

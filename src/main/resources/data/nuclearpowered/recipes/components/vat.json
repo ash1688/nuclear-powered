@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "I I",
+    "ITI",
+    " I "
+  ],
+  "key": {
+    "I": {
+      "tag": "forge:plates/iron"
+    },
+    "T": {
+      "item": "nuclearpowered:tank"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:vat"
+  }
+}

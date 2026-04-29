@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "IWI",
+    "IEI"
+  ],
+  "key": {
+    "I": {
+      "tag": "forge:plates/iron"
+    },
+    "W": {
+      "tag": "forge:wires/copper"
+    },
+    "E": {
+      "tag": "forge:wires/electrum"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:electro_magnet"
+  }
+}

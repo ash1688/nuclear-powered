@@ -1,12 +1,31 @@
 {
-  "conditions": [
-    { "type": "forge:not", "value": { "type": "forge:mod_loaded", "modid": "gtceu" } }
-  ],
   "type": "minecraft:crafting_shaped",
-  "pattern": [ "CCC", "CUC", "CCC" ],
+  "pattern": [
+    "GpG",
+    "CFL",
+    "GOG"
+  ],
   "key": {
-    "C": { "item": "minecraft:coal_block" },
-    "U": { "tag": "forge:ingots/uranium" }
+    "G": {
+      "tag": "nuclearpowered:graphite_casings"
+    },
+    "p": {
+      "item": "nuclearpowered:pump"
+    },
+    "C": {
+      "item": "nuclearpowered:circuit"
+    },
+    "F": {
+      "item": "nuclearpowered:pile_frame"
+    },
+    "L": {
+      "tag": "forge:plates/lead"
+    },
+    "O": {
+      "item": "minecraft:obsidian"
+    }
   },
-  "result": { "item": "nuclearpowered:graphite_pile_controller" }
+  "result": {
+    "item": "nuclearpowered:graphite_pile_controller"
+  }
 }

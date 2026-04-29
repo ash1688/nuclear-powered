@@ -1,25 +1,28 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "UWC",
-    "TVT",
+    "UpW",
+    "NAR",
     "PFP"
   ],
   "key": {
     "U": {
       "item": "nuclearpowered:pump"
     },
+    "p": {
+      "item": "minecraft:piston"
+    },
     "W": {
-      "item": "nuclearpowered:water_jet"
+      "tag": "forge:wires/copper"
     },
-    "C": {
-      "item": "nuclearpowered:circuit"
+    "N": {
+      "item": "nuclearpowered:nozzle"
     },
-    "T": {
-      "item": "nuclearpowered:tank"
+    "A": {
+      "item": "minecraft:anvil"
     },
-    "V": {
-      "item": "nuclearpowered:vat"
+    "R": {
+      "item": "nuclearpowered:wrench"
     },
     "P": {
       "tag": "nuclearpowered:plates/structural"
@@ -29,6 +32,6 @@
     }
   },
   "result": {
-    "item": "nuclearpowered:washer"
+    "item": "nuclearpowered:stamping_press"
   }
 }

@@ -1,0 +1,37 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "TFG",
+    "RBR",
+    "KOW"
+  ],
+  "key": {
+    "T": {
+      "item": "nuclearpowered:tank"
+    },
+    "F": {
+      "item": "nuclearpowered:fluid_pipe"
+    },
+    "G": {
+      "item": "minecraft:glass"
+    },
+    "R": {
+      "item": "nuclearpowered:rubber_ring"
+    },
+    "B": {
+      "item": "minecraft:iron_bars"
+    },
+    "K": {
+      "item": "minecraft:bucket"
+    },
+    "O": {
+      "item": "minecraft:stone_button"
+    },
+    "W": {
+      "item": "nuclearpowered:wrench"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:pump"
+  }
+}

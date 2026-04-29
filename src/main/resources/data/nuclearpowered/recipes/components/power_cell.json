@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "ELE",
+    "CRC",
+    "ENE"
+  ],
+  "key": {
+    "E": {
+      "tag": "forge:plates/electrum"
+    },
+    "L": {
+      "tag": "forge:plates/lead"
+    },
+    "C": {
+      "tag": "forge:ingots/copper"
+    },
+    "R": {
+      "item": "minecraft:redstone_block"
+    },
+    "N": {
+      "tag": "forge:plates/nickel"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:power_cell"
+  }
+}
