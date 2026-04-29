@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "WpC",
+    "pIp",
+    "PFP"
+  ],
+  "key": {
+    "W": {
+      "tag": "forge:wires/copper"
+    },
+    "p": {
+      "item": "minecraft:piston"
+    },
+    "C": {
+      "item": "nuclearpowered:circuit"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "P": {
+      "tag": "nuclearpowered:plates/structural"
+    },
+    "F": {
+      "item": "nuclearpowered:machine_frame"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:rubber_squeezer"
+  }
+}

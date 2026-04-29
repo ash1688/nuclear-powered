@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IIS",
+    "IWI",
+    "II "
+  ],
+  "key": {
+    "I": {
+      "tag": "forge:plates/iron"
+    },
+    "S": {
+      "item": "minecraft:shears"
+    },
+    "W": {
+      "item": "nuclearpowered:wrench"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:nozzle"
+  }
+}

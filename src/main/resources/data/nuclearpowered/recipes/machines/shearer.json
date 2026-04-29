@@ -1,12 +1,31 @@
 {
-  "conditions": [
-    { "type": "forge:not", "value": { "type": "forge:mod_loaded", "modid": "gtceu" } }
-  ],
   "type": "minecraft:crafting_shaped",
-  "pattern": [ "III", "ISI", "III" ],
+  "pattern": [
+    "pCp",
+    "IVI",
+    "PFP"
+  ],
   "key": {
-    "I": { "item": "minecraft:iron_ingot" },
-    "S": { "item": "minecraft:shears" }
+    "p": {
+      "item": "minecraft:piston"
+    },
+    "C": {
+      "item": "nuclearpowered:circuit"
+    },
+    "I": {
+      "item": "nuclearpowered:iron_shear"
+    },
+    "V": {
+      "item": "nuclearpowered:vice"
+    },
+    "P": {
+      "tag": "nuclearpowered:plates/structural"
+    },
+    "F": {
+      "item": "nuclearpowered:machine_frame"
+    }
   },
-  "result": { "item": "nuclearpowered:shearer" }
+  "result": {
+    "item": "nuclearpowered:shearer"
+  }
 }

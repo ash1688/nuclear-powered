@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "nuclearpowered:block/macerator"
+    },
+    "facing=south": {
+      "model": "nuclearpowered:block/macerator",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "nuclearpowered:block/macerator",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "nuclearpowered:block/macerator",
+      "y": 270
+    }
+  }
+}

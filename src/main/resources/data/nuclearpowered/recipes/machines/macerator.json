@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "FFF",
+    "WCI",
+    "PMP"
+  ],
+  "key": {
+    "F": {
+      "item": "minecraft:flint"
+    },
+    "W": {
+      "tag": "forge:wires/copper"
+    },
+    "C": {
+      "item": "nuclearpowered:circuit"
+    },
+    "I": {
+      "tag": "forge:plates/iron"
+    },
+    "P": {
+      "tag": "nuclearpowered:plates/structural"
+    },
+    "M": {
+      "item": "nuclearpowered:machine_frame"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:macerator"
+  }
+}

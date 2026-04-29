@@ -1,0 +1,37 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "UpW",
+    "NAR",
+    "PFP"
+  ],
+  "key": {
+    "U": {
+      "item": "nuclearpowered:pump"
+    },
+    "p": {
+      "item": "minecraft:piston"
+    },
+    "W": {
+      "tag": "forge:wires/copper"
+    },
+    "N": {
+      "item": "nuclearpowered:nozzle"
+    },
+    "A": {
+      "item": "minecraft:anvil"
+    },
+    "R": {
+      "item": "nuclearpowered:wrench"
+    },
+    "P": {
+      "tag": "nuclearpowered:plates/structural"
+    },
+    "F": {
+      "item": "nuclearpowered:machine_frame"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:stamping_press"
+  }
+}

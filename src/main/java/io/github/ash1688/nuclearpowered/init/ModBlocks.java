@@ -11,6 +11,7 @@ import io.github.ash1688.nuclearpowered.block.cscolumn.CsColumnBlock;
 import io.github.ash1688.nuclearpowered.block.dissolver.DissolverBlock;
 import io.github.ash1688.nuclearpowered.block.electricfurnace.ElectricFurnaceBlock;
 import io.github.ash1688.nuclearpowered.block.extractor.ExtractionColumnBlock;
+import io.github.ash1688.nuclearpowered.block.FacingPlaceableBlock;
 import io.github.ash1688.nuclearpowered.block.engine.SteamEngineBlock;
 import io.github.ash1688.nuclearpowered.block.fabricator.FuelFabricatorBlock;
 import io.github.ash1688.nuclearpowered.block.heater.HeaterBlock;
@@ -261,6 +262,61 @@ public final class ModBlocks {
             () -> new EnergyConverterBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_BLUE)
                     .strength(3.0f, 4.0f)
+                    .sound(SoundType.METAL)));
+
+    // --- Component blocks (no BlockEntity logic yet — placeholders) ---
+    // Tank/vat are storage components; fluid_pipe transports fluids. All three
+    // place as plain blocks for now and gain BE behavior in a follow-up.
+    public static final RegistryObject<Block> TANK = registerBlock("tank",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(2.0f, 3.0f)
+                    .sound(SoundType.METAL)
+                    .noOcclusion()));
+
+    public static final RegistryObject<Block> VAT = registerBlock("vat",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(2.5f, 3.0f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<Block> FLUID_PIPE = registerBlock("fluid_pipe",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_LIGHT_GRAY)
+                    .strength(1.5f, 2.0f)
+                    .sound(SoundType.METAL)));
+
+    // --- New processing machines (no BlockEntity logic yet — placeholders) ---
+    // Stamping press, macerator, slicer, wiremill, rubber squeezer. Place
+    // facing the player; recipe-driven processing wires up later.
+    public static final RegistryObject<FacingPlaceableBlock> STAMPING_PRESS = registerBlock("stamping_press",
+            () -> new FacingPlaceableBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(3.5f, 4.0f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<FacingPlaceableBlock> MACERATOR = registerBlock("macerator",
+            () -> new FacingPlaceableBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(3.5f, 4.0f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<FacingPlaceableBlock> SLICER = registerBlock("slicer",
+            () -> new FacingPlaceableBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(3.5f, 4.0f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<FacingPlaceableBlock> WIREMILL = registerBlock("wiremill",
+            () -> new FacingPlaceableBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(3.5f, 4.0f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<FacingPlaceableBlock> RUBBER_SQUEEZER = registerBlock("rubber_squeezer",
+            () -> new FacingPlaceableBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(3.5f, 4.0f)
                     .sound(SoundType.METAL)));
 
     private ModBlocks() {}

@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GIG",
+    "BCB",
+    "GIG"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:coal_block"
+    },
+    "I": {
+      "tag": "forge:plates/iron"
+    },
+    "B": {
+      "item": "minecraft:iron_bars"
+    },
+    "C": {
+      "item": "minecraft:coal_block"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:pile_frame"
+  }
+}

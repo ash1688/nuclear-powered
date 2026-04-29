@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "nuclearpowered:block/fluid_pipe"
+    }
+  }
+}

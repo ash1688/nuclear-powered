@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "DRD",
+    "EFE",
+    "DRD"
+  ],
+  "key": {
+    "D": {
+      "tag": "forge:storage_blocks/steel"
+    },
+    "R": {
+      "item": "nuclearpowered:electric_circuit"
+    },
+    "E": {
+      "tag": "forge:plates/electrum"
+    },
+    "F": {
+      "item": "nuclearpowered:machine_frame_t2"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:machine_frame_t3"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "CCC",
+    " WC",
+    "  N"
+  ],
+  "key": {
+    "C": {
+      "item": "nuclearpowered:copper_pipe"
+    },
+    "W": {
+      "item": "nuclearpowered:wrench"
+    },
+    "N": {
+      "item": "nuclearpowered:nozzle"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:water_jet"
+  }
+}

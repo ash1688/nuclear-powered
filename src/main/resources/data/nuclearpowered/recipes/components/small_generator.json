@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "G G",
+    "WRW",
+    "G G"
+  ],
+  "key": {
+    "G": {
+      "tag": "forge:plates/gold"
+    },
+    "W": {
+      "tag": "forge:wires/copper"
+    },
+    "R": {
+      "item": "minecraft:redstone_block"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:small_generator"
+  }
+}

@@ -1,12 +1,34 @@
 {
-  "conditions": [
-    { "type": "forge:not", "value": { "type": "forge:mod_loaded", "modid": "gtceu" } }
-  ],
   "type": "minecraft:crafting_shaped",
-  "pattern": [ "III", "IWI", "III" ],
+  "pattern": [
+    "UWC",
+    "TVT",
+    "PFP"
+  ],
   "key": {
-    "I": { "item": "minecraft:iron_ingot" },
-    "W": { "item": "minecraft:water_bucket" }
+    "U": {
+      "item": "nuclearpowered:pump"
+    },
+    "W": {
+      "item": "nuclearpowered:water_jet"
+    },
+    "C": {
+      "item": "nuclearpowered:circuit"
+    },
+    "T": {
+      "item": "nuclearpowered:tank"
+    },
+    "V": {
+      "item": "nuclearpowered:vat"
+    },
+    "P": {
+      "tag": "nuclearpowered:plates/structural"
+    },
+    "F": {
+      "item": "nuclearpowered:machine_frame"
+    }
   },
-  "result": { "item": "nuclearpowered:washer" }
+  "result": {
+    "item": "nuclearpowered:washer"
+  }
 }

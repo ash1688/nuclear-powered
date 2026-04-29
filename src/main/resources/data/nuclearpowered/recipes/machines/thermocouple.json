@@ -1,13 +1,22 @@
 {
-  "conditions": [
-    { "type": "forge:not", "value": { "type": "forge:mod_loaded", "modid": "gtceu" } }
-  ],
   "type": "minecraft:crafting_shaped",
-  "pattern": [ "ICI", "CRC", "ICI" ],
+  "pattern": [
+    "WNW",
+    "NTN",
+    "WNW"
+  ],
   "key": {
-    "I": { "item": "minecraft:iron_ingot" },
-    "C": { "item": "minecraft:copper_ingot" },
-    "R": { "item": "minecraft:redstone" }
+    "W": {
+      "tag": "forge:wires/copper"
+    },
+    "N": {
+      "tag": "forge:plates/nickel"
+    },
+    "T": {
+      "item": "nuclearpowered:thermo_core"
+    }
   },
-  "result": { "item": "nuclearpowered:thermocouple" }
+  "result": {
+    "item": "nuclearpowered:thermocouple"
+  }
 }

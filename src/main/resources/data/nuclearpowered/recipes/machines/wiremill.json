@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "III",
+    "CRI",
+    "PFP"
+  ],
+  "key": {
+    "I": {
+      "tag": "forge:plates/iron"
+    },
+    "C": {
+      "tag": "forge:ingots/copper"
+    },
+    "R": {
+      "item": "nuclearpowered:circuit"
+    },
+    "P": {
+      "tag": "nuclearpowered:plates/structural"
+    },
+    "F": {
+      "item": "nuclearpowered:machine_frame"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:wiremill"
+  }
+}

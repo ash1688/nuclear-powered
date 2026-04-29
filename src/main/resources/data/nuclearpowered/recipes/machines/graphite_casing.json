@@ -1,9 +1,26 @@
 {
   "type": "minecraft:crafting_shaped",
-  "pattern": [ "CIC", "ICI", "CIC" ],
+  "pattern": [
+    "GIG",
+    "LFL",
+    "GIG"
+  ],
   "key": {
-    "C": { "item": "minecraft:coal_block" },
-    "I": { "item": "minecraft:iron_ingot" }
+    "G": {
+      "item": "minecraft:coal_block"
+    },
+    "I": {
+      "tag": "forge:plates/iron"
+    },
+    "L": {
+      "tag": "forge:ingots/lead"
+    },
+    "F": {
+      "item": "nuclearpowered:pile_frame"
+    }
   },
-  "result": { "item": "nuclearpowered:graphite_casing", "count": 4 }
+  "result": {
+    "item": "nuclearpowered:graphite_casing",
+    "count": 4
+  }
 }

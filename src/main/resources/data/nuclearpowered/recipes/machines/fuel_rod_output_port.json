@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GGG",
+    "HFC",
+    "OOO"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:coal_block"
+    },
+    "H": {
+      "item": "minecraft:hopper"
+    },
+    "F": {
+      "item": "nuclearpowered:pile_frame"
+    },
+    "C": {
+      "item": "minecraft:chest"
+    },
+    "O": {
+      "item": "minecraft:obsidian"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:fuel_rod_output_port"
+  }
+}

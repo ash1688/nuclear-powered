@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "nuclearpowered:block/slicer"
+    },
+    "facing=south": {
+      "model": "nuclearpowered:block/slicer",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "nuclearpowered:block/slicer",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "nuclearpowered:block/slicer",
+      "y": 270
+    }
+  }
+}

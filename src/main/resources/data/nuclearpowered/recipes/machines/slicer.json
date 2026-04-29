@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IRC",
+    "IGW",
+    "PFP"
+  ],
+  "key": {
+    "I": {
+      "tag": "forge:plates/iron"
+    },
+    "R": {
+      "item": "minecraft:redstone_lamp"
+    },
+    "C": {
+      "item": "nuclearpowered:circuit"
+    },
+    "G": {
+      "item": "minecraft:glass"
+    },
+    "W": {
+      "item": "nuclearpowered:power_cell"
+    },
+    "P": {
+      "tag": "nuclearpowered:plates/structural"
+    },
+    "F": {
+      "item": "nuclearpowered:machine_frame"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:slicer"
+  }
+}

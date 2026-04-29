@@ -95,6 +95,49 @@ public final class ModCreativeTabs {
                         out.accept(ModItems.THERMAL_DAMPENER.get());
                         out.accept(ModItems.URANIUM_STARTER_CACHE.get());
                         out.accept(ModItems.REAGENT_BUNDLE.get());
+                        // New machines + component blocks.
+                        out.accept(ModBlocks.STAMPING_PRESS.get());
+                        out.accept(ModBlocks.MACERATOR.get());
+                        out.accept(ModBlocks.SLICER.get());
+                        out.accept(ModBlocks.WIREMILL.get());
+                        out.accept(ModBlocks.RUBBER_SQUEEZER.get());
+                        out.accept(ModBlocks.TANK.get());
+                        out.accept(ModBlocks.VAT.get());
+                        out.accept(ModBlocks.FLUID_PIPE.get());
+                        // Component tier — frames, cores, sub-assemblies, intermediates.
+                        out.accept(ModItems.COAL_BOILER_FRAME.get());
+                        out.accept(ModItems.MACHINE_FRAME.get());
+                        out.accept(ModItems.MACHINE_FRAME_T2.get());
+                        out.accept(ModItems.MACHINE_FRAME_T3.get());
+                        out.accept(ModItems.PILE_FRAME.get());
+                        out.accept(ModItems.STEAM_ENGINE_FRAME.get());
+                        out.accept(ModItems.BATTERY_CORE.get());
+                        out.accept(ModItems.THERMO_CORE.get());
+                        out.accept(ModItems.PUMP.get());
+                        out.accept(ModItems.CIRCUIT.get());
+                        out.accept(ModItems.ELECTRIC_CIRCUIT.get());
+                        out.accept(ModItems.ELECTRO_MAGNET.get());
+                        out.accept(ModItems.POWER_CELL.get());
+                        out.accept(ModItems.SMALL_GENERATOR.get());
+                        out.accept(ModItems.HEATING_COIL.get());
+                        out.accept(ModItems.HEATING_ELEMENT.get());
+                        out.accept(ModItems.IRON_SHEAR.get());
+                        out.accept(ModItems.VICE.get());
+                        out.accept(ModItems.JAGGED_FLINT.get());
+                        out.accept(ModItems.WATER_JET.get());
+                        out.accept(ModItems.NOZZLE.get());
+                        out.accept(ModItems.WRENCH.get());
+                        out.accept(ModItems.IRON_GRATE.get());
+                        out.accept(ModItems.FUEL_ASSEMBLY.get());
+                        out.accept(ModItems.WHEEL.get());
+                        out.accept(ModItems.RUBBER_RING.get());
+                        out.accept(ModItems.COPPER_PIPE.get());
+                        out.accept(ModItems.SILICON.get());
+                        out.accept(ModItems.SILICON_BASE.get());
+                        out.accept(ModItems.PCB.get());
+                        out.accept(ModItems.RUBBER.get());
+                        out.accept(ModItems.EMPTY_FUEL_ROD.get());
+                        out.accept(ModItems.EMPTY_FUEL_ROD_T2.get());
                     })
                     .build());
 

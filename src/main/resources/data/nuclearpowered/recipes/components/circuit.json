@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "EWE",
+    "GSG",
+    "RRR"
+  ],
+  "key": {
+    "E": {
+      "tag": "forge:wires/electrum"
+    },
+    "W": {
+      "tag": "forge:wires/copper"
+    },
+    "G": {
+      "item": "minecraft:green_dye"
+    },
+    "S": {
+      "item": "nuclearpowered:silicon_base"
+    },
+    "R": {
+      "item": "nuclearpowered:rubber"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:circuit"
+  }
+}

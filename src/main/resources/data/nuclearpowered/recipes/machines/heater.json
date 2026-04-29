@@ -1,13 +1,25 @@
 {
-  "conditions": [
-    { "type": "forge:not", "value": { "type": "forge:mod_loaded", "modid": "gtceu" } }
-  ],
   "type": "minecraft:crafting_shaped",
-  "pattern": [ "IRI", "RLR", "IRI" ],
+  "pattern": [
+    "CHN",
+    "HFH",
+    "NHC"
+  ],
   "key": {
-    "I": { "item": "minecraft:iron_ingot" },
-    "R": { "item": "minecraft:redstone" },
-    "L": { "item": "minecraft:lava_bucket" }
+    "C": {
+      "tag": "forge:plates/copper"
+    },
+    "H": {
+      "item": "nuclearpowered:heating_coil"
+    },
+    "N": {
+      "tag": "forge:plates/nickel"
+    },
+    "F": {
+      "item": "nuclearpowered:pile_frame"
+    }
   },
-  "result": { "item": "nuclearpowered:heater" }
+  "result": {
+    "item": "nuclearpowered:heater"
+  }
 }

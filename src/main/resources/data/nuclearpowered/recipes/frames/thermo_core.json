@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "WRW",
+    "NRI",
+    "WRW"
+  ],
+  "key": {
+    "W": {
+      "tag": "forge:wires/copper"
+    },
+    "R": {
+      "item": "minecraft:redstone_block"
+    },
+    "N": {
+      "tag": "forge:plates/nickel"
+    },
+    "I": {
+      "tag": "forge:plates/iron"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:thermo_core"
+  }
+}
