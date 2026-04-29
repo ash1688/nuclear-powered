@@ -95,6 +95,15 @@ public final class ModCreativeTabs {
                         out.accept(ModItems.THERMAL_DAMPENER.get());
                         out.accept(ModItems.URANIUM_STARTER_CACHE.get());
                         out.accept(ModItems.REAGENT_BUNDLE.get());
+                        // New machines + component blocks.
+                        out.accept(ModBlocks.STAMPING_PRESS.get());
+                        out.accept(ModBlocks.MACERATOR.get());
+                        out.accept(ModBlocks.SLICER.get());
+                        out.accept(ModBlocks.WIREMILL.get());
+                        out.accept(ModBlocks.RUBBER_SQUEEZER.get());
+                        out.accept(ModBlocks.TANK.get());
+                        out.accept(ModBlocks.VAT.get());
+                        out.accept(ModBlocks.FLUID_PIPE.get());
                         // Component tier — frames, cores, sub-assemblies, intermediates.
                         out.accept(ModItems.COAL_BOILER_FRAME.get());
                         out.accept(ModItems.MACHINE_FRAME.get());

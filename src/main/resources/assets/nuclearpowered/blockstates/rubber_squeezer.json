@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "nuclearpowered:block/rubber_squeezer"
+    },
+    "facing=south": {
+      "model": "nuclearpowered:block/rubber_squeezer",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "nuclearpowered:block/rubber_squeezer",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "nuclearpowered:block/rubber_squeezer",
+      "y": 270
+    }
+  }
+}

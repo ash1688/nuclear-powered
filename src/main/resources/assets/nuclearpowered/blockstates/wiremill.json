@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "nuclearpowered:block/wiremill"
+    },
+    "facing=south": {
+      "model": "nuclearpowered:block/wiremill",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "nuclearpowered:block/wiremill",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "nuclearpowered:block/wiremill",
+      "y": 270
+    }
+  }
+}

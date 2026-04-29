@@ -135,5 +135,13 @@
   "item.nuclearpowered.pcb": "PCB",
   "item.nuclearpowered.rubber": "Rubber",
   "item.nuclearpowered.empty_fuel_rod": "Empty Fuel Rod",
-  "item.nuclearpowered.empty_fuel_rod_t2": "Empty Fuel Rod (T2)"
+  "item.nuclearpowered.empty_fuel_rod_t2": "Empty Fuel Rod (T2)",
+  "block.nuclearpowered.stamping_press": "Stamping Press",
+  "block.nuclearpowered.macerator": "Macerator",
+  "block.nuclearpowered.slicer": "Slicer",
+  "block.nuclearpowered.wiremill": "Wiremill",
+  "block.nuclearpowered.rubber_squeezer": "Rubber Squeezer",
+  "block.nuclearpowered.tank": "Tank",
+  "block.nuclearpowered.vat": "Vat",
+  "block.nuclearpowered.fluid_pipe": "Fluid Pipe"
 }
