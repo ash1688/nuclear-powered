@@ -274,12 +274,6 @@ public final class ModBlocks {
                     .sound(SoundType.METAL)
                     .noOcclusion()));
 
-    public static final RegistryObject<Block> VAT = registerBlock("vat",
-            () -> new Block(BlockBehaviour.Properties.of()
-                    .mapColor(MapColor.METAL)
-                    .strength(2.5f, 3.0f)
-                    .sound(SoundType.METAL)));
-
     public static final RegistryObject<Block> FLUID_PIPE = registerBlock("fluid_pipe",
             () -> new Block(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_LIGHT_GRAY)

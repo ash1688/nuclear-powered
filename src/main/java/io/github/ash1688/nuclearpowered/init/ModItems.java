@@ -230,6 +230,11 @@ public final class ModItems {
             () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> RUBBER_RING = ITEMS.register("rubber_ring",
             () -> new Item(new Item.Properties()));
+    // Vat — recipe ingredient only (vitrifier, dissolver, washer). Not
+    // placeable; lives in ModItems rather than ModBlocks so it renders as a
+    // flat inventory icon instead of a 3D cube.
+    public static final RegistryObject<Item> VAT = ITEMS.register("vat",
+            () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> COPPER_PIPE = ITEMS.register("copper_pipe",
             () -> new Item(new Item.Properties()));
 
