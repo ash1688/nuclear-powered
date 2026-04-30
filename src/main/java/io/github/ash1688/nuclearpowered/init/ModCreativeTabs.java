@@ -138,6 +138,15 @@ public final class ModCreativeTabs {
                         out.accept(ModItems.RUBBER.get());
                         out.accept(ModItems.EMPTY_FUEL_ROD.get());
                         out.accept(ModItems.EMPTY_FUEL_ROD_T2.get());
+                        // Alloy fallbacks (forge:ingots/<name>, plates/<name>, wires/<name>)
+                        out.accept(ModItems.BRONZE_INGOT.get());
+                        out.accept(ModItems.BRONZE_PLATE.get());
+                        out.accept(ModItems.CONSTANTAN_INGOT.get());
+                        out.accept(ModItems.CONSTANTAN_PLATE.get());
+                        out.accept(ModItems.ELECTRUM_INGOT.get());
+                        out.accept(ModItems.ELECTRUM_PLATE.get());
+                        out.accept(ModItems.ELECTRUM_WIRE.get());
+                        out.accept(ModItems.DENSE_STEEL_INGOT.get());
                     })
                     .build());
 
