@@ -143,5 +143,13 @@
   "block.nuclearpowered.rubber_squeezer": "Rubber Squeezer",
   "block.nuclearpowered.tank": "Tank",
   "block.nuclearpowered.vat": "Vat",
-  "block.nuclearpowered.fluid_pipe": "Fluid Pipe"
+  "block.nuclearpowered.fluid_pipe": "Fluid Pipe",
+  "item.nuclearpowered.bronze_ingot": "Bronze Ingot",
+  "item.nuclearpowered.bronze_plate": "Bronze Plate",
+  "item.nuclearpowered.constantan_ingot": "Constantan Ingot",
+  "item.nuclearpowered.constantan_plate": "Constantan Plate",
+  "item.nuclearpowered.electrum_ingot": "Electrum Ingot",
+  "item.nuclearpowered.electrum_plate": "Electrum Plate",
+  "item.nuclearpowered.electrum_wire": "Electrum Wire",
+  "item.nuclearpowered.dense_steel_ingot": "Dense Steel Ingot"
 }

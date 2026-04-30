@@ -247,6 +247,27 @@ public final class ModItems {
     public static final RegistryObject<Item> EMPTY_FUEL_ROD_T2 = ITEMS.register("empty_fuel_rod_t2",
             () -> new Item(new Item.Properties()));
 
+    // Alloy fallbacks — populate forge:ingots/<name> + plates/wires tags so
+    // standalone packs (no Thermal/Mek/IE) can still craft from these. When
+    // another tech mod ships the same alloy under the same tag, the items
+    // stack interchangeably.
+    public static final RegistryObject<Item> BRONZE_INGOT = ITEMS.register("bronze_ingot",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> BRONZE_PLATE = ITEMS.register("bronze_plate",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> CONSTANTAN_INGOT = ITEMS.register("constantan_ingot",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> CONSTANTAN_PLATE = ITEMS.register("constantan_plate",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> ELECTRUM_INGOT = ITEMS.register("electrum_ingot",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> ELECTRUM_PLATE = ITEMS.register("electrum_plate",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> ELECTRUM_WIRE = ITEMS.register("electrum_wire",
+            () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> DENSE_STEEL_INGOT = ITEMS.register("dense_steel_ingot",
+            () -> new Item(new Item.Properties()));
+
     // Filled buckets for the reprocessing reagents. Registered here rather than
     // inside ModFluids so we can reference the Items registry cleanly; the
     // ForgeFlowingFluid.Properties in ModFluids then points back at these via
