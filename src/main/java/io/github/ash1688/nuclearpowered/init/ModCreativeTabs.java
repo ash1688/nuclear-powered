@@ -102,7 +102,6 @@ public final class ModCreativeTabs {
                         out.accept(ModBlocks.WIREMILL.get());
                         out.accept(ModBlocks.RUBBER_SQUEEZER.get());
                         out.accept(ModBlocks.TANK.get());
-                        out.accept(ModBlocks.VAT.get());
                         out.accept(ModBlocks.FLUID_PIPE.get());
                         // Component tier — frames, cores, sub-assemblies, intermediates.
                         out.accept(ModItems.COAL_BOILER_FRAME.get());
@@ -131,6 +130,7 @@ public final class ModCreativeTabs {
                         out.accept(ModItems.FUEL_ASSEMBLY.get());
                         out.accept(ModItems.WHEEL.get());
                         out.accept(ModItems.RUBBER_RING.get());
+                        out.accept(ModItems.VAT.get());
                         out.accept(ModItems.COPPER_PIPE.get());
                         out.accept(ModItems.SILICON.get());
                         out.accept(ModItems.SILICON_BASE.get());
