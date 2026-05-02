@@ -1,4 +1,5 @@
 {
+  "parent": "minecraft:block/block",
   "textures": {
     "particle": "nuclearpowered:block/energy_cable/side",
     "cap": "nuclearpowered:block/energy_cable/cap",
