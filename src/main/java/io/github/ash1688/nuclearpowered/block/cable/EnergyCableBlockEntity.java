@@ -24,6 +24,12 @@ import java.util.Set;
 // This mirrors how Forge/RF pipe mods (Thermal, Mekanism, Flux) route energy:
 // one transfer per push, producer → network → consumers, no per-cable storage and
 // therefore no ordering or oscillation bugs.
+//
+// Dual-energy mode: each cable also tracks an effective mode (FE / EU)
+// determined by its connected neighbours (FE wins ties). Cables in EU mode
+// don't expose Forge ENERGY — neighbours of the wrong mode refuse to connect
+// at the cap-resolution layer, which is exactly the visual / functional
+// refuse-connect spec. Real EU transport (distributeEU) is a follow-up.
 public class EnergyCableBlockEntity extends BlockEntity {
     // Bound BFS so a pathologically large network can't stall the server thread.
     public static final int MAX_NETWORK_SIZE = 512;
@@ -59,13 +65,72 @@ public class EnergyCableBlockEntity extends BlockEntity {
 
     private LazyOptional<IEnergyStorage> lazyAnySide = LazyOptional.empty();
 
+    /** Current mode this cable speaks. Recomputed from neighbours every time
+     *  a face's connection state changes (see {@link #recomputeMode}). FE
+     *  wins ties when both an FE and EU producer are connected. */
+    private io.github.ash1688.nuclearpowered.energy.EnergyMode mode =
+            io.github.ash1688.nuclearpowered.energy.EnergyMode.FE;
+
     public EnergyCableBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.ENERGY_CABLE.get(), pos, state);
+    }
+
+    public io.github.ash1688.nuclearpowered.energy.EnergyMode getMode() {
+        return mode;
+    }
+
+    /**
+     * Walk the 6 neighbours and pick the cable's mode. FE neighbours win;
+     * EU is chosen only when no FE neighbour is present. Cable-to-cable
+     * adopts the neighbour cable's existing mode so a chain stays coherent
+     * even if the producer is several blocks away. Called from the block's
+     * updateShape; idempotent — only invalidates caps when the mode changes.
+     */
+    public void recomputeMode() {
+        if (level == null) return;
+        boolean anyFE = false;
+        boolean anyEU = false;
+        for (Direction dir : Direction.values()) {
+            BlockPos npos = worldPosition.relative(dir);
+            BlockEntity be = level.getBlockEntity(npos);
+            if (be == null) continue;
+            if (be instanceof EnergyCableBlockEntity nb) {
+                if (nb.mode == io.github.ash1688.nuclearpowered.energy.EnergyMode.FE) anyFE = true;
+                else anyEU = true;
+                continue;
+            }
+            if (be.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).isPresent()) {
+                anyFE = true;
+                continue;
+            }
+            if (io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()
+                    && io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat
+                            .hasEUCapability(be, dir.getOpposite())) {
+                anyEU = true;
+            }
+        }
+        io.github.ash1688.nuclearpowered.energy.EnergyMode next =
+                anyFE ? io.github.ash1688.nuclearpowered.energy.EnergyMode.FE
+              : anyEU ? io.github.ash1688.nuclearpowered.energy.EnergyMode.EU
+              : mode; // no neighbours: keep current — avoids needless cap churn
+        if (next != mode) {
+            mode = next;
+            invalidateCaps();
+            lazyAnySide = LazyOptional.of(() -> anySideWrapper);
+            for (int i = 0; i < perFaceLazies.length; i++) perFaceLazies[i] = null;
+            setChanged();
+        }
     }
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
         if (cap != ForgeCapabilities.ENERGY) return super.getCapability(cap, side);
+        // EU-mode cables don't speak Forge ENERGY — wrong-mode neighbours
+        // refuse to resolve a connection through us, which is the visual
+        // refuse-connect mechanic. Real EU transport ships in a follow-up.
+        if (mode == io.github.ash1688.nuclearpowered.energy.EnergyMode.EU) {
+            return LazyOptional.empty();
+        }
         if (side == null) return lazyAnySide.cast();
         int idx = side.ordinal();
         if (perFaceLazies[idx] == null) perFaceLazies[idx] = LazyOptional.of(() -> getOrCreateFaceWrapper(side));
@@ -102,6 +167,24 @@ public class EnergyCableBlockEntity extends BlockEntity {
     public void onLoad() {
         super.onLoad();
         lazyAnySide = LazyOptional.of(() -> anySideWrapper);
+    }
+
+    @Override
+    protected void saveAdditional(net.minecraft.nbt.CompoundTag tag) {
+        super.saveAdditional(tag);
+        tag.putString("energyMode", mode.name());
+    }
+
+    @Override
+    public void load(net.minecraft.nbt.CompoundTag tag) {
+        super.load(tag);
+        if (tag.contains("energyMode")) {
+            try {
+                mode = io.github.ash1688.nuclearpowered.energy.EnergyMode.valueOf(tag.getString("energyMode"));
+            } catch (IllegalArgumentException ignored) {
+                mode = io.github.ash1688.nuclearpowered.energy.EnergyMode.FE;
+            }
+        }
     }
 
     @Override

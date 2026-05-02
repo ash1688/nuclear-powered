@@ -1,5 +1,8 @@
 package io.github.ash1688.nuclearpowered.block.cable;
 
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat;
+import io.github.ash1688.nuclearpowered.energy.EnergyMode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -87,6 +90,11 @@ public class EnergyCableBlock extends BaseEntityBlock {
     @Override
     public BlockState updateShape(BlockState state, Direction facing, BlockState facingState,
                                   LevelAccessor level, BlockPos pos, BlockPos facingPos) {
+        // Recompute mode in case a connecting/disconnecting neighbour shifts
+        // the cluster's energy system (e.g. removing the only FE producer
+        // leaves only EU producers, so the cable should swap to EU).
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof EnergyCableBlockEntity cable) cable.recomputeMode();
         return state.setValue(propertyFor(facing), canConnect(level, pos, facing));
     }
 
@@ -102,18 +110,38 @@ public class EnergyCableBlock extends BaseEntityBlock {
     }
 
     /**
-     * Connect to a neighbour if it's another cable, or exposes Forge ENERGY
-     * on the touching face. Mode-aware refuse-connect (FE vs EU mismatch)
-     * lands in a follow-up commit that wires the cable into the dual-energy
-     * mode-detection logic.
+     * Connect to a neighbour if its energy system matches this cable's mode.
+     *
+     * <ul>
+     *   <li>Cable→cable: connect if both cables share the same mode. Lets
+     *       a homogeneous run (all FE or all EU) line up cleanly while
+     *       still refusing where two networks cross modes.</li>
+     *   <li>Cable→other: connect to a neighbour exposing the cable's
+     *       active capability — Forge ENERGY for FE-mode, GT
+     *       IEnergyContainer for EU-mode.</li>
+     * </ul>
      */
     public static boolean canConnect(LevelAccessor level, BlockPos pos, Direction dir) {
         BlockPos npos = pos.relative(dir);
         BlockState nstate = level.getBlockState(npos);
-        if (nstate.getBlock() instanceof EnergyCableBlock) return true;
+        BlockEntity selfBE = level.getBlockEntity(pos);
+        EnergyMode selfMode = (selfBE instanceof EnergyCableBlockEntity sc) ? sc.getMode() : EnergyMode.FE;
+
+        if (nstate.getBlock() instanceof EnergyCableBlock) {
+            BlockEntity nbe = level.getBlockEntity(npos);
+            EnergyMode nMode = (nbe instanceof EnergyCableBlockEntity nc) ? nc.getMode() : EnergyMode.FE;
+            return nMode == selfMode;
+        }
+
         BlockEntity be = level.getBlockEntity(npos);
         if (be == null) return false;
-        return be.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).isPresent();
+        if (selfMode == EnergyMode.FE) {
+            return be.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).isPresent();
+        }
+        // EU mode — connect via the GT cap. Guarded by GTCompat so absent-GT
+        // packs simply never see EU connections.
+        return GTCompat.isLoaded()
+                && GTEnergyCompat.hasEUCapability(be, dir.getOpposite());
     }
 
     @Nullable
