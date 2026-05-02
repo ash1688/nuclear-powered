@@ -19,19 +19,44 @@ import javax.annotation.Nullable;
 // capability doesn't exist without GT). Pushes at HV with Long.MAX_VALUE
 // amperage so the neighbour's own input cap is the limit.
 public class CreativeEUGeneratorBlockEntity extends BlockEntity {
+    /** Phantom GT IEnergyContainer so cables (and other EU-aware blocks)
+     *  detect us as an EU endpoint. Real flow goes via {@link #tick}'s
+     *  GTEnergyCompat.creativePush; this lazy is the connection signal. */
+    @SuppressWarnings("rawtypes")
+    private LazyOptional lazyEUProducer = LazyOptional.empty();
+
     public CreativeEUGeneratorBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.CREATIVE_EU_GENERATOR.get(), pos, state);
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        if (GTCompat.isLoaded()) {
+            lazyEUProducer = GTEnergyCompat.creativeEUProducerCap();
+        }
+    }
+
+    @Override
+    public void invalidateCaps() {
+        super.invalidateCaps();
+        lazyEUProducer.invalidate();
     }
 
     /**
      * Explicit empty Forge ENERGY response so external mods (GTCEU, etc.)
      * can't auto-shim a Forge ENERGY cap onto this block. EU generators are
      * EU-only; FE cables must refuse to connect, and our cable's canConnect
-     * uses the Forge ENERGY cap as the connection signal.
+     * uses the Forge ENERGY cap as the connection signal. The GT cap goes
+     * through the phantom EU producer above.
      */
     @Override
+    @SuppressWarnings("unchecked")
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
         if (cap == ForgeCapabilities.ENERGY) return LazyOptional.empty();
+        if (GTCompat.isLoaded() && GTEnergyCompat.isEnergyContainerCap(cap)) {
+            return (LazyOptional<T>) lazyEUProducer;
+        }
         return super.getCapability(cap, side);
     }
 

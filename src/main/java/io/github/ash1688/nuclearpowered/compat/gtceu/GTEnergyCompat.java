@@ -107,6 +107,29 @@ public final class GTEnergyCompat {
     }
 
     /**
+     * Phantom EU producer. Used by the Creative EU Generator so cables can
+     * detect it as an EU endpoint and switch into EU mode. The real push
+     * still goes through {@link #creativePush} on the generator's tick;
+     * this wrapper just exists as a "yes, I speak EU" signal.
+     */
+    public static LazyOptional<IEnergyContainer> creativeEUProducerCap() {
+        return LazyOptional.of(() -> CREATIVE_PRODUCER);
+    }
+
+    private static final IEnergyContainer CREATIVE_PRODUCER = new IEnergyContainer() {
+        @Override public long acceptEnergyFromNetwork(Direction side, long voltage, long amperage) { return 0; }
+        @Override public boolean inputsEnergy(Direction side) { return false; }
+        @Override public boolean outputsEnergy(Direction side) { return true; }
+        @Override public long changeEnergy(long delta) { return 0; }
+        @Override public long getEnergyStored() { return Long.MAX_VALUE; }
+        @Override public long getEnergyCapacity() { return Long.MAX_VALUE; }
+        @Override public long getInputVoltage() { return 0; }
+        @Override public long getInputAmperage() { return 0; }
+        @Override public long getOutputVoltage() { return 8L; }
+        @Override public long getOutputAmperage() { return 1L; }
+    };
+
+    /**
      * Tick-side push — called from the BE's tick loop after the Forge FE push
      * fails. Returns the FE amount consumed on a successful push (so the BE
      * can debit its buffer), or 0 if the neighbour doesn't accept EU or has
