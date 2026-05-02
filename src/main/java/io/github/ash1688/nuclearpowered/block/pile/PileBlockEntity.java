@@ -9,6 +9,8 @@ import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
 import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
 import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
+import io.github.ash1688.nuclearpowered.energy.EnergyMode;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModBlocks;
 import io.github.ash1688.nuclearpowered.init.ModItems;
@@ -112,6 +114,13 @@ public class PileBlockEntity extends BlockEntity implements IUIHolder.BlockEntit
     private boolean extendedBurn = false;
     private boolean thermalDampener = false;
 
+    // Dual-energy mode for the whole reactor cluster. Single source of truth
+    // — every thermocouple attached via the casing structure inherits this
+    // mode. Players toggle it in the pile's GUI (EM tab); the change cascades
+    // automatically because thermos read this each tick. EU mode requires
+    // GTCEU; toggle is silently refused without it.
+    private EnergyMode energyMode = EnergyMode.FE;
+
     public PileBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.GRAPHITE_PILE_CONTROLLER.get(), pos, state);
     }
@@ -181,6 +190,25 @@ public class PileBlockEntity extends BlockEntity implements IUIHolder.BlockEntit
         return true;
     }
 
+    public EnergyMode getEnergyMode() { return energyMode; }
+
+    /** True if a mode switch would be valid right now. EU requires GTCEU. */
+    public boolean canToggleEnergyMode() {
+        if (energyMode == EnergyMode.FE && !GTCompat.isLoaded()) return false;
+        return true;
+    }
+
+    /** Toggle FE↔EU for the whole reactor cluster. Connected thermocouples
+     *  re-read this on their next tick and re-issue their capability handles. */
+    public void toggleEnergyMode() {
+        if (!canToggleEnergyMode()) return;
+        energyMode = energyMode.opposite();
+        setChanged();
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
     // Per-second heat coefficient each casing contributes at the current heat
     // level. Below 3K each casing heats (+5). At 3K and above each casing
     // cools, stacking an extra -1 for every 1K band crossed.
@@ -237,6 +265,8 @@ public class PileBlockEntity extends BlockEntity implements IUIHolder.BlockEntit
         ui.mainGroup.addWidget(new io.github.ash1688.nuclearpowered.client.ui.NPTabs()
                 .ioTab(() -> autoInput, this::toggleAutoInput,
                         () -> autoOutput, this::toggleAutoOutput)
+                .energyTab(this::getEnergyMode, this::toggleEnergyMode,
+                        this::canToggleEnergyMode)
                 .build());
         return ui;
     }
@@ -270,6 +300,7 @@ public class PileBlockEntity extends BlockEntity implements IUIHolder.BlockEntit
         tag.putBoolean("autoOutput", autoOutput);
         tag.putBoolean("extendedBurn", extendedBurn);
         tag.putBoolean("thermalDampener", thermalDampener);
+        tag.putString("energyMode", energyMode.name());
     }
 
     @Override
@@ -283,6 +314,10 @@ public class PileBlockEntity extends BlockEntity implements IUIHolder.BlockEntit
         autoOutput = !tag.contains("autoOutput") || tag.getBoolean("autoOutput");
         extendedBurn = tag.getBoolean("extendedBurn");
         thermalDampener = tag.getBoolean("thermalDampener");
+        if (tag.contains("energyMode")) {
+            try { energyMode = EnergyMode.valueOf(tag.getString("energyMode")); }
+            catch (IllegalArgumentException ignored) { energyMode = EnergyMode.FE; }
+        }
     }
 
     public void drops() {
