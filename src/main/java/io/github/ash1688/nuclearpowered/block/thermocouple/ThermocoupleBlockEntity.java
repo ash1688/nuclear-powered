@@ -5,6 +5,8 @@ import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
 import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import io.github.ash1688.nuclearpowered.block.pile.PileBlockEntity;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat;
 import io.github.ash1688.nuclearpowered.energy.EnergyMode;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModBlocks;
@@ -89,6 +91,12 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
 
     private LazyOptional<IEnergyStorage> lazyEnergy = LazyOptional.empty();
 
+    /** EU producer wrapper for the FE buffer; populated in onLoad when GT
+     *  is present. Exposed by getCapability when this thermo's effective
+     *  mode is EU so EU cables / GT consumers can connect and pull. */
+    @SuppressWarnings("rawtypes")
+    private LazyOptional lazyEUProducer = LazyOptional.empty();
+
     @Nullable private BlockPos cachedPilePos;
     private int scanCooldown = 0;
     private int lastGenerationFE = 0;
@@ -138,9 +146,15 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-        if (cap == ForgeCapabilities.ENERGY && getEffectiveMode() == EnergyMode.FE) {
+        EnergyMode effective = getEffectiveMode();
+        if (cap == ForgeCapabilities.ENERGY && effective == EnergyMode.FE) {
             return lazyEnergy.cast();
+        }
+        if (effective == EnergyMode.EU && GTCompat.isLoaded()
+                && GTEnergyCompat.isEnergyContainerCap(cap)) {
+            return (LazyOptional<T>) lazyEUProducer;
         }
         return super.getCapability(cap, side);
     }
@@ -149,12 +163,16 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
     public void onLoad() {
         super.onLoad();
         lazyEnergy = LazyOptional.of(() -> externalEnergy);
+        if (GTCompat.isLoaded()) {
+            lazyEUProducer = GTEnergyCompat.wrapFEAsEUProducer(externalEnergy);
+        }
     }
 
     @Override
     public void invalidateCaps() {
         super.invalidateCaps();
         lazyEnergy.invalidate();
+        lazyEUProducer.invalidate();
     }
 
     @Override
@@ -271,19 +289,17 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
             }
         }
 
-        // Push FE to adjacent consumers. Skip GT-aware neighbours so the
-        // Forge ENERGY shim on a battery-less GT buffer can't silently void
-        // the FE — players bridge to GT via the dedicated converter. EU mode
-        // skips this push entirely; producer-side EU push lands with the GT
-        // producer adapter in a follow-up commit.
+        // Push FE / EU to adjacent consumers depending on the inherited mode.
         if (storedFE > 0 && current == EnergyMode.FE) {
+            // Skip GT-aware neighbours — their Forge ENERGY shim silently voids
+            // FE when the EU side can't accept. Players bridge to GT via the
+            // dedicated converter (or now, by toggling the pile to EU).
             for (Direction dir : Direction.values()) {
                 if (storedFE <= 0) break;
                 BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
                 if (neighbour == null) continue;
-                if (io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()
-                        && io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat
-                                .isExternalGTSink(neighbour, dir.getOpposite())) continue;
+                if (GTCompat.isLoaded()
+                        && GTEnergyCompat.isExternalGTSink(neighbour, dir.getOpposite())) continue;
                 neighbour.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).ifPresent(sink -> {
                     if (!sink.canReceive()) return;
                     int offered = Math.min(storedFE, MAX_OUTPUT_FE_PER_TICK);
@@ -292,6 +308,24 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
                         storedFE -= accepted;
                     }
                 });
+            }
+        } else if (storedFE > 0 && current == EnergyMode.EU && GTCompat.isLoaded()) {
+            // EU push: convert the per-tick FE budget into amperage at LV
+            // (32 V × N A) and offer to each EU-capable neighbour.
+            long voltage = 32L;
+            long maxAmperage = MAX_OUTPUT_FE_PER_TICK / (voltage * EnergyMode.FE_PER_EU);
+            if (maxAmperage > 0) {
+                for (Direction dir : Direction.values()) {
+                    if (storedFE <= 0) break;
+                    BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
+                    if (neighbour == null) continue;
+                    int feDrained = GTEnergyCompat.pushEUFromFEBuffer(
+                            externalEnergy, neighbour, dir.getOpposite(),
+                            voltage, maxAmperage);
+                    // externalEnergy.extractEnergy already decremented storedFE
+                    // via the existing setter, so nothing to do here besides
+                    // re-checking the loop guard above.
+                }
             }
         }
 

@@ -116,6 +116,122 @@ public final class GTEnergyCompat {
         return LazyOptional.of(() -> CREATIVE_PRODUCER);
     }
 
+    /**
+     * Wrap an existing FE buffer as an EU consumer (input-only). Used by
+     * dual-energy machines that, while in EU mode, want to accept EU pushes
+     * and convert them into FE for the underlying buffer at the canonical
+     * 1 EU = 4 FE ratio. Read-only on the EU side — getEnergyStored /
+     * getEnergyCapacity reflect the FE buffer in EU units so downstream
+     * tooling sees a sensible value.
+     */
+    public static LazyOptional<IEnergyContainer> wrapFEAsEUConsumer(net.minecraftforge.energy.IEnergyStorage feStorage) {
+        return LazyOptional.of(() -> new ConsumerAdapter(feStorage));
+    }
+
+    /**
+     * Wrap an existing FE buffer as an EU producer (output-only). Used by
+     * dual-energy producers (thermo, steam engine, etc.) that, in EU mode,
+     * expose their stored FE as EU under the GT cap. Output side only —
+     * acceptEnergyFromNetwork is a no-op and inputsEnergy returns false.
+     */
+    public static LazyOptional<IEnergyContainer> wrapFEAsEUProducer(net.minecraftforge.energy.IEnergyStorage feStorage) {
+        return LazyOptional.of(() -> new ProducerAdapter(feStorage));
+    }
+
+    /**
+     * Push EU FROM an FE buffer into a single neighbour. Used on producer
+     * tick to drain EU equivalent into adjacent EU consumers / cables.
+     * Returns FE actually drained from the buffer.
+     */
+    public static int pushEUFromFEBuffer(net.minecraftforge.energy.IEnergyStorage feStorage,
+                                          BlockEntity neighbour, Direction facing,
+                                          long voltage, long maxAmperage) {
+        IEnergyContainer sink = neighbour.getCapability(GTCapability.CAPABILITY_ENERGY_CONTAINER, facing).orElse(null);
+        if (sink == null || !sink.inputsEnergy(facing) || maxAmperage <= 0 || voltage <= 0) return 0;
+        int feAvail = feStorage.getEnergyStored();
+        long feEquivPerPacket = voltage * EnergyConverterBlockEntity.FE_PER_EU;
+        if (feEquivPerPacket <= 0 || feAvail < feEquivPerPacket) return 0;
+        long packetsAfford = Math.min(maxAmperage, feAvail / feEquivPerPacket);
+        if (packetsAfford <= 0) return 0;
+        long accepted = sink.acceptEnergyFromNetwork(facing, voltage, packetsAfford);
+        if (accepted <= 0) return 0;
+        int feToBurn = (int) Math.min(Integer.MAX_VALUE, accepted * feEquivPerPacket);
+        return feStorage.extractEnergy(feToBurn, false);
+    }
+
+    /** EU consumer adapter — accepts EU and forwards to an FE storage as
+     *  receiveEnergy at the canonical 1 EU = 4 FE ratio. */
+    private static final class ConsumerAdapter implements IEnergyContainer {
+        private final net.minecraftforge.energy.IEnergyStorage fe;
+        ConsumerAdapter(net.minecraftforge.energy.IEnergyStorage fe) { this.fe = fe; }
+
+        @Override
+        public long acceptEnergyFromNetwork(Direction side, long voltage, long amperage) {
+            if (voltage <= 0 || amperage <= 0) return 0;
+            long feEquivPerPacket = voltage * EnergyConverterBlockEntity.FE_PER_EU;
+            if (feEquivPerPacket <= 0) return 0;
+            long packetsRoom = Long.MAX_VALUE;
+            // Try inserting one packet's worth at a time until the buffer
+            // refuses (returns 0). Small loop; usually only a few iterations.
+            long taken = 0;
+            for (long i = 0; i < amperage; i++) {
+                int wouldAdd = (int) Math.min(Integer.MAX_VALUE, feEquivPerPacket);
+                int added = fe.receiveEnergy(wouldAdd, false);
+                if (added < wouldAdd) {
+                    if (added > 0) taken++;
+                    break;
+                }
+                taken++;
+            }
+            return taken;
+        }
+
+        @Override public boolean inputsEnergy(Direction side) { return fe.canReceive(); }
+        @Override public boolean outputsEnergy(Direction side) { return false; }
+        @Override public long changeEnergy(long delta) {
+            if (delta > 0) {
+                long deltaFE = delta * EnergyConverterBlockEntity.FE_PER_EU;
+                int added = fe.receiveEnergy((int) Math.min(Integer.MAX_VALUE, deltaFE), false);
+                return added / EnergyConverterBlockEntity.FE_PER_EU;
+            }
+            return 0;
+        }
+        @Override public long getEnergyStored() { return (long) fe.getEnergyStored() / EnergyConverterBlockEntity.FE_PER_EU; }
+        @Override public long getEnergyCapacity() { return (long) fe.getMaxEnergyStored() / EnergyConverterBlockEntity.FE_PER_EU; }
+        @Override public long getInputVoltage()  { return 32L; }
+        @Override public long getInputAmperage() { return 1L; }
+        @Override public long getOutputVoltage()  { return 0L; }
+        @Override public long getOutputAmperage() { return 0L; }
+    }
+
+    /** EU producer adapter — exposes an FE storage as an output-only EU
+     *  endpoint. Cables / sinks pull via acceptEnergyFromNetwork (we don't
+     *  do that direction); the buffer is drained by the producer's own
+     *  tick via {@link #pushEUFromFEBuffer}. This adapter exists primarily
+     *  as a "yes, I speak EU" signal so cables connect. */
+    private static final class ProducerAdapter implements IEnergyContainer {
+        private final net.minecraftforge.energy.IEnergyStorage fe;
+        ProducerAdapter(net.minecraftforge.energy.IEnergyStorage fe) { this.fe = fe; }
+
+        @Override public long acceptEnergyFromNetwork(Direction side, long voltage, long amperage) { return 0; }
+        @Override public boolean inputsEnergy(Direction side) { return false; }
+        @Override public boolean outputsEnergy(Direction side) { return fe.canExtract(); }
+        @Override public long changeEnergy(long delta) {
+            if (delta < 0) {
+                long deltaFE = -delta * EnergyConverterBlockEntity.FE_PER_EU;
+                int removed = fe.extractEnergy((int) Math.min(Integer.MAX_VALUE, deltaFE), false);
+                return -((long) removed / EnergyConverterBlockEntity.FE_PER_EU);
+            }
+            return 0;
+        }
+        @Override public long getEnergyStored() { return (long) fe.getEnergyStored() / EnergyConverterBlockEntity.FE_PER_EU; }
+        @Override public long getEnergyCapacity() { return (long) fe.getMaxEnergyStored() / EnergyConverterBlockEntity.FE_PER_EU; }
+        @Override public long getInputVoltage()  { return 0L; }
+        @Override public long getInputAmperage() { return 0L; }
+        @Override public long getOutputVoltage()  { return 32L; }
+        @Override public long getOutputAmperage() { return 1L; }
+    }
+
     private static final IEnergyContainer CREATIVE_PRODUCER = new IEnergyContainer() {
         @Override public long acceptEnergyFromNetwork(Direction side, long voltage, long amperage) { return 0; }
         @Override public boolean inputsEnergy(Direction side) { return false; }
