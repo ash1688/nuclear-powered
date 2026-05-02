@@ -6,6 +6,8 @@ import io.github.ash1688.nuclearpowered.block.boiler.CoalBoilerBlockEntity;
 import io.github.ash1688.nuclearpowered.block.cable.EnergyCableBlockEntity;
 import io.github.ash1688.nuclearpowered.block.converter.EnergyConverterBlockEntity;
 import io.github.ash1688.nuclearpowered.block.coolingpond.CoolingPondBlockEntity;
+import io.github.ash1688.nuclearpowered.block.creative.CreativeEUGeneratorBlockEntity;
+import io.github.ash1688.nuclearpowered.block.creative.CreativeFEGeneratorBlockEntity;
 import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlockEntity;
 import io.github.ash1688.nuclearpowered.block.cscolumn.CsColumnBlockEntity;
 import io.github.ash1688.nuclearpowered.block.dissolver.DissolverBlockEntity;
@@ -131,6 +133,14 @@ public final class ModBlockEntities {
     public static final RegistryObject<BlockEntityType<EnergyConverterBlockEntity>> ENERGY_CONVERTER =
             BLOCK_ENTITIES.register("energy_converter", () ->
                     BlockEntityType.Builder.of(EnergyConverterBlockEntity::new, ModBlocks.ENERGY_CONVERTER.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<CreativeFEGeneratorBlockEntity>> CREATIVE_FE_GENERATOR =
+            BLOCK_ENTITIES.register("creative_fe_generator", () ->
+                    BlockEntityType.Builder.of(CreativeFEGeneratorBlockEntity::new, ModBlocks.CREATIVE_FE_GENERATOR.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<CreativeEUGeneratorBlockEntity>> CREATIVE_EU_GENERATOR =
+            BLOCK_ENTITIES.register("creative_eu_generator", () ->
+                    BlockEntityType.Builder.of(CreativeEUGeneratorBlockEntity::new, ModBlocks.CREATIVE_EU_GENERATOR.get()).build(null));
 
     private ModBlockEntities() {}
 

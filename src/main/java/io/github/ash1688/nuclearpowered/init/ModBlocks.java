@@ -12,6 +12,8 @@ import io.github.ash1688.nuclearpowered.block.dissolver.DissolverBlock;
 import io.github.ash1688.nuclearpowered.block.electricfurnace.ElectricFurnaceBlock;
 import io.github.ash1688.nuclearpowered.block.extractor.ExtractionColumnBlock;
 import io.github.ash1688.nuclearpowered.block.FacingPlaceableBlock;
+import io.github.ash1688.nuclearpowered.block.creative.CreativeEUGeneratorBlock;
+import io.github.ash1688.nuclearpowered.block.creative.CreativeFEGeneratorBlock;
 import io.github.ash1688.nuclearpowered.block.engine.SteamEngineBlock;
 import io.github.ash1688.nuclearpowered.block.fabricator.FuelFabricatorBlock;
 import io.github.ash1688.nuclearpowered.block.heater.HeaterBlock;
@@ -311,6 +313,22 @@ public final class ModBlocks {
             () -> new FacingPlaceableBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.METAL)
                     .strength(3.5f, 4.0f)
+                    .sound(SoundType.METAL)));
+
+    // --- Creative test sources for the dual-energy system ---
+    // Infinite FE / EU emitters; place adjacent to a machine to flood it
+    // with power. Useful for verifying mode-toggle + cable connection
+    // gating without building the full energy chain.
+    public static final RegistryObject<CreativeFEGeneratorBlock> CREATIVE_FE_GENERATOR = registerBlock("creative_fe_generator",
+            () -> new CreativeFEGeneratorBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_ORANGE)
+                    .strength(-1.0f, 3600000.0f)
+                    .sound(SoundType.METAL)));
+
+    public static final RegistryObject<CreativeEUGeneratorBlock> CREATIVE_EU_GENERATOR = registerBlock("creative_eu_generator",
+            () -> new CreativeEUGeneratorBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_BLUE)
+                    .strength(-1.0f, 3600000.0f)
                     .sound(SoundType.METAL)));
 
     private ModBlocks() {}

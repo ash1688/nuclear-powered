@@ -52,6 +52,8 @@ public final class ModCreativeTabs {
                         out.accept(ModBlocks.INFINITE_WATER_SOURCE.get());
                         out.accept(ModBlocks.INFINITE_NITRIC_ACID_SOURCE.get());
                         out.accept(ModBlocks.INFINITE_SOLVENT_SOURCE.get());
+                        out.accept(ModBlocks.CREATIVE_FE_GENERATOR.get());
+                        out.accept(ModBlocks.CREATIVE_EU_GENERATOR.get());
                         out.accept(ModBlocks.COOLING_POND.get());
                         out.accept(ModItems.HOT_SPENT_FUEL_ROD.get());
                         out.accept(ModBlocks.SHEARER.get());

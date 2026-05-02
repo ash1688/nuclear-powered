@@ -63,6 +63,20 @@ public final class GTEnergyCompat {
                 .startsWith("io.github.ash1688.nuclearpowered.");
     }
 
+    /**
+     * Creative EU push — used by the Creative EU Generator to flood any
+     * adjacent GT consumer with energy each tick. Pushes at HV (512 V) with
+     * Long.MAX_VALUE amperage so the neighbour's own input cap is the only
+     * limit. Returns true if any EU was accepted (cosmetic — no buffer to
+     * debit on a creative source).
+     */
+    public static boolean creativePush(BlockEntity neighbour, Direction facing) {
+        IEnergyContainer sink = neighbour.getCapability(GTCapability.CAPABILITY_ENERGY_CONTAINER, facing).orElse(null);
+        if (sink == null || !sink.inputsEnergy(facing)) return false;
+        long accepted = sink.acceptEnergyFromNetwork(facing, 512L, Long.MAX_VALUE);
+        return accepted > 0;
+    }
+
     /** Build the LazyOptional the BE hands out when GT asks for EU. */
     public static LazyOptional<IEnergyContainer> createLazy(EnergyConverterBlockEntity be) {
         return LazyOptional.of(() -> new Adapter(be));
