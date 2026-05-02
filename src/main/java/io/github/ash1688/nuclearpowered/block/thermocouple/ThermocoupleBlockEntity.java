@@ -2,8 +2,12 @@ package io.github.ash1688.nuclearpowered.block.thermocouple;
 
 import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import io.github.ash1688.nuclearpowered.block.pile.PileBlockEntity;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
+import io.github.ash1688.nuclearpowered.client.ui.NPTabs;
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
+import io.github.ash1688.nuclearpowered.energy.EnergyMode;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModBlocks;
 import net.minecraft.core.BlockPos;
@@ -45,6 +49,12 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
 
     // Internal energy counter. Exposed externally as extract-only via `externalEnergy`.
     private int storedFE = 0;
+
+    // Dual-energy mode flag. Same shape as battery/engine — no in-flight
+    // work to lose, so the toggle is always allowed (subject to GT availability
+    // for FE→EU). EU push + EU output cap exposure ship with the GT producer
+    // adapter in a follow-up commit.
+    private EnergyMode energyMode = EnergyMode.FE;
     private int coolTickCounter = 0;
     private boolean extractedThisInterval = false;
     private boolean coolantMode = false;
@@ -88,6 +98,26 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
         super(ModBlockEntities.THERMOCOUPLE.get(), pos, state);
     }
 
+    public EnergyMode getEnergyMode() {
+        return energyMode;
+    }
+
+    public boolean canToggleEnergyMode() {
+        if (energyMode == EnergyMode.FE && !GTCompat.isLoaded()) return false;
+        return true;
+    }
+
+    public void toggleEnergyMode() {
+        if (!canToggleEnergyMode()) return;
+        energyMode = energyMode.opposite();
+        lazyEnergy.invalidate();
+        lazyEnergy = LazyOptional.of(() -> externalEnergy);
+        setChanged();
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
     @Override
     public BlockEntity self() { return this; }
 
@@ -98,7 +128,13 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
         NPMachineUI.addTitle(ui.mainGroup, "block.nuclearpowered.thermocouple");
 
         ui.mainGroup.addWidget(NPMachineUI.feBar(82, 17,
-                () -> storedFE, CAPACITY_FE));
+                () -> storedFE, CAPACITY_FE,
+                () -> energyMode.displayUnit()));
+
+        // Energy-mode tag above the FE bar — green for FE, light blue for EU.
+        ui.mainGroup.addWidget(new LabelWidget(NPMachineUI.PANEL_X + 82, 8,
+                () -> energyMode == EnergyMode.FE ? "§aFE" : "§bEU")
+                .setDropShadow(true));
 
         // Coolant-mode toggle stays inline — it's a unique mode switch, not
         // a generic auto-I/O. PANEL_X manually applied since toggleButton
@@ -107,12 +143,18 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
                 "Coolant Mode", () -> coolantMode, this::toggleCoolantMode));
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+        ui.mainGroup.addWidget(new NPTabs()
+                .energyTab(this::getEnergyMode, this::toggleEnergyMode,
+                        this::canToggleEnergyMode)
+                .build());
         return ui;
     }
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-        if (cap == ForgeCapabilities.ENERGY) return lazyEnergy.cast();
+        if (cap == ForgeCapabilities.ENERGY && energyMode == EnergyMode.FE) {
+            return lazyEnergy.cast();
+        }
         return super.getCapability(cap, side);
     }
 
@@ -134,6 +176,7 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
         tag.putInt("fe", storedFE);
         tag.putBoolean("coolantMode", coolantMode);
         tag.putBoolean("heatCaptureEfficiency", heatCaptureEfficiency);
+        tag.putString("energyMode", energyMode.name());
     }
 
     @Override
@@ -142,6 +185,10 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
         storedFE = tag.getInt("fe");
         coolantMode = tag.getBoolean("coolantMode");
         heatCaptureEfficiency = tag.getBoolean("heatCaptureEfficiency");
+        if (tag.contains("energyMode")) {
+            try { energyMode = EnergyMode.valueOf(tag.getString("energyMode")); }
+            catch (IllegalArgumentException ignored) { energyMode = EnergyMode.FE; }
+        }
     }
 
     public boolean hasHeatCaptureEfficiency() { return heatCaptureEfficiency; }
@@ -230,8 +277,10 @@ public class ThermocoupleBlockEntity extends BlockEntity implements IUIHolder.Bl
 
         // Push FE to adjacent consumers. Skip GT-aware neighbours so the
         // Forge ENERGY shim on a battery-less GT buffer can't silently void
-        // the FE — players bridge to GT via the dedicated converter.
-        if (storedFE > 0) {
+        // the FE — players bridge to GT via the dedicated converter. EU mode
+        // skips this push entirely; producer-side EU push lands with the GT
+        // producer adapter in a follow-up commit.
+        if (storedFE > 0 && energyMode == EnergyMode.FE) {
             for (Direction dir : Direction.values()) {
                 if (storedFE <= 0) break;
                 BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
