@@ -23,6 +23,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 /**
  * Shared UI builders for NP's machine GUIs.
@@ -129,6 +130,18 @@ public final class NPMachineUI {
      * accumulates (conventional liquid-tank look).
      */
     public static ProgressWidget feBar(int x, int y, IntSupplier stored, int capacity) {
+        return feBar(x, y, stored, capacity, () -> "FE");
+    }
+
+    /**
+     * FE bar with a mode-aware unit label in the tooltip. Use the
+     * {@code unit} supplier on dual-energy machines so the hover tooltip
+     * reads "X / Y EU" while in EU mode and "X / Y FE" in FE mode. The
+     * underlying number stays the FE-equivalent buffer amount on purpose
+     * — keeps the bar visually consistent across mode switches.
+     */
+    public static ProgressWidget feBar(int x, int y, IntSupplier stored, int capacity,
+                                        Supplier<String> unit) {
         ProgressTexture tex = new ProgressTexture(
                 new ColorRectTexture(FE_BAR_EMPTY),
                 new ColorRectTexture(FE_BAR_FULL))
@@ -142,7 +155,7 @@ public final class NPMachineUI {
         // by default, so it would always read 0. Multiplying back by capacity
         // gives the live server-side value for the player.
         bar.setDynamicHoverTips(frac ->
-                Math.round(frac * capacity) + " / " + capacity + " FE");
+                Math.round(frac * capacity) + " / " + capacity + " " + unit.get());
         return bar;
     }
 

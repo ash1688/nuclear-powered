@@ -191,7 +191,8 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
                 () -> progress, () -> maxProgress));
 
         ui.mainGroup.addWidget(NPMachineUI.feBar(152, 17,
-                () -> storedFE, ENERGY_CAPACITY));
+                () -> storedFE, ENERGY_CAPACITY,
+                () -> energyMode.displayUnit()));
 
         // Energy-mode tag above the FE bar — green for FE, light blue for EU.
         ui.mainGroup.addWidget(new LabelWidget(NPMachineUI.PANEL_X + 152, 8,
