@@ -64,16 +64,17 @@ public final class GTEnergyCompat {
     }
 
     /**
-     * Creative EU push — used by the Creative EU Generator to flood any
-     * adjacent GT consumer with energy each tick. Pushes at HV (512 V) with
-     * Long.MAX_VALUE amperage so the neighbour's own input cap is the only
-     * limit. Returns true if any EU was accepted (cosmetic — no buffer to
-     * debit on a creative source).
+     * Creative EU push — used by the Creative EU Generator. Throttled to
+     * 8 EU/tick (8 V × 1 A, ULV tier) per face so the receiver's buffer
+     * bar fills at a clearly visible rate during testing. NP machines in
+     * EU mode will accept ULV; vanilla GT machines that reject below-LV
+     * inputs may need a higher tier — bump the voltage constant to 32
+     * (LV) if that comes up.
      */
     public static boolean creativePush(BlockEntity neighbour, Direction facing) {
         IEnergyContainer sink = neighbour.getCapability(GTCapability.CAPABILITY_ENERGY_CONTAINER, facing).orElse(null);
         if (sink == null || !sink.inputsEnergy(facing)) return false;
-        long accepted = sink.acceptEnergyFromNetwork(facing, 512L, Long.MAX_VALUE);
+        long accepted = sink.acceptEnergyFromNetwork(facing, 8L, 1L);
         return accepted > 0;
     }
 
