@@ -4,8 +4,10 @@ import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
 import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
+import io.github.ash1688.nuclearpowered.client.ui.NPTabs;
 import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
 import io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat;
+import io.github.ash1688.nuclearpowered.energy.EnergyMode;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModFluids;
 import net.minecraft.core.BlockPos;
@@ -52,6 +54,11 @@ public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.Blo
 
     private int storedFE = 0;
 
+    // Dual-energy mode flag. Engine produces FE → in EU mode it switches to
+    // producing/exposing EU. The EU-side cap and push behaviour ship in a
+    // follow-up commit; for now EU mode just hoards generated FE.
+    private EnergyMode energyMode = EnergyMode.FE;
+
     private final IEnergyStorage externalEnergy = new IEnergyStorage() {
         @Override
         public int receiveEnergy(int amount, boolean simulate) { return 0; }
@@ -82,6 +89,26 @@ public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.Blo
         super(ModBlockEntities.STEAM_ENGINE.get(), pos, state);
     }
 
+    public EnergyMode getEnergyMode() {
+        return energyMode;
+    }
+
+    public boolean canToggleEnergyMode() {
+        if (energyMode == EnergyMode.FE && !GTCompat.isLoaded()) return false;
+        return true;
+    }
+
+    public void toggleEnergyMode() {
+        if (!canToggleEnergyMode()) return;
+        energyMode = energyMode.opposite();
+        lazyEnergy.invalidate();
+        lazyEnergy = LazyOptional.of(() -> externalEnergy);
+        setChanged();
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
     @Override
     public BlockEntity self() { return this; }
 
@@ -93,7 +120,13 @@ public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.Blo
 
         ui.mainGroup.addWidget(NPMachineUI.tankBar(60, 17, steamTank));
         ui.mainGroup.addWidget(NPMachineUI.feBar(104, 17,
-                () -> storedFE, ENERGY_CAPACITY));
+                () -> storedFE, ENERGY_CAPACITY,
+                () -> energyMode.displayUnit()));
+
+        // Energy-mode tag above the FE bar — green for FE, light blue for EU.
+        ui.mainGroup.addWidget(new LabelWidget(NPMachineUI.PANEL_X + 104, 8,
+                () -> energyMode == EnergyMode.FE ? "§aFE" : "§bEU")
+                .setDropShadow(true));
 
         // Status line: green "Running (+N FE/t)" while steam is being
         // consumed, grey "Idle" otherwise. Minecraft format codes (§a, §7)
@@ -108,12 +141,18 @@ public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.Blo
                 .setDropShadow(true));
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
+        ui.mainGroup.addWidget(new NPTabs()
+                .energyTab(this::getEnergyMode, this::toggleEnergyMode,
+                        this::canToggleEnergyMode)
+                .build());
         return ui;
     }
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-        if (cap == ForgeCapabilities.ENERGY) return lazyEnergy.cast();
+        if (cap == ForgeCapabilities.ENERGY && energyMode == EnergyMode.FE) {
+            return lazyEnergy.cast();
+        }
         if (cap == ForgeCapabilities.FLUID_HANDLER) return lazyFluidHandler.cast();
         return super.getCapability(cap, side);
     }
@@ -139,6 +178,7 @@ public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.Blo
         steamTank.writeToNBT(tankTag);
         tag.put("steam", tankTag);
         tag.putInt("fe", storedFE);
+        tag.putString("energyMode", energyMode.name());
     }
 
     @Override
@@ -146,6 +186,10 @@ public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.Blo
         super.load(tag);
         steamTank.readFromNBT(tag.getCompound("steam"));
         storedFE = tag.getInt("fe");
+        if (tag.contains("energyMode")) {
+            try { energyMode = EnergyMode.valueOf(tag.getString("energyMode")); }
+            catch (IllegalArgumentException ignored) { energyMode = EnergyMode.FE; }
+        }
     }
 
     public void tick(Level level, BlockPos pos, BlockState state) {
@@ -178,8 +222,9 @@ public class SteamEngineBlockEntity extends BlockEntity implements IUIHolder.Blo
         // Push FE to adjacent consumers. Skip GT-aware neighbours — their
         // Forge ENERGY shim silently voids FE when the EU side is full or
         // missing storage. The dedicated FE↔EU converter is the bridge for
-        // GT integration.
-        if (storedFE > 0) {
+        // GT integration. EU mode skips this push entirely; producer-side
+        // EU push lands with the GT producer adapter in a follow-up commit.
+        if (storedFE > 0 && energyMode == EnergyMode.FE) {
             for (Direction dir : Direction.values()) {
                 if (storedFE <= 0) break;
                 BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
