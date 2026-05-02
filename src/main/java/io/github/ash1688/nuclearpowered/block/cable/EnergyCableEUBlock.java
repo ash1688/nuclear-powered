@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 
 import javax.annotation.Nullable;
 
@@ -100,10 +101,12 @@ public class EnergyCableEUBlock extends BaseEntityBlock {
     }
 
     /**
-     * EU cable: connect to another EU cable, or any neighbour exposing GT's
-     * IEnergyContainer on the touching face. Without GTCEU loaded EU cables
-     * are inert — canConnect returns false everywhere except to other EU
-     * cables (which are also inert), so the network is harmless.
+     * EU cable: connect to another EU cable, or any neighbour that exposes
+     * GT's IEnergyContainer AND does NOT also expose Forge ENERGY on the
+     * touching face. The Forge-ENERGY exclusion filters out FE-native blocks
+     * that GTCEU has auto-shimmed with a GT cap — those are real FE
+     * endpoints, not EU endpoints, and connecting to them would silently
+     * void the energy through GT's compat layer.
      */
     public static boolean canConnect(LevelAccessor level, BlockPos pos, Direction dir) {
         BlockPos npos = pos.relative(dir);
@@ -111,8 +114,12 @@ public class EnergyCableEUBlock extends BaseEntityBlock {
         if (nstate.getBlock() instanceof EnergyCableEUBlock) return true;
         BlockEntity be = level.getBlockEntity(npos);
         if (be == null) return false;
-        return GTCompat.isLoaded()
-                && GTEnergyCompat.hasEUCapability(be, dir.getOpposite());
+        if (!GTCompat.isLoaded()) return false;
+        Direction face = dir.getOpposite();
+        // Refuse FE-native blocks that GT auto-shimmed — they answer the GT
+        // cap query but the underlying block is FE-only.
+        if (be.getCapability(ForgeCapabilities.ENERGY, face).isPresent()) return false;
+        return GTEnergyCompat.hasEUCapability(be, face);
     }
 
     @Nullable
