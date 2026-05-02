@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "nuclearpowered:block/vat"
+    "all": "nuclearpowered:block/core/top"
   }
 }

@@ -1,3 +1,6 @@
 {
-  "parent": "nuclearpowered:block/vat"
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "nuclearpowered:item/vat"
+  }
 }

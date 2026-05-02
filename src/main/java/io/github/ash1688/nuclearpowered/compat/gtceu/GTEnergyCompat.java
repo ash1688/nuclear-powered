@@ -63,6 +63,21 @@ public final class GTEnergyCompat {
                 .startsWith("io.github.ash1688.nuclearpowered.");
     }
 
+    /**
+     * Creative EU push — used by the Creative EU Generator. Throttled to
+     * 8 EU/tick (8 V × 1 A, ULV tier) per face so the receiver's buffer
+     * bar fills at a clearly visible rate during testing. NP machines in
+     * EU mode will accept ULV; vanilla GT machines that reject below-LV
+     * inputs may need a higher tier — bump the voltage constant to 32
+     * (LV) if that comes up.
+     */
+    public static boolean creativePush(BlockEntity neighbour, Direction facing) {
+        IEnergyContainer sink = neighbour.getCapability(GTCapability.CAPABILITY_ENERGY_CONTAINER, facing).orElse(null);
+        if (sink == null || !sink.inputsEnergy(facing)) return false;
+        long accepted = sink.acceptEnergyFromNetwork(facing, 8L, 1L);
+        return accepted > 0;
+    }
+
     /** Build the LazyOptional the BE hands out when GT asks for EU. */
     public static LazyOptional<IEnergyContainer> createLazy(EnergyConverterBlockEntity be) {
         return LazyOptional.of(() -> new Adapter(be));

@@ -2,10 +2,13 @@ package io.github.ash1688.nuclearpowered.block.crusher;
 
 import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
 import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.client.ui.NPTabs;
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
+import io.github.ash1688.nuclearpowered.energy.EnergyMode;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModRecipes;
 import io.github.ash1688.nuclearpowered.recipe.CrusherRecipe;
@@ -70,6 +73,10 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
     private boolean autoInput = true;
     private boolean autoOutput = true;
     private int storedFE = 0;
+    // Dual-energy mode flag. FE is the cross-mod default; EU only does
+    // anything when GTCEU is loaded and the player has toggled. The toggle
+    // is gated on progress == 0 so a mid-process switch can't lose work.
+    private EnergyMode energyMode = EnergyMode.FE;
 
     private final IEnergyStorage externalEnergy = new IEnergyStorage() {
         @Override
@@ -132,6 +139,34 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
         setChanged();
     }
 
+    public EnergyMode getEnergyMode() {
+        return energyMode;
+    }
+
+    /** True if a mode switch would be valid right now (idle + EU available). */
+    public boolean canToggleEnergyMode() {
+        // Block mid-process to avoid losing work; rescaling stored energy on
+        // switch is handled here so the buffer reads correctly in either unit.
+        if (progress > 0) return false;
+        // EU is GT-only — without GTCEU loaded, FE→EU is silently refused.
+        if (energyMode == EnergyMode.FE && !GTCompat.isLoaded()) return false;
+        return true;
+    }
+
+    public void toggleEnergyMode() {
+        if (!canToggleEnergyMode()) return;
+        energyMode = energyMode.opposite();
+        // Capability identity changes with mode (FE cap goes invalid in EU
+        // mode and vice versa) so neighbours re-resolve and refuse the wrong
+        // cable type. Invalidating both lazies forces that re-resolve.
+        lazyEnergy.invalidate();
+        lazyEnergy = LazyOptional.of(() -> externalEnergy);
+        setChanged();
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
     // --- LDLib UI ---
 
     @Override
@@ -156,7 +191,13 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
                 () -> progress, () -> maxProgress));
 
         ui.mainGroup.addWidget(NPMachineUI.feBar(152, 17,
-                () -> storedFE, ENERGY_CAPACITY));
+                () -> storedFE, ENERGY_CAPACITY,
+                () -> energyMode.displayUnit()));
+
+        // Energy-mode tag above the FE bar — green for FE, light blue for EU.
+        ui.mainGroup.addWidget(new LabelWidget(NPMachineUI.PANEL_X + 152, 8,
+                () -> energyMode == EnergyMode.FE ? "§aFE" : "§bEU")
+                .setDropShadow(true));
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
 
@@ -164,6 +205,8 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
         ui.mainGroup.addWidget(new NPTabs()
                 .ioTab(() -> autoInput, this::toggleAutoInput,
                         () -> autoOutput, this::toggleAutoOutput)
+                .energyTab(this::getEnergyMode, this::toggleEnergyMode,
+                        this::canToggleEnergyMode)
                 .build());
         return ui;
     }
@@ -171,7 +214,11 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
         if (cap == ForgeCapabilities.ITEM_HANDLER) return lazyExternalHandler.cast();
-        if (cap == ForgeCapabilities.ENERGY) return lazyEnergy.cast();
+        // FE cap is exposed only in FE mode — EU mode hides it so an FE
+        // cable refuses to connect, which is what gates the network.
+        if (cap == ForgeCapabilities.ENERGY && energyMode == EnergyMode.FE) {
+            return lazyEnergy.cast();
+        }
         return super.getCapability(cap, side);
     }
 
@@ -198,6 +245,7 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
         tag.putInt("fe", storedFE);
         tag.putBoolean("autoInput", autoInput);
         tag.putBoolean("autoOutput", autoOutput);
+        tag.putString("energyMode", energyMode.name());
     }
 
     @Override
@@ -210,6 +258,11 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
         // Default to true for worlds created before the toggles existed.
         autoInput = !tag.contains("autoInput") || tag.getBoolean("autoInput");
         autoOutput = !tag.contains("autoOutput") || tag.getBoolean("autoOutput");
+        // Pre-dual-energy worlds default to FE.
+        if (tag.contains("energyMode")) {
+            try { energyMode = EnergyMode.valueOf(tag.getString("energyMode")); }
+            catch (IllegalArgumentException ignored) { energyMode = EnergyMode.FE; }
+        }
     }
 
     public void drops() {

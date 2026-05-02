@@ -6,7 +6,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "nuclearpowered:vat"
+          "name": "nuclearpowered:creative_eu_generator"
         }
       ],
       "conditions": [
