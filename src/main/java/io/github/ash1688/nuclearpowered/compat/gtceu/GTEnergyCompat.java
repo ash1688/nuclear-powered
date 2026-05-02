@@ -2,6 +2,7 @@ package io.github.ash1688.nuclearpowered.compat.gtceu;
 
 import com.gregtechceu.gtceu.api.capability.IEnergyContainer;
 import com.gregtechceu.gtceu.api.capability.forge.GTCapability;
+import io.github.ash1688.nuclearpowered.block.cable.EnergyCableBlockEntity;
 import io.github.ash1688.nuclearpowered.block.converter.EnergyConverterBlockEntity;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -84,6 +85,28 @@ public final class GTEnergyCompat {
     }
 
     /**
+     * Wrap a cable BE as an {@link IEnergyContainer} so EU producers can
+     * push into the cable network. The adapter forwards
+     * {@code acceptEnergyFromNetwork} into the cable's {@code distributeEU}
+     * BFS, which walks the connected cables and dispatches the energy to
+     * EU-capable neighbours.
+     */
+    public static LazyOptional<IEnergyContainer> wrapCableAsEU(EnergyCableBlockEntity cable) {
+        return LazyOptional.of(() -> new CableAdapter(cable));
+    }
+
+    /**
+     * Push EU into a single neighbour. Returns the amperage accepted
+     * (0 if neighbour doesn't take EU on that face). Used by
+     * {@link EnergyCableBlockEntity#distributeEU} as the per-sink call.
+     */
+    public static long pushEUToSink(BlockEntity neighbour, Direction facing, long voltage, long amperage) {
+        IEnergyContainer sink = neighbour.getCapability(GTCapability.CAPABILITY_ENERGY_CONTAINER, facing).orElse(null);
+        if (sink == null || !sink.inputsEnergy(facing) || amperage <= 0 || voltage <= 0) return 0;
+        return sink.acceptEnergyFromNetwork(facing, voltage, amperage);
+    }
+
+    /**
      * Tick-side push — called from the BE's tick loop after the Forge FE push
      * fails. Returns the FE amount consumed on a successful push (so the BE
      * can debit its buffer), or 0 if the neighbour doesn't accept EU or has
@@ -162,5 +185,35 @@ public final class GTEnergyCompat {
         @Override public long getInputAmperage() { return 1L; }
         @Override public long getOutputVoltage() { return 32L; }  // LV
         @Override public long getOutputAmperage() { return 1L; }
+    }
+
+    // ---------- Cable adapter ----------
+    // Cables in EU mode expose this so producers can push EU into them. The
+    // cable doesn't store anything itself — it forwards every accepted packet
+    // to consumers walked through the cable network. inputs only (cables
+    // don't pull from neighbours; consumers pull / producers push).
+
+    private static final class CableAdapter implements IEnergyContainer {
+        private final EnergyCableBlockEntity cable;
+        CableAdapter(EnergyCableBlockEntity cable) { this.cable = cable; }
+
+        @Override
+        public long acceptEnergyFromNetwork(Direction side, long voltage, long amperage) {
+            return cable.distributeEU(side, voltage, amperage);
+        }
+
+        @Override public boolean inputsEnergy(Direction side) { return true; }
+        @Override public boolean outputsEnergy(Direction side) { return false; }
+
+        @Override public long changeEnergy(long deltaEU) { return 0L; }
+        @Override public long getEnergyStored() { return 0L; }
+        @Override public long getEnergyCapacity() { return 0L; }
+
+        // Generous tier — cables don't impose throughput; the bottleneck is
+        // the producer's own output voltage and the consumers' input limits.
+        @Override public long getInputVoltage()   { return 8192L; } // ZPM
+        @Override public long getInputAmperage()  { return Long.MAX_VALUE; }
+        @Override public long getOutputVoltage()  { return 0L; }
+        @Override public long getOutputAmperage() { return 0L; }
     }
 }

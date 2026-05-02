@@ -65,6 +65,13 @@ public class EnergyCableBlockEntity extends BlockEntity {
 
     private LazyOptional<IEnergyStorage> lazyAnySide = LazyOptional.empty();
 
+    /** Lazy GT IEnergyContainer wrapper. Initialised in onLoad when GTCEU is
+     *  loaded; stays empty otherwise. Exposed by getCapability when this
+     *  cable is in EU mode so GT producers can push energy into the
+     *  network. */
+    @SuppressWarnings("rawtypes")
+    private LazyOptional lazyEU = LazyOptional.empty();
+
     /** Current mode this cable speaks. Recomputed from neighbours every time
      *  a face's connection state changes (see {@link #recomputeMode}). FE
      *  wins ties when both an FE and EU producer are connected. */
@@ -123,14 +130,21 @@ public class EnergyCableBlockEntity extends BlockEntity {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-        if (cap != ForgeCapabilities.ENERGY) return super.getCapability(cap, side);
-        // EU-mode cables don't speak Forge ENERGY — wrong-mode neighbours
-        // refuse to resolve a connection through us, which is the visual
-        // refuse-connect mechanic. Real EU transport ships in a follow-up.
+        // EU mode: serve the GT IEnergyContainer cap; Forge ENERGY is hidden
+        // so wrong-mode neighbours refuse to resolve a connection.
         if (mode == io.github.ash1688.nuclearpowered.energy.EnergyMode.EU) {
-            return LazyOptional.empty();
+            if (cap == ForgeCapabilities.ENERGY) return LazyOptional.empty();
+            if (io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()
+                    && io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat
+                            .isEnergyContainerCap(cap)) {
+                return (LazyOptional<T>) lazyEU;
+            }
+            return super.getCapability(cap, side);
         }
+        // FE mode: existing per-face FE wrappers.
+        if (cap != ForgeCapabilities.ENERGY) return super.getCapability(cap, side);
         if (side == null) return lazyAnySide.cast();
         int idx = side.ordinal();
         if (perFaceLazies[idx] == null) perFaceLazies[idx] = LazyOptional.of(() -> getOrCreateFaceWrapper(side));
@@ -167,6 +181,9 @@ public class EnergyCableBlockEntity extends BlockEntity {
     public void onLoad() {
         super.onLoad();
         lazyAnySide = LazyOptional.of(() -> anySideWrapper);
+        if (io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()) {
+            lazyEU = io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat.wrapCableAsEU(this);
+        }
     }
 
     @Override
@@ -191,6 +208,7 @@ public class EnergyCableBlockEntity extends BlockEntity {
     public void invalidateCaps() {
         super.invalidateCaps();
         lazyAnySide.invalidate();
+        lazyEU.invalidate();
         for (int i = 0; i < perFaceLazies.length; i++) {
             if (perFaceLazies[i] != null) perFaceLazies[i].invalidate();
         }
@@ -250,6 +268,64 @@ public class EnergyCableBlockEntity extends BlockEntity {
         }
         return remaining;
     }
+
+    /**
+     * EU pathway parallel to {@link #distribute}. A GT producer pushes a
+     * voltage × amperage packet into our IEnergyContainer wrapper; we BFS
+     * the cable network and offer those amperage packets to each EU sink in
+     * turn until either every sink is full or the producer's amperage is
+     * exhausted. Returns the amperage actually accepted.
+     *
+     * <p>Source-face exclusion mirrors the FE side — the neighbour that
+     * pushed the packet doesn't appear in the sink list, so we never feed
+     * it back into the producer.</p>
+     */
+    public long distributeEU(@Nullable Direction sourceFace, long voltage, long amperage) {
+        if (level == null || level.isClientSide || amperage <= 0 || voltage <= 0) return 0;
+        if (!io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()) return 0;
+        BlockPos sourcePos = sourceFace == null ? null : worldPosition.relative(sourceFace);
+        // Sinks are stored as (BlockEntity, facing) pairs because GT's
+        // pushEUToSink takes the receiving face. Same neighbour reachable
+        // from multiple cables only counts once (consumersSeen guard).
+        List<EUSinkEntry> sinks = new ArrayList<>();
+        Set<BlockPos> visited = new HashSet<>();
+        Set<BlockPos> consumersSeen = new HashSet<>();
+        Deque<BlockPos> queue = new ArrayDeque<>();
+        visited.add(worldPosition);
+        queue.add(worldPosition);
+        while (!queue.isEmpty() && visited.size() <= MAX_NETWORK_SIZE) {
+            BlockPos cur = queue.poll();
+            for (Direction dir : Direction.values()) {
+                BlockPos npos = cur.relative(dir);
+                if (sourcePos != null && npos.equals(sourcePos)) continue;
+                BlockEntity be = level.getBlockEntity(npos);
+                if (be == null) continue;
+                if (be instanceof EnergyCableBlockEntity nb) {
+                    // Only walk into cables in the same EU mode — wrong-mode
+                    // cables aren't part of this network.
+                    if (nb.mode != io.github.ash1688.nuclearpowered.energy.EnergyMode.EU) continue;
+                    if (visited.add(npos)) queue.add(npos);
+                    continue;
+                }
+                if (!consumersSeen.add(npos)) continue;
+                // Only neighbours that actually accept EU on the touching face.
+                if (io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat
+                        .hasEUCapability(be, dir.getOpposite())) {
+                    sinks.add(new EUSinkEntry(be, dir.getOpposite()));
+                }
+            }
+        }
+        long remaining = amperage;
+        for (EUSinkEntry sink : sinks) {
+            if (remaining <= 0) break;
+            long taken = io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat
+                    .pushEUToSink(sink.be, sink.facing, voltage, remaining);
+            if (taken > 0) remaining -= taken;
+        }
+        return amperage - remaining;
+    }
+
+    private record EUSinkEntry(BlockEntity be, Direction facing) {}
 
     private void discoverNetwork(List<IEnergyStorage> pureSinks, List<IEnergyStorage> buffers,
                                   @Nullable BlockPos exclude) {
