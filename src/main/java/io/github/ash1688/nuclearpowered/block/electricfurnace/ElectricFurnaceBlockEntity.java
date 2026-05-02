@@ -8,6 +8,7 @@ import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
 import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat;
 import io.github.ash1688.nuclearpowered.energy.EnergyMode;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import net.minecraft.core.BlockPos;
@@ -102,6 +103,12 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements IUIHolder
 
     private LazyOptional<IEnergyStorage> lazyEnergy = LazyOptional.empty();
 
+    /** EU consumer wrapper for the FE buffer; populated in onLoad when
+     *  GT is present. Exposed by getCapability when energyMode == EU so
+     *  EU cables / GT producers can connect and push. */
+    @SuppressWarnings("rawtypes")
+    private LazyOptional lazyEUConsumer = LazyOptional.empty();
+
     public ElectricFurnaceBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.ELECTRIC_FURNACE.get(), pos, state);
     }
@@ -138,7 +145,11 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements IUIHolder
         if (!canToggleEnergyMode()) return;
         energyMode = energyMode.opposite();
         lazyEnergy.invalidate();
+        lazyEUConsumer.invalidate();
         lazyEnergy = LazyOptional.of(() -> externalEnergy);
+        if (GTCompat.isLoaded()) {
+            lazyEUConsumer = GTEnergyCompat.wrapFEAsEUConsumer(externalEnergy);
+        }
         setChanged();
         if (level != null && !level.isClientSide) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
@@ -186,10 +197,15 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements IUIHolder
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
         if (cap == ForgeCapabilities.ITEM_HANDLER) return lazyExternalHandler.cast();
         if (cap == ForgeCapabilities.ENERGY && energyMode == EnergyMode.FE) {
             return lazyEnergy.cast();
+        }
+        if (energyMode == EnergyMode.EU && GTCompat.isLoaded()
+                && GTEnergyCompat.isEnergyContainerCap(cap)) {
+            return (LazyOptional<T>) lazyEUConsumer;
         }
         return super.getCapability(cap, side);
     }
@@ -206,6 +222,7 @@ public class ElectricFurnaceBlockEntity extends BlockEntity implements IUIHolder
         super.invalidateCaps();
         lazyExternalHandler.invalidate();
         lazyEnergy.invalidate();
+        lazyEUConsumer.invalidate();
     }
 
     @Override

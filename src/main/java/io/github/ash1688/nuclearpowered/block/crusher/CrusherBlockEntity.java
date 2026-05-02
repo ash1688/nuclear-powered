@@ -8,6 +8,7 @@ import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.client.ui.NPTabs;
 import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat;
 import io.github.ash1688.nuclearpowered.energy.EnergyMode;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModRecipes;
@@ -99,6 +100,12 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
 
     private LazyOptional<IEnergyStorage> lazyEnergy = LazyOptional.empty();
 
+    /** EU consumer wrapper for the FE buffer; populated in onLoad when
+     *  GT is present. Exposed by getCapability when energyMode == EU so
+     *  EU cables / GT producers can connect and push. */
+    @SuppressWarnings("rawtypes")
+    private LazyOptional lazyEUConsumer = LazyOptional.empty();
+
     // ContainerData is gone — LDLib widgets read field state directly via
     // DoubleSupplier lambdas in createUI, and LDLib handles the server->client
     // sync internally. No vanilla AbstractContainerMenu means no need for
@@ -160,7 +167,11 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
         // mode and vice versa) so neighbours re-resolve and refuse the wrong
         // cable type. Invalidating both lazies forces that re-resolve.
         lazyEnergy.invalidate();
+        lazyEUConsumer.invalidate();
         lazyEnergy = LazyOptional.of(() -> externalEnergy);
+        if (GTCompat.isLoaded()) {
+            lazyEUConsumer = GTEnergyCompat.wrapFEAsEUConsumer(externalEnergy);
+        }
         setChanged();
         if (level != null && !level.isClientSide) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
@@ -212,12 +223,17 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
         if (cap == ForgeCapabilities.ITEM_HANDLER) return lazyExternalHandler.cast();
         // FE cap is exposed only in FE mode — EU mode hides it so an FE
         // cable refuses to connect, which is what gates the network.
         if (cap == ForgeCapabilities.ENERGY && energyMode == EnergyMode.FE) {
             return lazyEnergy.cast();
+        }
+        if (energyMode == EnergyMode.EU && GTCompat.isLoaded()
+                && GTEnergyCompat.isEnergyContainerCap(cap)) {
+            return (LazyOptional<T>) lazyEUConsumer;
         }
         return super.getCapability(cap, side);
     }
