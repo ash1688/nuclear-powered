@@ -2,6 +2,7 @@ package io.github.ash1688.nuclearpowered.block.crusher;
 
 import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
 import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
@@ -191,6 +192,11 @@ public class CrusherBlockEntity extends BlockEntity implements IUIHolder.BlockEn
 
         ui.mainGroup.addWidget(NPMachineUI.feBar(152, 17,
                 () -> storedFE, ENERGY_CAPACITY));
+
+        // Energy-mode tag above the FE bar — green for FE, light blue for EU.
+        ui.mainGroup.addWidget(new LabelWidget(NPMachineUI.PANEL_X + 152, 8,
+                () -> energyMode == EnergyMode.FE ? "§aFE" : "§bEU")
+                .setDropShadow(true));
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
 
