@@ -8,6 +8,11 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
+
+import javax.annotation.Nullable;
 
 // Infinite EU source for testing the dual-energy system in EU mode. No-op
 // when GTCEU isn't loaded — block still places, just doesn't push (the EU
@@ -16,6 +21,18 @@ import net.minecraft.world.level.block.state.BlockState;
 public class CreativeEUGeneratorBlockEntity extends BlockEntity {
     public CreativeEUGeneratorBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.CREATIVE_EU_GENERATOR.get(), pos, state);
+    }
+
+    /**
+     * Explicit empty Forge ENERGY response so external mods (GTCEU, etc.)
+     * can't auto-shim a Forge ENERGY cap onto this block. EU generators are
+     * EU-only; FE cables must refuse to connect, and our cable's canConnect
+     * uses the Forge ENERGY cap as the connection signal.
+     */
+    @Override
+    public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
+        if (cap == ForgeCapabilities.ENERGY) return LazyOptional.empty();
+        return super.getCapability(cap, side);
     }
 
     public void tick(Level level, BlockPos pos, BlockState state) {
