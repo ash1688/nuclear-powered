@@ -80,9 +80,17 @@ public class EnergyCableBlock extends BaseEntityBlock {
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
         BlockState s = defaultBlockState();
+        // Scan neighbours BEFORE the BE exists so the initial blockstate
+        // already reflects the right system. Without this, a cable placed
+        // next to an EU-only neighbour would compute connections in the
+        // default FE mode, find no Forge ENERGY, and place with all six
+        // booleans false — and updateShape never re-fires for the cable's
+        // own placement, so the wrong state would be sticky.
+        EnergyMode placementMode = EnergyCableBlockEntity.scanModeAt(ctx.getLevel(), ctx.getClickedPos());
+        if (placementMode == null) placementMode = EnergyMode.FE;
         for (Direction dir : Direction.values()) {
             s = s.setValue(propertyFor(dir),
-                    canConnect(ctx.getLevel(), ctx.getClickedPos(), dir));
+                    canConnectWithMode(ctx.getLevel(), ctx.getClickedPos(), dir, placementMode));
         }
         return s;
     }
@@ -122,17 +130,22 @@ public class EnergyCableBlock extends BaseEntityBlock {
      * </ul>
      */
     public static boolean canConnect(LevelAccessor level, BlockPos pos, Direction dir) {
-        BlockPos npos = pos.relative(dir);
-        BlockState nstate = level.getBlockState(npos);
         BlockEntity selfBE = level.getBlockEntity(pos);
         EnergyMode selfMode = (selfBE instanceof EnergyCableBlockEntity sc) ? sc.getMode() : EnergyMode.FE;
+        return canConnectWithMode(level, pos, dir, selfMode);
+    }
 
+    /** As {@link #canConnect}, but the cable's mode is supplied externally
+     *  rather than read from a BE — used by {@link #getStateForPlacement}
+     *  before the cable BE exists. */
+    public static boolean canConnectWithMode(LevelAccessor level, BlockPos pos, Direction dir, EnergyMode selfMode) {
+        BlockPos npos = pos.relative(dir);
+        BlockState nstate = level.getBlockState(npos);
         if (nstate.getBlock() instanceof EnergyCableBlock) {
             BlockEntity nbe = level.getBlockEntity(npos);
             EnergyMode nMode = (nbe instanceof EnergyCableBlockEntity nc) ? nc.getMode() : EnergyMode.FE;
             return nMode == selfMode;
         }
-
         BlockEntity be = level.getBlockEntity(npos);
         if (be == null) return false;
         if (selfMode == EnergyMode.FE) {

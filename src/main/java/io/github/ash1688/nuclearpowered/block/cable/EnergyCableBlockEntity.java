@@ -87,18 +87,23 @@ public class EnergyCableBlockEntity extends BlockEntity {
     }
 
     /**
-     * Walk the 6 neighbours and pick the cable's mode. FE neighbours win;
-     * EU is chosen only when no FE neighbour is present. Cable-to-cable
-     * adopts the neighbour cable's existing mode so a chain stays coherent
-     * even if the producer is several blocks away. Called from the block's
-     * updateShape; idempotent — only invalidates caps when the mode changes.
+     * Static neighbour-scan: pick the mode a cable at {@code pos} should
+     * take based on its 6 neighbours. FE wins ties; EU only if no FE
+     * present; cable-to-cable adopts the neighbour cable's mode. Returns
+     * null if no neighbours offer either system — callers (getStateForPlacement,
+     * recomputeMode) decide their own fallback in that case.
+     *
+     * <p>Doesn't require this cable's BE to exist, so it's safe to call
+     * from {@link io.github.ash1688.nuclearpowered.block.cable.EnergyCableBlock#getStateForPlacement}
+     * before the cable is actually placed in the world.</p>
      */
-    public void recomputeMode() {
-        if (level == null) return;
+    @Nullable
+    public static io.github.ash1688.nuclearpowered.energy.EnergyMode scanModeAt(
+            net.minecraft.world.level.LevelAccessor level, BlockPos pos) {
         boolean anyFE = false;
         boolean anyEU = false;
         for (Direction dir : Direction.values()) {
-            BlockPos npos = worldPosition.relative(dir);
+            BlockPos npos = pos.relative(dir);
             BlockEntity be = level.getBlockEntity(npos);
             if (be == null) continue;
             if (be instanceof EnergyCableBlockEntity nb) {
@@ -116,14 +121,28 @@ public class EnergyCableBlockEntity extends BlockEntity {
                 anyEU = true;
             }
         }
-        io.github.ash1688.nuclearpowered.energy.EnergyMode next =
-                anyFE ? io.github.ash1688.nuclearpowered.energy.EnergyMode.FE
-              : anyEU ? io.github.ash1688.nuclearpowered.energy.EnergyMode.EU
-              : mode; // no neighbours: keep current — avoids needless cap churn
+        if (anyFE) return io.github.ash1688.nuclearpowered.energy.EnergyMode.FE;
+        if (anyEU) return io.github.ash1688.nuclearpowered.energy.EnergyMode.EU;
+        return null;
+    }
+
+    /**
+     * Re-derive this cable's mode from its current neighbours. Called from
+     * the block's updateShape after the BE exists. Keeps the current mode
+     * when no neighbours offer a clear signal; idempotent — only invalidates
+     * caps when the mode actually changes.
+     */
+    public void recomputeMode() {
+        if (level == null) return;
+        io.github.ash1688.nuclearpowered.energy.EnergyMode scanned = scanModeAt(level, worldPosition);
+        io.github.ash1688.nuclearpowered.energy.EnergyMode next = scanned != null ? scanned : mode;
         if (next != mode) {
             mode = next;
             invalidateCaps();
             lazyAnySide = LazyOptional.of(() -> anySideWrapper);
+            if (io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()) {
+                lazyEU = io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat.wrapCableAsEU(this);
+            }
             for (int i = 0; i < perFaceLazies.length; i++) perFaceLazies[i] = null;
             setChanged();
         }
@@ -184,6 +203,11 @@ public class EnergyCableBlockEntity extends BlockEntity {
         if (io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()) {
             lazyEU = io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat.wrapCableAsEU(this);
         }
+        // Sync the BE's mode with whatever neighbours are saying right now.
+        // For freshly placed cables this picks up the EU producer that the
+        // block-state was already drawn against; for cables loaded from disk
+        // it self-corrects if a neighbour changed while the chunk was unloaded.
+        recomputeMode();
     }
 
     @Override
