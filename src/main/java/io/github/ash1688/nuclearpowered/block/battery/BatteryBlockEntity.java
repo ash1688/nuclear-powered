@@ -2,9 +2,12 @@ package io.github.ash1688.nuclearpowered.block.battery;
 
 import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
+import io.github.ash1688.nuclearpowered.client.ui.NPTabs;
 import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
 import io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat;
+import io.github.ash1688.nuclearpowered.energy.EnergyMode;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -29,6 +32,12 @@ public class BatteryBlockEntity extends BlockEntity implements IUIHolder.BlockEn
     public static final int MAX_IO_PER_TICK = 2048;
 
     private int storedFE = 0;
+
+    // Dual-energy mode flag. Battery is producer + storer + sink, so toggling
+    // simply switches which capability key it exposes. There's no in-flight
+    // work to lose, so the toggle is always allowed (when GTCEU is loaded
+    // for FE→EU). EU-side cap exposure + EU push are a follow-up commit.
+    private EnergyMode energyMode = EnergyMode.FE;
 
     private final IEnergyStorage externalEnergy = new IEnergyStorage() {
         @Override
@@ -65,6 +74,26 @@ public class BatteryBlockEntity extends BlockEntity implements IUIHolder.BlockEn
         super(ModBlockEntities.BATTERY.get(), pos, state);
     }
 
+    public EnergyMode getEnergyMode() {
+        return energyMode;
+    }
+
+    public boolean canToggleEnergyMode() {
+        if (energyMode == EnergyMode.FE && !GTCompat.isLoaded()) return false;
+        return true;
+    }
+
+    public void toggleEnergyMode() {
+        if (!canToggleEnergyMode()) return;
+        energyMode = energyMode.opposite();
+        lazyEnergy.invalidate();
+        lazyEnergy = LazyOptional.of(() -> externalEnergy);
+        setChanged();
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
     @Override
     public BlockEntity self() { return this; }
 
@@ -76,16 +105,29 @@ public class BatteryBlockEntity extends BlockEntity implements IUIHolder.BlockEn
 
         // Centred FE bar — the only thing this machine has to display.
         ui.mainGroup.addWidget(NPMachineUI.feBar(82, 17,
-                () -> storedFE, CAPACITY_FE));
+                () -> storedFE, CAPACITY_FE,
+                () -> energyMode.displayUnit()));
+
+        // Energy-mode tag above the FE bar — green for FE, light blue for EU.
+        ui.mainGroup.addWidget(new LabelWidget(NPMachineUI.PANEL_X + 82, 8,
+                () -> energyMode == EnergyMode.FE ? "§aFE" : "§bEU")
+                .setDropShadow(true));
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
-        // Tab strip is reserved for future side-config / energy-direction tabs.
+        ui.mainGroup.addWidget(new NPTabs()
+                .energyTab(this::getEnergyMode, this::toggleEnergyMode,
+                        this::canToggleEnergyMode)
+                .build());
         return ui;
     }
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-        if (cap == ForgeCapabilities.ENERGY) return lazyEnergy.cast();
+        // FE cap exposed only in FE mode — wrong-mode cables refuse to connect
+        // at the cap-resolution layer. EU cap exposure is a follow-up commit.
+        if (cap == ForgeCapabilities.ENERGY && energyMode == EnergyMode.FE) {
+            return lazyEnergy.cast();
+        }
         return super.getCapability(cap, side);
     }
 
@@ -105,12 +147,17 @@ public class BatteryBlockEntity extends BlockEntity implements IUIHolder.BlockEn
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putInt("fe", storedFE);
+        tag.putString("energyMode", energyMode.name());
     }
 
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
         storedFE = tag.getInt("fe");
+        if (tag.contains("energyMode")) {
+            try { energyMode = EnergyMode.valueOf(tag.getString("energyMode")); }
+            catch (IllegalArgumentException ignored) { energyMode = EnergyMode.FE; }
+        }
     }
 
     // Push stored FE to any adjacent consumer each tick. Sources (thermocouples) push
@@ -119,6 +166,10 @@ public class BatteryBlockEntity extends BlockEntity implements IUIHolder.BlockEn
     // or destroyed) and FE still reaches real sinks within a few ticks.
     public void tick(Level level, BlockPos pos, BlockState state) {
         if (level.isClientSide || storedFE <= 0) return;
+        // EU mode: skip the FE push entirely. EU-side push lands with the
+        // producer-side GT adapter in a follow-up commit; until then EU mode
+        // simply hoards the buffer.
+        if (energyMode == EnergyMode.EU) return;
         for (Direction dir : Direction.values()) {
             if (storedFE <= 0) break;
             BlockEntity neighbour = level.getBlockEntity(pos.relative(dir));
