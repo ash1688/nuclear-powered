@@ -1,10 +1,11 @@
 package io.github.ash1688.nuclearpowered.block.cable;
 
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
@@ -16,16 +17,15 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
 
 import javax.annotation.Nullable;
 
-// Cables don't tick — energy moves through receiveEnergy push as soon as a
-// producer puts power into the network. The block carries 6 boolean properties
-// (one per face) so the multipart blockstate can render arms only on faces
-// that actually have a neighbour worth connecting to: another cable, or any
-// block that exposes Forge ENERGY.
-public class EnergyCableBlock extends BaseEntityBlock {
+// EU-only cable. Visually mirrors the FE cable's multipart connection
+// rendering (centre core + arms toward connected neighbours) but only
+// connects to other EU cables and to neighbours exposing GT's
+// IEnergyContainer cap. FE blocks are refused; FE cables are refused. The
+// two networks live side-by-side and never bridge.
+public class EnergyCableEUBlock extends BaseEntityBlock {
     public static final BooleanProperty NORTH = BooleanProperty.create("north");
     public static final BooleanProperty SOUTH = BooleanProperty.create("south");
     public static final BooleanProperty EAST  = BooleanProperty.create("east");
@@ -33,8 +33,6 @@ public class EnergyCableBlock extends BaseEntityBlock {
     public static final BooleanProperty UP    = BooleanProperty.create("up");
     public static final BooleanProperty DOWN  = BooleanProperty.create("down");
 
-    // 6 px-thick centre core (5..11 along each axis) so it visually reads
-    // as a wire rather than a full cube even when no arms are connected.
     private static final VoxelShape CORE = Block.box(5, 5, 5, 11, 11, 11);
     private static final VoxelShape ARM_NORTH = Block.box(5, 5,  0, 11, 11,  5);
     private static final VoxelShape ARM_SOUTH = Block.box(5, 5, 11, 11, 11, 16);
@@ -43,7 +41,7 @@ public class EnergyCableBlock extends BaseEntityBlock {
     private static final VoxelShape ARM_UP    = Block.box(5, 11, 5, 11, 16, 11);
     private static final VoxelShape ARM_DOWN  = Block.box(5,  0, 5, 11,  5, 11);
 
-    public EnergyCableBlock(Properties props) {
+    public EnergyCableEUBlock(Properties props) {
         super(props);
         registerDefaultState(stateDefinition.any()
                 .setValue(NORTH, false).setValue(SOUTH, false)
@@ -102,23 +100,24 @@ public class EnergyCableBlock extends BaseEntityBlock {
     }
 
     /**
-     * FE cable: connect to another FE cable, or any neighbour exposing
-     * Forge ENERGY on the touching face. EU cables and EU-only blocks are
-     * refused — they live in their own parallel network served by
-     * {@link EnergyCableEUBlock}.
+     * EU cable: connect to another EU cable, or any neighbour exposing GT's
+     * IEnergyContainer on the touching face. Without GTCEU loaded EU cables
+     * are inert — canConnect returns false everywhere except to other EU
+     * cables (which are also inert), so the network is harmless.
      */
     public static boolean canConnect(LevelAccessor level, BlockPos pos, Direction dir) {
         BlockPos npos = pos.relative(dir);
         BlockState nstate = level.getBlockState(npos);
-        if (nstate.getBlock() instanceof EnergyCableBlock) return true;
+        if (nstate.getBlock() instanceof EnergyCableEUBlock) return true;
         BlockEntity be = level.getBlockEntity(npos);
         if (be == null) return false;
-        return be.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).isPresent();
+        return GTCompat.isLoaded()
+                && GTEnergyCompat.hasEUCapability(be, dir.getOpposite());
     }
 
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new EnergyCableBlockEntity(pos, state);
+        return new EnergyCableEUBlockEntity(pos, state);
     }
 }

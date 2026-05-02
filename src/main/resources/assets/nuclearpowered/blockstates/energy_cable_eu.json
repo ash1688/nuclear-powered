@@ -1,0 +1,62 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "nuclearpowered:block/energy_cable_eu_core"
+      }
+    },
+    {
+      "when": {
+        "north": "true"
+      },
+      "apply": {
+        "model": "nuclearpowered:block/energy_cable_eu_arm"
+      }
+    },
+    {
+      "when": {
+        "south": "true"
+      },
+      "apply": {
+        "model": "nuclearpowered:block/energy_cable_eu_arm",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "east": "true"
+      },
+      "apply": {
+        "model": "nuclearpowered:block/energy_cable_eu_arm",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "west": "true"
+      },
+      "apply": {
+        "model": "nuclearpowered:block/energy_cable_eu_arm",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "up": "true"
+      },
+      "apply": {
+        "model": "nuclearpowered:block/energy_cable_eu_arm",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "down": "true"
+      },
+      "apply": {
+        "model": "nuclearpowered:block/energy_cable_eu_arm",
+        "x": 90
+      }
+    }
+  ]
+}

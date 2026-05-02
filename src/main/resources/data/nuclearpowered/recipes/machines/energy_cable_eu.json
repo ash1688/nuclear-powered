@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "WRW"
+  ],
+  "key": {
+    "W": {
+      "item": "minecraft:white_wool"
+    },
+    "R": {
+      "tag": "forge:wires/electrum"
+    }
+  },
+  "result": {
+    "item": "nuclearpowered:energy_cable_eu",
+    "count": 6
+  }
+}

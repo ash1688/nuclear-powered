@@ -153,5 +153,6 @@
   "item.nuclearpowered.electrum_wire": "Electrum Wire",
   "item.nuclearpowered.dense_steel_ingot": "Dense Steel Ingot",
   "block.nuclearpowered.creative_fe_generator": "Creative FE Generator",
-  "block.nuclearpowered.creative_eu_generator": "Creative EU Generator"
+  "block.nuclearpowered.creative_eu_generator": "Creative EU Generator",
+  "block.nuclearpowered.energy_cable_eu": "EU Cable"
 }

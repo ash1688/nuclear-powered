@@ -4,6 +4,7 @@ import io.github.ash1688.nuclearpowered.NuclearPowered;
 import io.github.ash1688.nuclearpowered.block.battery.BatteryBlock;
 import io.github.ash1688.nuclearpowered.block.boiler.CoalBoilerBlock;
 import io.github.ash1688.nuclearpowered.block.cable.EnergyCableBlock;
+import io.github.ash1688.nuclearpowered.block.cable.EnergyCableEUBlock;
 import io.github.ash1688.nuclearpowered.block.converter.EnergyConverterBlock;
 import io.github.ash1688.nuclearpowered.block.coolingpond.CoolingPondBlock;
 import io.github.ash1688.nuclearpowered.block.crusher.CrusherBlock;
@@ -158,6 +159,14 @@ public final class ModBlocks {
     public static final RegistryObject<EnergyCableBlock> ENERGY_CABLE = registerBlock("energy_cable",
             () -> new EnergyCableBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_GRAY)
+                    .strength(1.5f, 2.0f)
+                    .sound(SoundType.METAL)));
+
+    // EU-only cable. Lives alongside the FE cable as a parallel network —
+    // GT producers / consumers connect, FE blocks are refused.
+    public static final RegistryObject<EnergyCableEUBlock> ENERGY_CABLE_EU = registerBlock("energy_cable_eu",
+            () -> new EnergyCableEUBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_BLUE)
                     .strength(1.5f, 2.0f)
                     .sound(SoundType.METAL)));
 

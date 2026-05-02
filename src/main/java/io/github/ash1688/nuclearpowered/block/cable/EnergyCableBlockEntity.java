@@ -24,12 +24,6 @@ import java.util.Set;
 // This mirrors how Forge/RF pipe mods (Thermal, Mekanism, Flux) route energy:
 // one transfer per push, producer → network → consumers, no per-cable storage and
 // therefore no ordering or oscillation bugs.
-//
-// Dual-energy mode: each cable also tracks an effective mode (FE / EU)
-// determined by its connected neighbours (FE wins ties). Cables in EU mode
-// don't expose Forge ENERGY — neighbours of the wrong mode refuse to connect
-// at the cap-resolution layer, which is exactly the visual / functional
-// refuse-connect spec. Real EU transport (distributeEU) is a follow-up.
 public class EnergyCableBlockEntity extends BlockEntity {
     // Bound BFS so a pathologically large network can't stall the server thread.
     public static final int MAX_NETWORK_SIZE = 512;
@@ -65,104 +59,12 @@ public class EnergyCableBlockEntity extends BlockEntity {
 
     private LazyOptional<IEnergyStorage> lazyAnySide = LazyOptional.empty();
 
-    /** Lazy GT IEnergyContainer wrapper. Initialised in onLoad when GTCEU is
-     *  loaded; stays empty otherwise. Exposed by getCapability when this
-     *  cable is in EU mode so GT producers can push energy into the
-     *  network. */
-    @SuppressWarnings("rawtypes")
-    private LazyOptional lazyEU = LazyOptional.empty();
-
-    /** Current mode this cable speaks. Recomputed from neighbours every time
-     *  a face's connection state changes (see {@link #recomputeMode}). FE
-     *  wins ties when both an FE and EU producer are connected. */
-    private io.github.ash1688.nuclearpowered.energy.EnergyMode mode =
-            io.github.ash1688.nuclearpowered.energy.EnergyMode.FE;
-
     public EnergyCableBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.ENERGY_CABLE.get(), pos, state);
     }
 
-    public io.github.ash1688.nuclearpowered.energy.EnergyMode getMode() {
-        return mode;
-    }
-
-    /**
-     * Static neighbour-scan: pick the mode a cable at {@code pos} should
-     * take based on its 6 neighbours. FE wins ties; EU only if no FE
-     * present; cable-to-cable adopts the neighbour cable's mode. Returns
-     * null if no neighbours offer either system — callers (getStateForPlacement,
-     * recomputeMode) decide their own fallback in that case.
-     *
-     * <p>Doesn't require this cable's BE to exist, so it's safe to call
-     * from {@link io.github.ash1688.nuclearpowered.block.cable.EnergyCableBlock#getStateForPlacement}
-     * before the cable is actually placed in the world.</p>
-     */
-    @Nullable
-    public static io.github.ash1688.nuclearpowered.energy.EnergyMode scanModeAt(
-            net.minecraft.world.level.LevelAccessor level, BlockPos pos) {
-        boolean anyFE = false;
-        boolean anyEU = false;
-        for (Direction dir : Direction.values()) {
-            BlockPos npos = pos.relative(dir);
-            BlockEntity be = level.getBlockEntity(npos);
-            if (be == null) continue;
-            if (be instanceof EnergyCableBlockEntity nb) {
-                if (nb.mode == io.github.ash1688.nuclearpowered.energy.EnergyMode.FE) anyFE = true;
-                else anyEU = true;
-                continue;
-            }
-            if (be.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).isPresent()) {
-                anyFE = true;
-                continue;
-            }
-            if (io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()
-                    && io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat
-                            .hasEUCapability(be, dir.getOpposite())) {
-                anyEU = true;
-            }
-        }
-        if (anyFE) return io.github.ash1688.nuclearpowered.energy.EnergyMode.FE;
-        if (anyEU) return io.github.ash1688.nuclearpowered.energy.EnergyMode.EU;
-        return null;
-    }
-
-    /**
-     * Re-derive this cable's mode from its current neighbours. Called from
-     * the block's updateShape after the BE exists. Keeps the current mode
-     * when no neighbours offer a clear signal; idempotent — only invalidates
-     * caps when the mode actually changes.
-     */
-    public void recomputeMode() {
-        if (level == null) return;
-        io.github.ash1688.nuclearpowered.energy.EnergyMode scanned = scanModeAt(level, worldPosition);
-        io.github.ash1688.nuclearpowered.energy.EnergyMode next = scanned != null ? scanned : mode;
-        if (next != mode) {
-            mode = next;
-            invalidateCaps();
-            lazyAnySide = LazyOptional.of(() -> anySideWrapper);
-            if (io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()) {
-                lazyEU = io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat.wrapCableAsEU(this);
-            }
-            for (int i = 0; i < perFaceLazies.length; i++) perFaceLazies[i] = null;
-            setChanged();
-        }
-    }
-
     @Override
-    @SuppressWarnings("unchecked")
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-        // EU mode: serve the GT IEnergyContainer cap; Forge ENERGY is hidden
-        // so wrong-mode neighbours refuse to resolve a connection.
-        if (mode == io.github.ash1688.nuclearpowered.energy.EnergyMode.EU) {
-            if (cap == ForgeCapabilities.ENERGY) return LazyOptional.empty();
-            if (io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()
-                    && io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat
-                            .isEnergyContainerCap(cap)) {
-                return (LazyOptional<T>) lazyEU;
-            }
-            return super.getCapability(cap, side);
-        }
-        // FE mode: existing per-face FE wrappers.
         if (cap != ForgeCapabilities.ENERGY) return super.getCapability(cap, side);
         if (side == null) return lazyAnySide.cast();
         int idx = side.ordinal();
@@ -200,39 +102,12 @@ public class EnergyCableBlockEntity extends BlockEntity {
     public void onLoad() {
         super.onLoad();
         lazyAnySide = LazyOptional.of(() -> anySideWrapper);
-        if (io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()) {
-            lazyEU = io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat.wrapCableAsEU(this);
-        }
-        // Sync the BE's mode with whatever neighbours are saying right now.
-        // For freshly placed cables this picks up the EU producer that the
-        // block-state was already drawn against; for cables loaded from disk
-        // it self-corrects if a neighbour changed while the chunk was unloaded.
-        recomputeMode();
-    }
-
-    @Override
-    protected void saveAdditional(net.minecraft.nbt.CompoundTag tag) {
-        super.saveAdditional(tag);
-        tag.putString("energyMode", mode.name());
-    }
-
-    @Override
-    public void load(net.minecraft.nbt.CompoundTag tag) {
-        super.load(tag);
-        if (tag.contains("energyMode")) {
-            try {
-                mode = io.github.ash1688.nuclearpowered.energy.EnergyMode.valueOf(tag.getString("energyMode"));
-            } catch (IllegalArgumentException ignored) {
-                mode = io.github.ash1688.nuclearpowered.energy.EnergyMode.FE;
-            }
-        }
     }
 
     @Override
     public void invalidateCaps() {
         super.invalidateCaps();
         lazyAnySide.invalidate();
-        lazyEU.invalidate();
         for (int i = 0; i < perFaceLazies.length; i++) {
             if (perFaceLazies[i] != null) perFaceLazies[i].invalidate();
         }
@@ -292,64 +167,6 @@ public class EnergyCableBlockEntity extends BlockEntity {
         }
         return remaining;
     }
-
-    /**
-     * EU pathway parallel to {@link #distribute}. A GT producer pushes a
-     * voltage × amperage packet into our IEnergyContainer wrapper; we BFS
-     * the cable network and offer those amperage packets to each EU sink in
-     * turn until either every sink is full or the producer's amperage is
-     * exhausted. Returns the amperage actually accepted.
-     *
-     * <p>Source-face exclusion mirrors the FE side — the neighbour that
-     * pushed the packet doesn't appear in the sink list, so we never feed
-     * it back into the producer.</p>
-     */
-    public long distributeEU(@Nullable Direction sourceFace, long voltage, long amperage) {
-        if (level == null || level.isClientSide || amperage <= 0 || voltage <= 0) return 0;
-        if (!io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat.isLoaded()) return 0;
-        BlockPos sourcePos = sourceFace == null ? null : worldPosition.relative(sourceFace);
-        // Sinks are stored as (BlockEntity, facing) pairs because GT's
-        // pushEUToSink takes the receiving face. Same neighbour reachable
-        // from multiple cables only counts once (consumersSeen guard).
-        List<EUSinkEntry> sinks = new ArrayList<>();
-        Set<BlockPos> visited = new HashSet<>();
-        Set<BlockPos> consumersSeen = new HashSet<>();
-        Deque<BlockPos> queue = new ArrayDeque<>();
-        visited.add(worldPosition);
-        queue.add(worldPosition);
-        while (!queue.isEmpty() && visited.size() <= MAX_NETWORK_SIZE) {
-            BlockPos cur = queue.poll();
-            for (Direction dir : Direction.values()) {
-                BlockPos npos = cur.relative(dir);
-                if (sourcePos != null && npos.equals(sourcePos)) continue;
-                BlockEntity be = level.getBlockEntity(npos);
-                if (be == null) continue;
-                if (be instanceof EnergyCableBlockEntity nb) {
-                    // Only walk into cables in the same EU mode — wrong-mode
-                    // cables aren't part of this network.
-                    if (nb.mode != io.github.ash1688.nuclearpowered.energy.EnergyMode.EU) continue;
-                    if (visited.add(npos)) queue.add(npos);
-                    continue;
-                }
-                if (!consumersSeen.add(npos)) continue;
-                // Only neighbours that actually accept EU on the touching face.
-                if (io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat
-                        .hasEUCapability(be, dir.getOpposite())) {
-                    sinks.add(new EUSinkEntry(be, dir.getOpposite()));
-                }
-            }
-        }
-        long remaining = amperage;
-        for (EUSinkEntry sink : sinks) {
-            if (remaining <= 0) break;
-            long taken = io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat
-                    .pushEUToSink(sink.be, sink.facing, voltage, remaining);
-            if (taken > 0) remaining -= taken;
-        }
-        return amperage - remaining;
-    }
-
-    private record EUSinkEntry(BlockEntity be, Direction facing) {}
 
     private void discoverNetwork(List<IEnergyStorage> pureSinks, List<IEnergyStorage> buffers,
                                   @Nullable BlockPos exclude) {

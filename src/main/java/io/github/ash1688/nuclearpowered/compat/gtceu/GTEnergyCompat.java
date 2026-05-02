@@ -2,7 +2,7 @@ package io.github.ash1688.nuclearpowered.compat.gtceu;
 
 import com.gregtechceu.gtceu.api.capability.IEnergyContainer;
 import com.gregtechceu.gtceu.api.capability.forge.GTCapability;
-import io.github.ash1688.nuclearpowered.block.cable.EnergyCableBlockEntity;
+import io.github.ash1688.nuclearpowered.block.cable.EnergyCableEUBlockEntity;
 import io.github.ash1688.nuclearpowered.block.converter.EnergyConverterBlockEntity;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -85,13 +85,13 @@ public final class GTEnergyCompat {
     }
 
     /**
-     * Wrap a cable BE as an {@link IEnergyContainer} so EU producers can
+     * Wrap an EU cable BE as an {@link IEnergyContainer} so EU producers can
      * push into the cable network. The adapter forwards
      * {@code acceptEnergyFromNetwork} into the cable's {@code distributeEU}
-     * BFS, which walks the connected cables and dispatches the energy to
+     * BFS, which walks the connected EU cables and dispatches the energy to
      * EU-capable neighbours.
      */
-    public static LazyOptional<IEnergyContainer> wrapCableAsEU(EnergyCableBlockEntity cable) {
+    public static LazyOptional<IEnergyContainer> wrapEUCableAsContainer(EnergyCableEUBlockEntity cable) {
         return LazyOptional.of(() -> new CableAdapter(cable));
     }
 
@@ -217,8 +217,8 @@ public final class GTEnergyCompat {
     // don't pull from neighbours; consumers pull / producers push).
 
     private static final class CableAdapter implements IEnergyContainer {
-        private final EnergyCableBlockEntity cable;
-        CableAdapter(EnergyCableBlockEntity cable) { this.cable = cable; }
+        private final EnergyCableEUBlockEntity cable;
+        CableAdapter(EnergyCableEUBlockEntity cable) { this.cable = cable; }
 
         @Override
         public long acceptEnergyFromNetwork(Direction side, long voltage, long amperage) {
