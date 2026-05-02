@@ -2,10 +2,13 @@ package io.github.ash1688.nuclearpowered.block.cscolumn;
 
 import com.lowdragmc.lowdraglib.gui.modular.IUIHolder;
 import com.lowdragmc.lowdraglib.gui.modular.ModularUI;
+import com.lowdragmc.lowdraglib.gui.widget.LabelWidget;
 import com.lowdragmc.lowdraglib.gui.widget.SlotWidget;
 import com.lowdragmc.lowdraglib.side.item.IItemTransfer;
 import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
+import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
+import io.github.ash1688.nuclearpowered.energy.EnergyMode;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModItems;
 import net.minecraft.core.BlockPos;
@@ -72,6 +75,11 @@ public class CsColumnBlockEntity extends BlockEntity implements IUIHolder.BlockE
 
     private int progress = 0;
     private int storedFE = 0;
+
+    // Dual-energy mode flag. FE is the cross-mod default; EU only does
+    // anything when GTCEU is loaded and the player has toggled. The toggle
+    // is gated on progress == 0 so a mid-process switch can't lose work.
+    private EnergyMode energyMode = EnergyMode.FE;
     private boolean autoInput = true;
     private boolean autoOutput = true;
 
@@ -105,6 +113,28 @@ public class CsColumnBlockEntity extends BlockEntity implements IUIHolder.BlockE
     public void toggleAutoInput() { autoInput = !autoInput; setChanged(); }
     public void toggleAutoOutput() { autoOutput = !autoOutput; setChanged(); }
 
+    public EnergyMode getEnergyMode() {
+        return energyMode;
+    }
+
+    /** True if a mode switch would be valid right now (idle + EU available). */
+    public boolean canToggleEnergyMode() {
+        if (progress > 0) return false;
+        if (energyMode == EnergyMode.FE && !GTCompat.isLoaded()) return false;
+        return true;
+    }
+
+    public void toggleEnergyMode() {
+        if (!canToggleEnergyMode()) return;
+        energyMode = energyMode.opposite();
+        lazyEnergy.invalidate();
+        lazyEnergy = LazyOptional.of(() -> externalEnergy);
+        setChanged();
+        if (level != null && !level.isClientSide) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
     @Override
     public BlockEntity self() { return this; }
 
@@ -126,13 +156,21 @@ public class CsColumnBlockEntity extends BlockEntity implements IUIHolder.BlockE
                 () -> progress, () -> PROCESS_TICKS));
 
         ui.mainGroup.addWidget(NPMachineUI.feBar(152, 17,
-                () -> storedFE, ENERGY_CAPACITY));
+                () -> storedFE, ENERGY_CAPACITY,
+                () -> energyMode.displayUnit()));
+
+        // Energy-mode tag above the FE bar — green for FE, light blue for EU.
+        ui.mainGroup.addWidget(new LabelWidget(NPMachineUI.PANEL_X + 152, 8,
+                () -> energyMode == EnergyMode.FE ? "§aFE" : "§bEU")
+                .setDropShadow(true));
 
         NPMachineUI.addPlayerInventory(ui.mainGroup, player);
 
         ui.mainGroup.addWidget(new io.github.ash1688.nuclearpowered.client.ui.NPTabs()
                 .ioTab(() -> autoInput, this::toggleAutoInput,
                         () -> autoOutput, this::toggleAutoOutput)
+                .energyTab(this::getEnergyMode, this::toggleEnergyMode,
+                        this::canToggleEnergyMode)
                 .build());
         return ui;
     }
@@ -140,7 +178,9 @@ public class CsColumnBlockEntity extends BlockEntity implements IUIHolder.BlockE
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
         if (cap == ForgeCapabilities.ITEM_HANDLER) return lazyExternalHandler.cast();
-        if (cap == ForgeCapabilities.ENERGY) return lazyEnergy.cast();
+        if (cap == ForgeCapabilities.ENERGY && energyMode == EnergyMode.FE) {
+            return lazyEnergy.cast();
+        }
         return super.getCapability(cap, side);
     }
 
@@ -167,6 +207,7 @@ public class CsColumnBlockEntity extends BlockEntity implements IUIHolder.BlockE
         tag.putInt("fe", storedFE);
         tag.putBoolean("autoInput", autoInput);
         tag.putBoolean("autoOutput", autoOutput);
+        tag.putString("energyMode", energyMode.name());
     }
 
     @Override
@@ -178,6 +219,10 @@ public class CsColumnBlockEntity extends BlockEntity implements IUIHolder.BlockE
         storedFE = tag.getInt("fe");
         autoInput = !tag.contains("autoInput") || tag.getBoolean("autoInput");
         autoOutput = !tag.contains("autoOutput") || tag.getBoolean("autoOutput");
+        if (tag.contains("energyMode")) {
+            try { energyMode = EnergyMode.valueOf(tag.getString("energyMode")); }
+            catch (IllegalArgumentException ignored) { energyMode = EnergyMode.FE; }
+        }
     }
 
     public void drops() {
