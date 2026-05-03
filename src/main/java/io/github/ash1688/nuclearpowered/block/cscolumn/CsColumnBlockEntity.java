@@ -87,7 +87,7 @@ public class CsColumnBlockEntity extends BlockEntity implements IUIHolder.BlockE
      *  so onLoad() can scan adjacent blocks and adopt an EU cable's mode
      *  automatically. Avoids forcing the player to toggle the UI when the
      *  cable type already disambiguates. */
-    private transient boolean pendingAutoDetect = false;
+    private transient boolean pendingAutoDetect = true;
     private boolean autoInput = true;
     private boolean autoOutput = true;
 
@@ -246,9 +246,7 @@ public class CsColumnBlockEntity extends BlockEntity implements IUIHolder.BlockE
         if (tag.contains("energyMode")) {
             try { energyMode = EnergyMode.valueOf(tag.getString("energyMode")); }
             catch (IllegalArgumentException ignored) { energyMode = EnergyMode.FE; }
-        }
-        else {
-            pendingAutoDetect = true;
+            pendingAutoDetect = false;
         }
     }
 
