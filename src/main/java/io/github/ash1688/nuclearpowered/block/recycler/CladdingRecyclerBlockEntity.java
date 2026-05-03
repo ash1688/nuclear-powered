@@ -9,6 +9,7 @@ import com.lowdragmc.lowdraglib.side.item.forge.ItemTransferHelperImpl;
 import io.github.ash1688.nuclearpowered.client.ui.NPMachineUI;
 import io.github.ash1688.nuclearpowered.compat.gtceu.GTCompat;
 import io.github.ash1688.nuclearpowered.compat.gtceu.GTEnergyCompat;
+import io.github.ash1688.nuclearpowered.block.cable.EnergyCableEUBlock;
 import io.github.ash1688.nuclearpowered.energy.EnergyMode;
 import io.github.ash1688.nuclearpowered.init.ModBlockEntities;
 import io.github.ash1688.nuclearpowered.init.ModItems;
@@ -75,6 +76,12 @@ public class CladdingRecyclerBlockEntity extends BlockEntity implements IUIHolde
     // anything when GTCEU is loaded and the player has toggled. The toggle
     // is gated on progress == 0 so a mid-process switch can't lose work.
     private EnergyMode energyMode = EnergyMode.FE;
+
+    /** Set true by load() when the BE was placed fresh (no NBT tag yet)
+     *  so onLoad() can scan adjacent blocks and adopt an EU cable's mode
+     *  automatically. Avoids forcing the player to toggle the UI when the
+     *  cable type already disambiguates. */
+    private transient boolean pendingAutoDetect = false;
     private boolean autoInput = true;
     private boolean autoOutput = true;
 
@@ -234,6 +241,9 @@ public class CladdingRecyclerBlockEntity extends BlockEntity implements IUIHolde
         if (tag.contains("energyMode")) {
             try { energyMode = EnergyMode.valueOf(tag.getString("energyMode")); }
             catch (IllegalArgumentException ignored) { energyMode = EnergyMode.FE; }
+        }
+        else {
+            pendingAutoDetect = true;
         }
     }
 
